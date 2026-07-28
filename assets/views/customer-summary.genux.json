@@ -1,0 +1,124 @@
+{
+  "schema": "aix.genux/1.0",
+  "view": {
+    "id": "1002",
+    "code": "customer.summary",
+    "revision": 1,
+    "kind": "view"
+  },
+  "catalog": {
+    "id": "aix.core",
+    "version": 1,
+    "checksum": "sha256:df13b4276c7e3f607524c4bc7e8b82d0fda561d610ac73013341794fa2e5de9d"
+  },
+  "root": "summaryRoot",
+  "state": {
+    "summary": {
+      "name": "Mya",
+      "customerType": "Business",
+      "marketing": "Marketing consent not granted"
+    }
+  },
+  "actions": {
+    "backToEditor": {
+      "capability": "view.back"
+    }
+  },
+  "nodes": [
+    {
+      "id": "summaryRoot",
+      "component": "Column",
+      "version": 1,
+      "props": {"gap": 18, "mainAxisSize": "min", "crossAxisAlignment": "stretch"},
+      "slots": {
+        "children": ["summaryHeading", "summaryIntro", "summaryDivider", "summaryCard", "backButton"]
+      }
+    },
+    {
+      "id": "summaryHeading",
+      "component": "Text",
+      "version": 1,
+      "props": {"text": "Customer summary", "style": "titleLarge"}
+    },
+    {
+      "id": "summaryIntro",
+      "component": "Text",
+      "version": 1,
+      "props": {
+        "text": "This is a second independently compiled Genux View.",
+        "style": "bodySmall"
+      }
+    },
+    {
+      "id": "summaryDivider",
+      "component": "Divider",
+      "version": 1,
+      "props": {"thickness": 1}
+    },
+    {
+      "id": "summaryCard",
+      "component": "Card",
+      "version": 1,
+      "props": {"padding": 20},
+      "slots": {"content": ["summaryFields"]}
+    },
+    {
+      "id": "summaryFields",
+      "component": "Column",
+      "version": 1,
+      "props": {"gap": 14, "mainAxisSize": "min", "crossAxisAlignment": "start"},
+      "slots": {"children": ["nameRow", "typeRow", "marketingValue"]}
+    },
+    {
+      "id": "nameRow",
+      "component": "Row",
+      "version": 1,
+      "props": {"gap": 10, "mainAxisSize": "min", "crossAxisAlignment": "center"},
+      "slots": {"children": ["nameLabel", "nameValue"]}
+    },
+    {
+      "id": "nameLabel",
+      "component": "Text",
+      "version": 1,
+      "props": {"text": "Name:", "style": "labelLarge"}
+    },
+    {
+      "id": "nameValue",
+      "component": "Text",
+      "version": 1,
+      "bind": {"text": "/summary/name"}
+    },
+    {
+      "id": "typeRow",
+      "component": "Row",
+      "version": 1,
+      "props": {"gap": 10, "mainAxisSize": "min", "crossAxisAlignment": "center"},
+      "slots": {"children": ["typeLabel", "typeValue"]}
+    },
+    {
+      "id": "typeLabel",
+      "component": "Text",
+      "version": 1,
+      "props": {"text": "Type:", "style": "labelLarge"}
+    },
+    {
+      "id": "typeValue",
+      "component": "Text",
+      "version": 1,
+      "bind": {"text": "/summary/customerType"}
+    },
+    {
+      "id": "marketingValue",
+      "component": "Text",
+      "version": 1,
+      "bind": {"text": "/summary/marketing"}
+    },
+    {
+      "id": "backButton",
+      "component": "Button",
+      "version": 1,
+      "props": {"label": "Back to editor", "variant": "tertiary"},
+      "events": {"pressed": "backToEditor"}
+    }
+  ]
+}

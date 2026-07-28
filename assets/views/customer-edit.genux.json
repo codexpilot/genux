@@ -1,0 +1,156 @@
+{
+  "schema": "aix.genux/1.0",
+  "view": {
+    "id": "1001",
+    "code": "customer.edit",
+    "revision": 6,
+    "kind": "view"
+  },
+  "catalog": {
+    "id": "aix.core",
+    "version": 1,
+    "checksum": "sha256:df13b4276c7e3f607524c4bc7e8b82d0fda561d610ac73013341794fa2e5de9d"
+  },
+  "root": "customerForm",
+  "state": {
+    "draft": {
+      "name": "Mya",
+      "customerType": 2,
+      "marketingOptIn": false
+    },
+    "lookups": {
+      "customerTypes": [
+        {"key": 1, "label": "Retail"},
+        {"key": 2, "label": "Business"},
+        {"key": 3, "label": "Internal", "disabled": true}
+      ]
+    },
+    "ui": {
+      "saving": false
+    }
+  },
+  "actions": {
+    "openComponentLab": {
+      "capability": "view.open",
+      "args": {"viewCode": "component.lab"}
+    },
+    "openSummary": {
+      "capability": "view.open",
+      "args": {"viewCode": "customer.summary"}
+    },
+    "customerTypeChanged": {
+      "capability": "customer.type.changed",
+      "args": {
+        "value": {"$bind": "/draft/customerType"}
+      }
+    },
+    "saveCustomer": {
+      "capability": "customer.save",
+      "args": {
+        "customer": {"$bind": "/draft"}
+      }
+    }
+  },
+  "nodes": [
+    {
+      "id": "customerForm",
+      "component": "Form",
+      "version": 1,
+      "bind": {"busy": "/ui/saving"},
+      "slots": {
+        "content": ["heading", "intro", "sectionDivider", "profileCard"],
+        "actions": ["componentLabButton", "summaryButton", "saveButton"]
+      }
+    },
+    {
+      "id": "heading",
+      "component": "Text",
+      "version": 1,
+      "props": {"text": "Edit customer", "style": "titleLarge"}
+    },
+    {
+      "id": "intro",
+      "component": "Text",
+      "version": 1,
+      "props": {
+        "text": "This form is compiled from a published Genux snapshot.",
+        "style": "bodySmall"
+      }
+    },
+    {
+      "id": "sectionDivider",
+      "component": "Divider",
+      "version": 1,
+      "props": {"thickness": 1}
+    },
+    {
+      "id": "profileCard",
+      "component": "Card",
+      "version": 1,
+      "props": {"padding": 20},
+      "slots": {"content": ["profileFields"]}
+    },
+    {
+      "id": "profileFields",
+      "component": "Column",
+      "version": 1,
+      "props": {"gap": 16, "crossAxisAlignment": "stretch", "mainAxisSize": "min"},
+      "slots": {"children": ["customerName", "customerType", "marketingOptIn"]}
+    },
+    {
+      "id": "customerName",
+      "component": "TextField",
+      "version": 1,
+      "props": {
+        "label": "Customer name",
+        "hint": "Enter a display name",
+        "maxLines": 1
+      },
+      "bind": {"value": "/draft/name"},
+      "events": {"submitted": "saveCustomer"}
+    },
+    {
+      "id": "customerType",
+      "component": "ComboBox",
+      "version": 1,
+      "props": {
+        "clearable": false,
+        "placeholder": "Customer type"
+      },
+      "bind": {
+        "items": "/lookups/customerTypes",
+        "value": "/draft/customerType"
+      },
+      "events": {"changed": "customerTypeChanged"}
+    },
+    {
+      "id": "marketingOptIn",
+      "component": "Checkbox",
+      "version": 1,
+      "props": {"label": "Marketing consent"},
+      "bind": {"value": "/draft/marketingOptIn"}
+    },
+    {
+      "id": "componentLabButton",
+      "component": "Button",
+      "version": 1,
+      "props": {"label": "Open Component Lab", "variant": "secondary"},
+      "events": {"pressed": "openComponentLab"}
+    },
+    {
+      "id": "summaryButton",
+      "component": "Button",
+      "version": 1,
+      "props": {"label": "Open customer summary", "variant": "secondary"},
+      "events": {"pressed": "openSummary"}
+    },
+    {
+      "id": "saveButton",
+      "component": "Button",
+      "version": 1,
+      "props": {"label": "Dispatch customer.save", "variant": "primary"},
+      "bind": {"busy": "/ui/saving"},
+      "events": {"pressed": "saveCustomer"}
+    }
+  ]
+}

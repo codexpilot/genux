@@ -1,0 +1,561 @@
+{
+  "schema": "aix.genux/1.0",
+  "view": {
+    "id": "1003",
+    "code": "component.lab",
+    "revision": 1,
+    "kind": "view"
+  },
+  "catalog": {
+    "id": "aix.core",
+    "version": 1,
+    "checksum": "sha256:df13b4276c7e3f607524c4bc7e8b82d0fda561d610ac73013341794fa2e5de9d"
+  },
+  "root": "labRoot",
+  "state": {
+    "copy": {
+      "boundText": "This sentence is resolved from /copy/boundText.",
+      "longText": "A deliberately long one-line Text sample demonstrates maxLines and ellipsis without changing the published document structure."
+    },
+    "form": {
+      "busy": false,
+      "errors": {
+        "errorTextField": "A demo validation error is present."
+      },
+      "status": "ready"
+    },
+    "busyForm": {
+      "busy": true
+    },
+    "fields": {
+      "normal": "Edit me and watch state change",
+      "readOnly": "Read-only value",
+      "disabled": "Disabled value",
+      "invalid": "Invalid demo value"
+    },
+    "fieldChannels": {
+      "readOnly": true,
+      "disabled": false,
+      "errorText": "This error comes from a bound nullable channel."
+    },
+    "checks": {
+      "interactive": false,
+      "disabled": true
+    },
+    "checkChannels": {
+      "disabled": false
+    },
+    "lookups": {
+      "choices": [
+        {"key": "alpha", "label": "Alpha"},
+        {"key": "beta", "label": "Beta"},
+        {"key": "gamma", "label": "Gamma"},
+        {"key": "archived", "label": "Archived", "disabled": true}
+      ]
+    },
+    "combos": {
+      "clearable": "beta",
+      "disabled": "archived",
+      "busy": "gamma"
+    },
+    "comboChannels": {
+      "disabled": false,
+      "busy": true
+    },
+    "buttonChannels": {
+      "disabled": false,
+      "busy": true
+    }
+  },
+  "actions": {
+    "normalTextChanged": {
+      "capability": "demo.event",
+      "args": {
+        "control": "normalTextField",
+        "event": "changed",
+        "value": {"$bind": "/fields/normal"}
+      }
+    },
+    "normalTextSubmitted": {
+      "capability": "demo.event",
+      "args": {
+        "control": "normalTextField",
+        "event": "submitted",
+        "value": {"$bind": "/fields/normal"}
+      }
+    },
+    "interactiveCheckChanged": {
+      "capability": "demo.event",
+      "args": {
+        "control": "interactiveCheckbox",
+        "event": "changed",
+        "value": {"$bind": "/checks/interactive"}
+      }
+    },
+    "clearableComboChanged": {
+      "capability": "demo.event",
+      "args": {
+        "control": "clearableCombo",
+        "event": "changed",
+        "value": {"$bind": "/combos/clearable"}
+      }
+    },
+    "disabledComboChanged": {
+      "capability": "demo.event",
+      "args": {
+        "control": "disabledCombo",
+        "event": "changed",
+        "value": {"$bind": "/combos/disabled"}
+      }
+    },
+    "busyComboChanged": {
+      "capability": "demo.event",
+      "args": {
+        "control": "busyCombo",
+        "event": "changed",
+        "value": {"$bind": "/combos/busy"}
+      }
+    },
+    "formSubmitted": {
+      "capability": "demo.event",
+      "args": {"control": "labForm", "event": "submitted"}
+    },
+    "formCancelled": {
+      "capability": "demo.event",
+      "args": {"control": "labForm", "event": "cancelled"}
+    },
+    "tertiaryPressed": {
+      "capability": "demo.event",
+      "args": {"control": "tertiaryButton", "event": "pressed"}
+    },
+    "dangerPressed": {
+      "capability": "demo.event",
+      "args": {"control": "dangerButton", "event": "pressed"}
+    },
+    "disabledPressed": {
+      "capability": "demo.event",
+      "args": {"control": "disabledButton", "event": "pressed"}
+    },
+    "busyPressed": {
+      "capability": "demo.event",
+      "args": {"control": "busyButton", "event": "pressed"}
+    },
+    "backToEditor": {
+      "capability": "view.back"
+    }
+  },
+  "nodes": [
+    {
+      "id": "labRoot",
+      "component": "Column",
+      "version": 1,
+      "props": {
+        "gap": 18,
+        "mainAxisSize": "min",
+        "crossAxisAlignment": "stretch"
+      },
+      "slots": {
+        "children": [
+          "labHeading",
+          "labIntro",
+          "labDivider",
+          "textCard",
+          "labForm",
+          "busyDemoForm",
+          "backButton"
+        ]
+      }
+    },
+    {
+      "id": "labHeading",
+      "component": "Text",
+      "version": 1,
+      "props": {"text": "Component Lab", "style": "headlineMedium"}
+    },
+    {
+      "id": "labIntro",
+      "component": "Text",
+      "version": 1,
+      "props": {
+        "text": "Every aix.core v1 component is rendered from this JSON View. Edit live controls and inspect state and semantic actions beside the preview.",
+        "style": "bodySmall",
+        "maxLines": 3
+      }
+    },
+    {
+      "id": "labDivider",
+      "component": "Divider",
+      "version": 1,
+      "props": {"thickness": 2, "indent": 12, "endIndent": 36}
+    },
+    {
+      "id": "textCard",
+      "component": "Card",
+      "version": 1,
+      "props": {"padding": 20},
+      "slots": {"content": ["textSection"]}
+    },
+    {
+      "id": "textSection",
+      "component": "Column",
+      "version": 1,
+      "props": {
+        "gap": 10,
+        "mainAxisSize": "min",
+        "crossAxisAlignment": "stretch"
+      },
+      "slots": {
+        "children": [
+          "textTitle",
+          "textDisplay",
+          "boundText",
+          "ellipsizedText"
+        ]
+      }
+    },
+    {
+      "id": "textTitle",
+      "component": "Text",
+      "version": 1,
+      "props": {"text": "Text", "style": "titleLarge"}
+    },
+    {
+      "id": "textDisplay",
+      "component": "Text",
+      "version": 1,
+      "props": {"text": "Style specimen", "style": "headlineSmall"}
+    },
+    {
+      "id": "boundText",
+      "component": "Text",
+      "version": 1,
+      "props": {"style": "titleMedium"},
+      "bind": {"text": "/copy/boundText"}
+    },
+    {
+      "id": "ellipsizedText",
+      "component": "Text",
+      "version": 1,
+      "props": {"style": "bodySmall", "maxLines": 1},
+      "bind": {"text": "/copy/longText"}
+    },
+    {
+      "id": "labForm",
+      "component": "Form",
+      "version": 1,
+      "bind": {"busy": "/form/busy", "errors": "/form/errors"},
+      "events": {
+        "submitted": "formSubmitted",
+        "cancelled": "formCancelled"
+      },
+      "slots": {
+        "content": ["fieldsCard", "selectionCard", "formChannelsCard"],
+        "actions": [
+          "primaryButton",
+          "secondaryButton",
+          "tertiaryButton",
+          "dangerButton",
+          "disabledButton",
+          "busyButton"
+        ]
+      }
+    },
+    {
+      "id": "fieldsCard",
+      "component": "Card",
+      "version": 1,
+      "props": {"padding": 20},
+      "slots": {"content": ["fieldsSection"]}
+    },
+    {
+      "id": "fieldsSection",
+      "component": "Column",
+      "version": 1,
+      "props": {
+        "gap": 14,
+        "mainAxisSize": "min",
+        "crossAxisAlignment": "stretch"
+      },
+      "slots": {
+        "children": [
+          "fieldsTitle",
+          "normalTextField",
+          "readOnlyTextField",
+          "disabledTextField",
+          "errorTextField"
+        ]
+      }
+    },
+    {
+      "id": "fieldsTitle",
+      "component": "Text",
+      "version": 1,
+      "props": {"text": "TextField states", "style": "titleMedium"}
+    },
+    {
+      "id": "normalTextField",
+      "component": "TextField",
+      "version": 1,
+      "props": {
+        "label": "Normal — changed + submitted",
+        "hint": "Type and press Return",
+        "maxLines": 1
+      },
+      "bind": {"value": "/fields/normal"},
+      "events": {
+        "changed": "normalTextChanged",
+        "submitted": "normalTextSubmitted"
+      }
+    },
+    {
+      "id": "readOnlyTextField",
+      "component": "TextField",
+      "version": 1,
+      "props": {"label": "Read-only", "maxLines": 1},
+      "bind": {
+        "value": "/fields/readOnly",
+        "readOnly": "/fieldChannels/readOnly"
+      }
+    },
+    {
+      "id": "disabledTextField",
+      "component": "TextField",
+      "version": 1,
+      "props": {"label": "Disabled", "maxLines": 1},
+      "bind": {
+        "value": "/fields/disabled",
+        "enabled": "/fieldChannels/disabled"
+      }
+    },
+    {
+      "id": "errorTextField",
+      "component": "TextField",
+      "version": 1,
+      "props": {"label": "Error", "maxLines": 2},
+      "bind": {
+        "value": "/fields/invalid",
+        "errorText": "/fieldChannels/errorText"
+      }
+    },
+    {
+      "id": "selectionCard",
+      "component": "Card",
+      "version": 1,
+      "props": {"padding": 20},
+      "slots": {"content": ["selectionSection"]}
+    },
+    {
+      "id": "selectionSection",
+      "component": "Column",
+      "version": 1,
+      "props": {
+        "gap": 14,
+        "mainAxisSize": "min",
+        "crossAxisAlignment": "stretch"
+      },
+      "slots": {
+        "children": [
+          "selectionTitle",
+          "interactiveCheckbox",
+          "disabledCheckbox",
+          "selectionDivider",
+          "clearableCombo",
+          "disabledCombo",
+          "busyCombo"
+        ]
+      }
+    },
+    {
+      "id": "selectionTitle",
+      "component": "Text",
+      "version": 1,
+      "props": {"text": "Checkbox + ComboBox", "style": "titleMedium"}
+    },
+    {
+      "id": "interactiveCheckbox",
+      "component": "Checkbox",
+      "version": 1,
+      "props": {"label": "Interactive — emits changed"},
+      "bind": {"value": "/checks/interactive"},
+      "events": {"changed": "interactiveCheckChanged"}
+    },
+    {
+      "id": "disabledCheckbox",
+      "component": "Checkbox",
+      "version": 1,
+      "props": {"label": "Disabled and selected"},
+      "bind": {
+        "value": "/checks/disabled",
+        "enabled": "/checkChannels/disabled"
+      }
+    },
+    {
+      "id": "selectionDivider",
+      "component": "Divider",
+      "version": 1,
+      "props": {"thickness": 1, "indent": 24, "endIndent": 24}
+    },
+    {
+      "id": "clearableCombo",
+      "component": "ComboBox",
+      "version": 1,
+      "props": {"clearable": true, "placeholder": "Clearable ComboBox"},
+      "bind": {
+        "items": "/lookups/choices",
+        "value": "/combos/clearable"
+      },
+      "events": {"changed": "clearableComboChanged"}
+    },
+    {
+      "id": "disabledCombo",
+      "component": "ComboBox",
+      "version": 1,
+      "props": {"clearable": false, "placeholder": "Disabled ComboBox"},
+      "bind": {
+        "items": "/lookups/choices",
+        "value": "/combos/disabled",
+        "enabled": "/comboChannels/disabled"
+      },
+      "events": {"changed": "disabledComboChanged"}
+    },
+    {
+      "id": "busyCombo",
+      "component": "ComboBox",
+      "version": 1,
+      "props": {"clearable": false, "placeholder": "Busy ComboBox"},
+      "bind": {
+        "items": "/lookups/choices",
+        "value": "/combos/busy",
+        "busy": "/comboChannels/busy"
+      },
+      "events": {"changed": "busyComboChanged"}
+    },
+    {
+      "id": "formChannelsCard",
+      "component": "Card",
+      "version": 1,
+      "props": {"padding": 20},
+      "slots": {"content": ["formChannelsSection"]}
+    },
+    {
+      "id": "formChannelsSection",
+      "component": "Column",
+      "version": 1,
+      "props": {
+        "gap": 10,
+        "mainAxisSize": "min",
+        "crossAxisAlignment": "start"
+      },
+      "slots": {
+        "children": ["formChannelsTitle", "formStatusRow", "formGapNote"]
+      }
+    },
+    {
+      "id": "formChannelsTitle",
+      "component": "Text",
+      "version": 1,
+      "props": {"text": "Form channels + Row", "style": "titleMedium"}
+    },
+    {
+      "id": "formStatusRow",
+      "component": "Row",
+      "version": 1,
+      "props": {
+        "gap": 8,
+        "mainAxisSize": "min",
+        "crossAxisAlignment": "center"
+      },
+      "slots": {"children": ["formStatusLabel", "formStatusValue"]}
+    },
+    {
+      "id": "formStatusLabel",
+      "component": "Text",
+      "version": 1,
+      "props": {"text": "Bound:", "style": "labelLarge"}
+    },
+    {
+      "id": "formStatusValue",
+      "component": "Text",
+      "version": 1,
+      "props": {"style": "bodySmall"},
+      "bind": {"text": "/form/status"}
+    },
+    {
+      "id": "formGapNote",
+      "component": "Text",
+      "version": 1,
+      "props": {
+        "text": "The error summary is driven by Form.errors. Press Ctrl/Cmd+Enter for submitted or Escape for cancelled while a field in this Form has focus.",
+        "style": "bodySmall",
+        "maxLines": 4
+      }
+    },
+    {
+      "id": "primaryButton",
+      "component": "Button",
+      "version": 1,
+      "props": {"label": "Primary / submit", "variant": "primary"},
+      "events": {"pressed": "formSubmitted"}
+    },
+    {
+      "id": "secondaryButton",
+      "component": "Button",
+      "version": 1,
+      "props": {"label": "Secondary / cancel", "variant": "secondary"},
+      "events": {"pressed": "formCancelled"}
+    },
+    {
+      "id": "tertiaryButton",
+      "component": "Button",
+      "version": 1,
+      "props": {"label": "Tertiary", "variant": "tertiary"},
+      "events": {"pressed": "tertiaryPressed"}
+    },
+    {
+      "id": "dangerButton",
+      "component": "Button",
+      "version": 1,
+      "props": {"label": "Danger", "variant": "danger"},
+      "events": {"pressed": "dangerPressed"}
+    },
+    {
+      "id": "disabledButton",
+      "component": "Button",
+      "version": 1,
+      "props": {"label": "Disabled", "variant": "primary"},
+      "bind": {"enabled": "/buttonChannels/disabled"},
+      "events": {"pressed": "disabledPressed"}
+    },
+    {
+      "id": "busyButton",
+      "component": "Button",
+      "version": 1,
+      "props": {"label": "Busy", "variant": "secondary"},
+      "bind": {"busy": "/buttonChannels/busy"},
+      "events": {"pressed": "busyPressed"}
+    },
+    {
+      "id": "busyDemoForm",
+      "component": "Form",
+      "version": 1,
+      "bind": {"busy": "/busyForm/busy"},
+      "slots": {"content": ["busyDemoText"]}
+    },
+    {
+      "id": "busyDemoText",
+      "component": "Text",
+      "version": 1,
+      "props": {
+        "text": "Busy Form — this subtree is faded, blocked, and accompanied by progress.",
+        "style": "bodySmall"
+      }
+    },
+    {
+      "id": "backButton",
+      "component": "Button",
+      "version": 1,
+      "props": {"label": "Back to editor", "variant": "tertiary"},
+      "events": {"pressed": "backToEditor"}
+    }
+  ]
+}
