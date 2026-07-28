@@ -20,4 +20,5 @@ flutter:
   assets:
     - assets/views/customer-edit.genux.json
     - assets/views/customer-summary.genux.json
+    - assets/views/customer-list.genux.json
     - assets/views/component-lab.genux.json

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../compiler/document_compiler.dart';
 import '../model/choice_item.dart';
+import '../model/evaluation_context.dart';
 import '../runtime/surface_session.dart';
 import '../state/surface_store.dart';
 import 'component_scope.dart';
@@ -24,8 +25,15 @@ final class GenuxSurfaceHost extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Catalog must match ID and document version must not exceed catalog version
     if (session.document.catalog.id != catalog.catalog.id ||
-        session.document.catalog.version != catalog.catalog.version ||
+        session.document.catalog.version > catalog.catalog.version) {
+      return const _SurfaceError(
+        message: 'The active surface and Flutter catalog do not match.',
+      );
+    }
+    // Only check checksum if versions match exactly
+    if (session.document.catalog.version == catalog.catalog.version &&
         session.document.catalog.checksum != catalog.catalog.checksum) {
       return const _SurfaceError(
         message: 'The active surface and Flutter catalog do not match.',
@@ -46,6 +54,7 @@ final class _GenuxNodeHost extends StatefulWidget {
     required this.node,
     required this.session,
     required this.catalog,
+    this.context = GenuxEvaluationContext.empty,
     this.onRenderError,
     super.key,
   });
@@ -53,6 +62,7 @@ final class _GenuxNodeHost extends StatefulWidget {
   final GenuxCompiledNode node;
   final GenuxSurfaceSession session;
   final GenuxFlutterCatalog catalog;
+  final GenuxEvaluationContext context;
   final GenuxRenderErrorHandler? onRenderError;
 
   @override
@@ -107,6 +117,7 @@ final class _GenuxNodeHostState extends State<_GenuxNodeHost> {
           node: widget.node,
           session: widget.session,
           catalog: widget.catalog,
+          evaluationContext: widget.context,
           onRenderError: widget.onRenderError,
         ),
       );
@@ -124,12 +135,14 @@ final class _ComponentScope implements GenuxComponentScope {
     required this.node,
     required this.session,
     required this.catalog,
+    required this.evaluationContext,
     required this.onRenderError,
   });
 
   final GenuxCompiledNode node;
   final GenuxSurfaceSession session;
   final GenuxFlutterCatalog catalog;
+  final GenuxEvaluationContext evaluationContext;
   final GenuxRenderErrorHandler? onRenderError;
 
   @override
@@ -156,7 +169,7 @@ final class _ComponentScope implements GenuxComponentScope {
     if (binding == null) {
       return null;
     }
-    return binding.read(session.store.state);
+    return binding.read(session.store.state, evaluationContext);
   }
 
   @override
@@ -227,7 +240,12 @@ final class _ComponentScope implements GenuxComponentScope {
 
   @override
   Future<GenuxActionDispatchResult> emit(String event, [Object? payload]) =>
-      session.emit(nodeId: node.id, event: event, payload: payload);
+      session.emit(
+        nodeId: node.id,
+        event: event,
+        payload: payload,
+        context: evaluationContext,
+      );
 
   @override
   List<Widget> slot(String name) {
@@ -242,9 +260,37 @@ final class _ComponentScope implements GenuxComponentScope {
           node: session.document.nodes[childId]!,
           session: session,
           catalog: catalog,
+          context: evaluationContext,
           onRenderError: onRenderError,
         ),
     ];
+  }
+
+  @override
+  Widget buildItemTemplate(
+    String slotName,
+    String instanceKey,
+    GenuxEvaluationContext context,
+  ) {
+    final slot = node.slots[slotName];
+    if (slot == null || slot.childIds.isEmpty) {
+      throw StateError('Slot $slotName is not defined or is empty.');
+    }
+
+    final templateNodeId = slot.childIds.first;
+    final templateNode = session.document.nodes[templateNodeId];
+    if (templateNode == null) {
+      throw StateError('Template node $templateNodeId not found.');
+    }
+
+    return _GenuxNodeHost(
+      key: ValueKey('$templateNodeId:$instanceKey'),
+      node: templateNode,
+      session: session,
+      catalog: catalog,
+      context: context,
+      onRenderError: onRenderError,
+    );
   }
 }
 

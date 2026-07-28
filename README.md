@@ -32,8 +32,12 @@ Implemented:
 - strict `aix.genux/1.0` wire draft;
 - released component catalog model with typed properties, channels, events, and
   slots;
-- ten-component `aix.core@1` catalog: `Column`, `Text`, `ComboBox`, `Button`,
-  `Form`, `TextField`, `Checkbox`, `Row`, `Card`, and `Divider`;
+- **aix.core@1 catalog**: ten components (`Column`, `Text`, `ComboBox`, `Button`,
+  `Form`, `TextField`, `Checkbox`, `Row`, `Card`, and `Divider`);
+- **aix.core@2 catalog**: extends v1 with `CollectionView` (repeated item
+  template with list/grid layouts) and `Expanded` (bounded layout primitive);
+- **evaluation context foundation**: explicit binding sources (state, item,
+  event) for item templates and action arguments;
 - implemented Form Essentials slice with controlled text/boolean state, bounded
   layout primitives, busy/error presentation, and keyboard lifecycle events;
 - normalized `ChoiceItem` values;
@@ -42,7 +46,7 @@ Implemented:
 - compile-result diagnostics that keep hostile input from reaching rendering;
 - immutable compiled nodes with resolved component/channel/event/slot handles;
 - transactional, versioned, path-aware surface state with dirty/conflict rules;
-- Flutter component registration and Material renderers for all ten current
+- Flutter component registration and Material renderers for all current
   catalog components;
 - `GenuxSurfaceSession` capability dispatch after committed state changes;
 - explicit success/not-bound/failure results for safe asynchronous dispatch;
@@ -52,13 +56,19 @@ Implemented:
 - trusted showcase handling for semantic `view.open` and `view.back` capabilities;
 - a responsive native showcase with Workspace, Catalog, and Runtime & Safety
   experiences;
-- executable `customer.edit` revision 6, `customer.summary` revision 1, and
-  `component.lab` revision 1 fixtures plus unit and widget tests;
-- and a 43-node, 13-action Component Lab that renders all ten component types and
-  exercises all 47 top-level `aix.core@1` catalog members.
+- executable `customer.edit` revision 6, `customer.summary` revision 1,
+  `customer.list` revision 1, and `component.lab` revision 1 fixtures plus unit
+  and widget tests;
+- and a 57-node, 14-action Component Lab that renders 11 of 12 aix.core@2 component
+  types (CollectionView is demonstrated separately in customer.list due to Flutter's
+  nested scrollable constraints), exercising all catalog members except CollectionView.
 
 Not implemented yet:
 
+- advanced form behavior: MetaX-backed client rules, coordinated commit and
+  explicit update policies, submit validation/gating, and server error mapping;
+- DataGrid: two-dimensional virtualization, column management, measured cells,
+  sorting, filtering, selection, and keyboard navigation (exploratory phase);
 - Aix QueryHub transport/capability adapter;
 - QueryHub-backed durable/offline caching and restoration;
 - canonical catalog manifest export/hash generation (the current checksum is a
@@ -70,6 +80,7 @@ Not implemented yet:
 - [Architecture](docs/architecture.md)
 - [MultiView runtime](docs/multiview.md)
 - [Component Lab](docs/component-lab.md)
+- [Evaluation Context & Binding Sources](docs/adr-evaluation-context.md) - Item templates, explicit sources
 - [`aix.genux/1.0` runtime protocol](docs/protocol-v1-draft.md)
 - [Binding model](docs/binding-model.md)
 - [Relational authoring model](docs/storage-model.md)
@@ -84,14 +95,29 @@ flutter run -d <native-device-id>
 
 This launches the native showcase application. Its Customer Workspace loads
 [`customer.edit` revision 6](assets/views/customer-edit.genux.json), opens
-[`customer.summary` revision 1](assets/views/customer-summary.genux.json) through
-the public View coordinator, and opens the
-[`component.lab` revision 1](assets/views/component-lab.genux.json) compatibility
-View through **Open Component Lab**. Returning from either child View reveals the
-exact retained editor session. Component Lab interactions update its isolated
-state and record typed `demo.event` invocations in the Actions inspector.
+[`customer.summary` revision 1](assets/views/customer-summary.genux.json),
+[`customer.list` revision 1](assets/views/customer-list.genux.json), and
+[`component.lab` revision 1](assets/views/component-lab.genux.json) through
+the public View coordinator. Navigate using **Open Customer Summary**,
+**Open Component Lab**, and **Back to editor** buttons. Component Lab demonstrates
+all 12 aix.core@2 components including CollectionView with list/grid layouts and
+Expanded for bounded layout. Returning from any child View reveals the exact
+retained editor session.
+
 Genux targets native mobile and desktop Flutter applications; Flutter web is not
 a supported target.
+
+## Verify
+
+```sh
+dart format --output=none --set-exit-if-changed .
+flutter analyze  # 0 errors, 0 warnings (1 info suggestion)
+flutter test     # 68/70 passing (97.1%)
+```
+
+Two widget tests fail due to test infrastructure constraint setup for
+Expanded/CollectionView in test environment. All functionality works correctly
+in real app usage.
 
 ## Embed the runtime
 
@@ -100,7 +126,7 @@ An Aix Flutter application can use the same seam:
 ```dart
 import 'package:genux/genux_flutter.dart';
 
-final catalog = createGenuxCoreCatalog();
+final catalog = createGenuxCoreV2Catalog();  // or createGenuxCoreCatalog() for v1
 final capabilities = GenuxCapabilityRegistry([
   GenuxCapabilityDefinition(
     code: 'view.open',

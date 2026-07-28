@@ -8,7 +8,8 @@ final class ShowcaseRuntime {
   });
 
   factory ShowcaseRuntime.standard() {
-    final catalog = createGenuxCoreCatalog();
+    // Use aix.core@2 catalog with CollectionView and Expanded
+    final catalog = createGenuxCoreV2Catalog();
     final capabilities = GenuxCapabilityRegistry([
       GenuxCapabilityDefinition(
         code: 'view.open',
@@ -54,6 +55,33 @@ final class ShowcaseRuntime {
           ),
         },
       ),
+      GenuxCapabilityDefinition(
+        code: 'customer.select',
+        arguments: const {
+          'customerId': GenuxArgumentDefinition(
+            type: GenuxValueType.string,
+            required: true,
+          ),
+          'customerName': GenuxArgumentDefinition(
+            type: GenuxValueType.string,
+            required: true,
+          ),
+        },
+      ),
+      GenuxCapabilityDefinition(
+        code: 'debug.log',
+        arguments: const {
+          'message': GenuxArgumentDefinition(
+            type: GenuxValueType.string,
+          ),
+          'itemKey': GenuxArgumentDefinition(
+            type: GenuxValueType.any,
+          ),
+          'itemIndex': GenuxArgumentDefinition(
+            type: GenuxValueType.integer,
+          ),
+        },
+      ),
     ]);
     return ShowcaseRuntime._(
       catalog: catalog,
@@ -66,6 +94,7 @@ final class ShowcaseRuntime {
   static const fixtureAssets = <String, String>{
     'customer.edit': 'assets/views/customer-edit.genux.json',
     'customer.summary': 'assets/views/customer-summary.genux.json',
+    'customer.list': 'assets/views/customer-list.genux.json',
     'component.lab': 'assets/views/component-lab.genux.json',
   };
 

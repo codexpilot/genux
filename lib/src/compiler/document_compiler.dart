@@ -4,6 +4,7 @@ import 'dart:convert';
 import '../catalog/capability.dart';
 import '../catalog/catalog.dart';
 import '../model/document.dart';
+import '../model/evaluation_context.dart';
 import '../model/json_pointer.dart';
 import '../validation/document_validator.dart';
 
@@ -27,7 +28,10 @@ final class GenuxCompileFailure extends GenuxCompileResult {
 sealed class GenuxCompiledValue {
   const GenuxCompiledValue();
 
-  Object? resolve(Map<String, Object?> state);
+  Object? resolve(
+    Map<String, Object?> state, [
+    GenuxEvaluationContext context = GenuxEvaluationContext.empty,
+  ]);
 }
 
 final class GenuxLiteralValue extends GenuxCompiledValue {
@@ -36,7 +40,11 @@ final class GenuxLiteralValue extends GenuxCompiledValue {
   final Object? value;
 
   @override
-  Object? resolve(Map<String, Object?> state) => value;
+  Object? resolve(
+    Map<String, Object?> state, [
+    GenuxEvaluationContext context = GenuxEvaluationContext.empty,
+  ]) =>
+      value;
 }
 
 final class GenuxListValue extends GenuxCompiledValue {
@@ -46,8 +54,13 @@ final class GenuxListValue extends GenuxCompiledValue {
   final List<GenuxCompiledValue> items;
 
   @override
-  Object? resolve(Map<String, Object?> state) =>
-      List<Object?>.unmodifiable(items.map((item) => item.resolve(state)));
+  Object? resolve(
+    Map<String, Object?> state, [
+    GenuxEvaluationContext context = GenuxEvaluationContext.empty,
+  ]) =>
+      List<Object?>.unmodifiable(
+        items.map((item) => item.resolve(state, context)),
+      );
 }
 
 final class GenuxObjectValue extends GenuxCompiledValue {
@@ -57,34 +70,50 @@ final class GenuxObjectValue extends GenuxCompiledValue {
   final Map<String, GenuxCompiledValue> fields;
 
   @override
-  Object? resolve(Map<String, Object?> state) =>
+  Object? resolve(
+    Map<String, Object?> state, [
+    GenuxEvaluationContext context = GenuxEvaluationContext.empty,
+  ]) =>
       Map<String, Object?>.unmodifiable({
         for (final entry in fields.entries)
-          entry.key: entry.value.resolve(state),
+          entry.key: entry.value.resolve(state, context),
       });
 }
 
 final class GenuxStateValue extends GenuxCompiledValue {
   const GenuxStateValue({
+    required this.source,
     required this.pointer,
     this.fallback,
     this.hasFallback = false,
   });
 
+  final GenuxBindingSource source;
   final GenuxJsonPointer pointer;
   final Object? fallback;
   final bool hasFallback;
 
   @override
-  Object? resolve(Map<String, Object?> state) {
-    final result = pointer.read(state);
+  Object? resolve(
+    Map<String, Object?> state, [
+    GenuxEvaluationContext context = GenuxEvaluationContext.empty,
+  ]) {
+    final sourceMap = switch (source) {
+      GenuxBindingSource.state => state,
+      GenuxBindingSource.item => context.toItemMap(),
+      GenuxBindingSource.event => context.toEventMap(),
+    };
+
+    final result = pointer.read(sourceMap);
     if (result.exists) {
       return result.value;
     }
     if (hasFallback) {
       return fallback;
     }
-    throw StateError('Required state path ${pointer.source} is missing.');
+    throw StateError(
+      'Required ${source.name} path ${pointer.source} is missing.',
+    );
   }
 }
 
@@ -92,6 +121,7 @@ final class GenuxCompiledBinding {
   const GenuxCompiledBinding({
     required this.name,
     required this.definition,
+    required this.source,
     required this.pointer,
     this.fallback,
     this.hasFallback = false,
@@ -99,22 +129,36 @@ final class GenuxCompiledBinding {
 
   final String name;
   final GenuxChannelDefinition definition;
+  final GenuxBindingSource source;
   final GenuxJsonPointer pointer;
   final Object? fallback;
   final bool hasFallback;
 
-  Object? read(Map<String, Object?> state) {
-    final result = pointer.read(state);
+  Object? read(
+    Map<String, Object?> state, [
+    GenuxEvaluationContext context = GenuxEvaluationContext.empty,
+  ]) {
+    final sourceMap = switch (source) {
+      GenuxBindingSource.state => state,
+      GenuxBindingSource.item => context.toItemMap(),
+      GenuxBindingSource.event => context.toEventMap(),
+    };
+
+    final result = pointer.read(sourceMap);
     if (result.exists) {
       return result.value;
     }
     if (hasFallback) {
       return fallback;
     }
-    throw StateError('Required state path ${pointer.source} is missing.');
+    throw StateError(
+      'Required ${source.name} path ${pointer.source} is missing.',
+    );
   }
 
-  bool get isWritable => definition.direction == GenuxChannelDirection.state;
+  bool get isWritable =>
+      source == GenuxBindingSource.state &&
+      definition.direction == GenuxChannelDirection.state;
 }
 
 final class GenuxCompiledAction {
@@ -129,9 +173,13 @@ final class GenuxCompiledAction {
   String get capability => definition.code;
   final Map<String, GenuxCompiledValue> args;
 
-  Map<String, Object?> resolveArgs(Map<String, Object?> state) =>
+  Map<String, Object?> resolveArgs(
+    Map<String, Object?> state, [
+    GenuxEvaluationContext context = GenuxEvaluationContext.empty,
+  ]) =>
       Map<String, Object?>.unmodifiable({
-        for (final entry in args.entries) entry.key: entry.value.resolve(state),
+        for (final entry in args.entries)
+          entry.key: entry.value.resolve(state, context),
       });
 }
 
@@ -300,6 +348,7 @@ final class GenuxDocumentCompiler {
             binding.key: GenuxCompiledBinding(
               name: binding.key,
               definition: component.channels[binding.key]!,
+              source: _parseBindingSource(binding.value.source),
               pointer: GenuxJsonPointer.parse(binding.value.path),
               fallback: _freezeJson(binding.value.fallback),
               hasFallback: binding.value.hasFallback,
@@ -341,11 +390,26 @@ GenuxCompiledValue _compileValue(Object? value) {
   }
   if (value is Map) {
     if (value.containsKey(r'$bind')) {
-      return GenuxStateValue(
-        pointer: GenuxJsonPointer.parse(value[r'$bind']! as String),
-        fallback: _freezeJson(value['fallback']),
-        hasFallback: value.containsKey('fallback'),
-      );
+      final bind = value[r'$bind'];
+      if (bind is String) {
+        // Shorthand: "$bind": "/path" defaults to state source
+        return GenuxStateValue(
+          source: GenuxBindingSource.state,
+          pointer: GenuxJsonPointer.parse(bind),
+          fallback: _freezeJson(value['fallback']),
+          hasFallback: value.containsKey('fallback'),
+        );
+      }
+      if (bind is Map) {
+        // Explicit: "$bind": {"source": "item", "path": "/data/name"}
+        final sourceName = bind['source'] as String?;
+        return GenuxStateValue(
+          source: _parseBindingSource(sourceName),
+          pointer: GenuxJsonPointer.parse(bind['path']! as String),
+          fallback: _freezeJson(value['fallback']),
+          hasFallback: value.containsKey('fallback'),
+        );
+      }
     }
     return GenuxObjectValue({
       for (final entry in value.entries)
@@ -353,6 +417,15 @@ GenuxCompiledValue _compileValue(Object? value) {
     });
   }
   return GenuxLiteralValue(value);
+}
+
+GenuxBindingSource _parseBindingSource(String? sourceName) {
+  return switch (sourceName) {
+    null || 'state' => GenuxBindingSource.state,
+    'item' => GenuxBindingSource.item,
+    'event' => GenuxBindingSource.event,
+    _ => throw FormatException('Unknown binding source: $sourceName'),
+  };
 }
 
 Map<String, Object?> _stringMap(Object? value) {

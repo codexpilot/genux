@@ -5,36 +5,57 @@ import 'package:flutter/services.dart';
 
 import '../catalog/catalog.dart';
 import '../state/surface_store.dart';
+import 'collection_view_renderer.dart';
 import 'component_scope.dart';
 import 'flutter_catalog.dart';
 
 GenuxFlutterCatalog createGenuxMaterialCatalog(GenuxCatalog catalog) {
+  // Base registrations for aix.core@1 (10 components)
+  final baseRegistrations = const [
+    GenuxFlutterRegistration(componentCode: 'Column', builder: _buildColumn),
+    GenuxFlutterRegistration(componentCode: 'Text', builder: _buildText),
+    GenuxFlutterRegistration(
+      componentCode: 'ComboBox',
+      builder: _buildComboBox,
+    ),
+    GenuxFlutterRegistration(componentCode: 'Button', builder: _buildButton),
+    GenuxFlutterRegistration(componentCode: 'Form', builder: _buildForm),
+    GenuxFlutterRegistration(
+      componentCode: 'TextField',
+      builder: _buildTextField,
+    ),
+    GenuxFlutterRegistration(
+      componentCode: 'Checkbox',
+      builder: _buildCheckbox,
+    ),
+    GenuxFlutterRegistration(componentCode: 'Row', builder: _buildRow),
+    GenuxFlutterRegistration(componentCode: 'Card', builder: _buildCard),
+    GenuxFlutterRegistration(
+      componentCode: 'Divider',
+      builder: _buildDivider,
+    ),
+  ];
+
+  // Additional registrations for aix.core@2
+  final v2Registrations = const [
+    GenuxFlutterRegistration(
+      componentCode: 'CollectionView',
+      builder: buildCollectionView,
+    ),
+    GenuxFlutterRegistration(
+      componentCode: 'Expanded',
+      builder: buildExpanded,
+    ),
+  ];
+
+  // Select registrations based on catalog version
+  final registrations = catalog.version >= 2
+      ? [...baseRegistrations, ...v2Registrations]
+      : baseRegistrations;
+
   return GenuxFlutterCatalog(
     catalog: catalog,
-    registrations: const [
-      GenuxFlutterRegistration(componentCode: 'Column', builder: _buildColumn),
-      GenuxFlutterRegistration(componentCode: 'Text', builder: _buildText),
-      GenuxFlutterRegistration(
-        componentCode: 'ComboBox',
-        builder: _buildComboBox,
-      ),
-      GenuxFlutterRegistration(componentCode: 'Button', builder: _buildButton),
-      GenuxFlutterRegistration(componentCode: 'Form', builder: _buildForm),
-      GenuxFlutterRegistration(
-        componentCode: 'TextField',
-        builder: _buildTextField,
-      ),
-      GenuxFlutterRegistration(
-        componentCode: 'Checkbox',
-        builder: _buildCheckbox,
-      ),
-      GenuxFlutterRegistration(componentCode: 'Row', builder: _buildRow),
-      GenuxFlutterRegistration(componentCode: 'Card', builder: _buildCard),
-      GenuxFlutterRegistration(
-        componentCode: 'Divider',
-        builder: _buildDivider,
-      ),
-    ],
+    registrations: registrations,
   );
 }
 

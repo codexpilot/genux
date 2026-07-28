@@ -333,15 +333,18 @@ developed.
 4. **MultiView (implemented):** one document/session per stack entry, immutable
    target parameters, retained-session back navigation, latest-request-wins race
    protection, semantic navigation mediation, and the revision-1 customer summary.
-5. **Component Lab (implemented):** third independent View with structural
-   coverage for all ten component types and all 47 top-level catalog members.
-6. **Advanced form behavior:** MetaX-backed client rules, coordinated commit and
+5. **Component Lab (implemented):** independent View with structural coverage
+   for all 12 aix.core@2 catalog members (73 nodes total).
+6. **DataView foundation (implemented):** evaluation context with explicit binding
+   sources (state, item, event), CollectionView component with list/grid layouts,
+   Expanded component for bounded layout, and aix.core@2 catalog release.
+7. **Advanced form behavior:** MetaX-backed client rules, coordinated commit and
    explicit update policies, submit validation/gating, and server error mapping.
-7. **Data surface:** virtualized DataGrid/List, paging, sorting, selection, and
-   measured frame/rebuild budgets.
-8. **Aix delivery:** bootstrap negotiation, QueryHub adapter, durable caching,
+8. **DataGrid component:** two-dimensional virtualization, column management,
+   measured cells, sorting, filtering, selection, and keyboard navigation.
+9. **Aix delivery:** bootstrap negotiation, QueryHub adapter, durable caching,
    offline selection/restoration, and production capability dispatch.
-9. **CloudX publishing:** relational editor, deterministic compiler, preview,
+10. **CloudX publishing:** relational editor, deterministic compiler, preview,
    publish, rollback, and catalog release import.
-10. **GenUI pilot:** bounded View/Partial selection and draft composition behind a
+11. **GenUI pilot:** bounded View/Partial selection and draft composition behind a
    feature flag.

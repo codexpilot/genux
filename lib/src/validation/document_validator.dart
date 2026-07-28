@@ -118,7 +118,7 @@ final class GenuxDocumentValidator {
       );
     }
     if (document.catalog.id != catalog.id ||
-        document.catalog.version != catalog.version) {
+        document.catalog.version > catalog.version) {
       error(
         'catalog.mismatch',
         'Document requires ${document.catalog.id}@${document.catalog.version}; '
@@ -126,7 +126,8 @@ final class GenuxDocumentValidator {
         '/catalog',
       );
     }
-    if (document.catalog.checksum != catalog.checksum) {
+    if (document.catalog.version == catalog.version &&
+        document.catalog.checksum != catalog.checksum) {
       error(
         'catalog.checksumMismatch',
         'The catalog checksum does not match the runtime catalog.',
@@ -284,71 +285,7 @@ final class GenuxDocumentValidator {
         }
       }
 
-      for (final binding in node.bindings.entries) {
-        final channel = component.channels[binding.key];
-        if (channel == null) {
-          error(
-            'channel.unknown',
-            'Binding channel ${binding.key} is not supported.',
-            '$location/bind/${binding.key}',
-          );
-          continue;
-        }
-
-        GenuxJsonPointer pointer;
-        try {
-          pointer = GenuxJsonPointer.parse(binding.value.path);
-        } on FormatException catch (exception) {
-          error(
-            'binding.path',
-            exception.message.toString(),
-            '$location/bind/${binding.key}',
-          );
-          continue;
-        }
-
-        final resolved = pointer.read(document.state);
-        final isWritable = channel.direction == GenuxChannelDirection.state;
-        if (isWritable && binding.value.hasFallback) {
-          error(
-            'binding.stateFallback',
-            'Writable state channels cannot use a fallback.',
-            '$location/bind/${binding.key}',
-          );
-        }
-        if (isWritable && pointer.segments.isEmpty) {
-          error(
-            'binding.rootWrite',
-            'Writable state channels cannot replace the surface state root.',
-            '$location/bind/${binding.key}',
-          );
-        }
-        if (!resolved.exists && (isWritable || !binding.value.hasFallback)) {
-          error(
-            'binding.missingValue',
-            'State path ${binding.value.path} does not exist and has no fallback.',
-            '$location/bind/${binding.key}',
-          );
-        } else {
-          final value = resolved.exists
-              ? resolved.value
-              : binding.value.fallback;
-          if (!channel.type.accepts(value)) {
-            error(
-              'binding.type',
-              'State value must be ${channel.type.displayName}.',
-              '$location/bind/${binding.key}',
-            );
-          } else if (channel.constraint.violation(value)
-              case final violation?) {
-            error(
-              'binding.constraint',
-              violation,
-              '$location/bind/${binding.key}',
-            );
-          }
-        }
-      }
+      // Bindings are validated in a second pass after context is established
 
       for (final channel in component.channels.entries) {
         final isAssigned =
@@ -458,6 +395,14 @@ final class GenuxDocumentValidator {
 
     _validateGraph(document.root, adjacency, diagnostics, limits.maxDepth);
 
+    // Second pass: validate bindings with lexical context tracking
+    _validateBindingsWithContext(
+      document,
+      catalog,
+      adjacency,
+      diagnostics,
+    );
+
     final capabilityPattern = RegExp(r'^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)+$');
     for (final action in document.actions.entries) {
       final location = '/actions/${_escapePointerSegment(action.key)}';
@@ -501,7 +446,8 @@ final class GenuxDocumentValidator {
         } else if (argumentDefinition != null &&
             diagnostics.length == diagnosticsBefore) {
           final resolved = _resolveActionValue(arg.value, document.state);
-          if (!argumentDefinition.type.accepts(resolved)) {
+          // Only type-check if resolved (null means item/event binding at validation time)
+          if (resolved != null && !argumentDefinition.type.accepts(resolved)) {
             error(
               'action.argumentType',
               'Expected ${argumentDefinition.type.displayName}.',
@@ -531,6 +477,165 @@ final class GenuxDocumentValidator {
 bool _validIdentifier(String value) =>
     value.length <= 128 &&
     RegExp(r'^[A-Za-z0-9][A-Za-z0-9._:-]*$').hasMatch(value);
+
+void _validateBindingsWithContext(
+  GenuxDocument document,
+  GenuxCatalog catalog,
+  Map<String, List<String>> adjacency,
+  List<GenuxDiagnostic> diagnostics,
+) {
+  void error(String code, String message, String location) {
+    diagnostics.add(
+      GenuxDiagnostic(code: code, message: message, location: location),
+    );
+  }
+
+  // Traverse from root and track which nodes have item context
+  final nodesWithItemContext = <String>{};
+
+  void traverse(String nodeId, bool hasItemContext) {
+    if (hasItemContext) {
+      nodesWithItemContext.add(nodeId);
+    }
+
+    final node = document.nodes[nodeId];
+    if (node == null) return;
+
+    final component = catalog.component(node.component);
+    if (component == null) return;
+
+    // Check which slots introduce item context
+    for (final slotEntry in node.slots.entries) {
+      final slotDef = component.slots[slotEntry.key];
+      if (slotDef == null) continue;
+
+      final introducesItem = slotDef.introducesContext == GenuxContextKind.item;
+      for (final childId in slotEntry.value) {
+        traverse(childId, hasItemContext || introducesItem);
+      }
+    }
+  }
+
+  traverse(document.root, false);
+
+  // Now validate all bindings with context information
+  for (final node in document.nodes.values) {
+    final location = '/nodes/${_escapePointerSegment(node.id)}';
+    final component = catalog.component(node.component);
+    if (component == null) continue;
+
+    final hasItemContext = nodesWithItemContext.contains(node.id);
+
+    for (final binding in node.bindings.entries) {
+      final channel = component.channels[binding.key];
+      if (channel == null) continue; // Already reported as unknown
+
+      final source = binding.value.source ?? 'state';
+      final bindingLoc = '$location/bind/${binding.key}';
+
+      // Validate source
+      if (source != 'state' && source != 'item' && source != 'event') {
+        error(
+          'binding.unknownSource',
+          'Binding source must be "state", "item", or "event".',
+          bindingLoc,
+        );
+        continue;
+      }
+
+      // Validate item source requires item context
+      if (source == 'item' && !hasItemContext) {
+        error(
+          'binding.itemOutsideContext',
+          'Item bindings are only valid inside item-template slots.',
+          bindingLoc,
+        );
+        continue;
+      }
+
+      // Validate event source not allowed in node bindings
+      if (source == 'event') {
+        error(
+          'binding.eventInNode',
+          'Event bindings are only valid in action arguments.',
+          bindingLoc,
+        );
+        continue;
+      }
+
+      // Validate writable channels require state source
+      final isWritable = channel.direction == GenuxChannelDirection.state;
+      if (isWritable && source != 'state') {
+        error(
+          'binding.nonStateWritable',
+          'Writable channels can only bind to state source.',
+          bindingLoc,
+        );
+        continue;
+      }
+
+      // Parse pointer
+      GenuxJsonPointer pointer;
+      try {
+        pointer = GenuxJsonPointer.parse(binding.value.path);
+      } on FormatException catch (exception) {
+        error(
+          'binding.path',
+          exception.message.toString(),
+          bindingLoc,
+        );
+        continue;
+      }
+
+      // Validate state bindings against document state
+      if (source == 'state') {
+        final resolved = pointer.read(document.state);
+
+        if (isWritable && binding.value.hasFallback) {
+          error(
+            'binding.stateFallback',
+            'Writable state channels cannot use a fallback.',
+            bindingLoc,
+          );
+        }
+        if (isWritable && pointer.segments.isEmpty) {
+          error(
+            'binding.rootWrite',
+            'Writable state channels cannot replace the surface state root.',
+            bindingLoc,
+          );
+        }
+        if (!resolved.exists && (isWritable || !binding.value.hasFallback)) {
+          error(
+            'binding.missingValue',
+            'State path ${binding.value.path} does not exist and has no fallback.',
+            bindingLoc,
+          );
+        } else {
+          final value = resolved.exists
+              ? resolved.value
+              : binding.value.fallback;
+          if (!channel.type.accepts(value)) {
+            error(
+              'binding.type',
+              'State value must be ${channel.type.displayName}.',
+              bindingLoc,
+            );
+          } else if (channel.constraint.violation(value)
+              case final violation?) {
+            error(
+              'binding.constraint',
+              violation,
+              bindingLoc,
+            );
+          }
+        }
+      }
+      // Item bindings validated structurally but not against data
+      // (item data is runtime-dependent)
+    }
+  }
+}
 
 bool _validateJsonTree(
   Object? value,
@@ -722,48 +827,131 @@ void _validateActionValue(
   }
 
   if (value.containsKey(r'$bind')) {
-    final allowed = {r'$bind', 'fallback'};
-    if (value.keys.any((key) => key is! String || !allowed.contains(key))) {
-      diagnostics.add(
-        GenuxDiagnostic(
-          code: 'action.bindingShape',
-          message: 'A bound argument only supports \$bind and fallback.',
-          location: location,
-        ),
-      );
-      return;
-    }
-    final path = value[r'$bind'];
-    if (path is! String) {
-      diagnostics.add(
-        GenuxDiagnostic(
-          code: 'action.bindingPath',
-          message: '\$bind must be a JSON Pointer string.',
-          location: location,
-        ),
-      );
-      return;
-    }
-    try {
-      final resolved = GenuxJsonPointer.parse(path).read(state);
-      if (!resolved.exists && !value.containsKey('fallback')) {
+    final bindValue = value[r'$bind'];
+
+    // Handle explicit source object: {"$bind": {"source": "...", "path": "..."}}
+    if (bindValue is Map) {
+      final allowed = {r'$bind', 'fallback'};
+      if (value.keys.any((key) => key is! String || !allowed.contains(key))) {
         diagnostics.add(
           GenuxDiagnostic(
-            code: 'action.bindingMissing',
-            message: 'State path $path does not exist and has no fallback.',
+            code: 'action.bindingShape',
+            message: 'A bound argument only supports \$bind and fallback.',
+            location: location,
+          ),
+        );
+        return;
+      }
+
+      final source = bindValue['source'];
+      final path = bindValue['path'];
+
+      if (source != null && source is! String) {
+        diagnostics.add(
+          GenuxDiagnostic(
+            code: 'action.bindingSource',
+            message: 'Binding source must be a string.',
+            location: location,
+          ),
+        );
+        return;
+      }
+
+      if (source != null && source != 'state' && source != 'item' && source != 'event') {
+        diagnostics.add(
+          GenuxDiagnostic(
+            code: 'action.unknownSource',
+            message: 'Binding source must be "state", "item", or "event".',
+            location: location,
+          ),
+        );
+        return;
+      }
+
+      if (path is! String) {
+        diagnostics.add(
+          GenuxDiagnostic(
+            code: 'action.bindingPath',
+            message: 'Binding path must be a JSON Pointer string.',
+            location: location,
+          ),
+        );
+        return;
+      }
+
+      try {
+        GenuxJsonPointer.parse(path);
+        // For state bindings, validate against document state
+        if (source == 'state' || source == null) {
+          final resolved = GenuxJsonPointer.parse(path).read(state);
+          if (!resolved.exists && !value.containsKey('fallback')) {
+            diagnostics.add(
+              GenuxDiagnostic(
+                code: 'action.bindingMissing',
+                message: 'State path $path does not exist and has no fallback.',
+                location: location,
+              ),
+            );
+          }
+        }
+        // Item and event bindings are validated at runtime
+      } on FormatException catch (exception) {
+        diagnostics.add(
+          GenuxDiagnostic(
+            code: 'action.bindingPath',
+            message: exception.message.toString(),
             location: location,
           ),
         );
       }
-    } on FormatException catch (exception) {
-      diagnostics.add(
-        GenuxDiagnostic(
-          code: 'action.bindingPath',
-          message: exception.message.toString(),
-          location: location,
-        ),
-      );
+      return;
     }
+
+    // Handle string shorthand: {"$bind": "/path"}
+    if (bindValue is String) {
+      final allowed = {r'$bind', 'fallback'};
+      if (value.keys.any((key) => key is! String || !allowed.contains(key))) {
+        diagnostics.add(
+          GenuxDiagnostic(
+            code: 'action.bindingShape',
+            message: 'A bound argument only supports \$bind and fallback.',
+            location: location,
+          ),
+        );
+        return;
+      }
+
+      try {
+        final resolved = GenuxJsonPointer.parse(bindValue).read(state);
+        if (!resolved.exists && !value.containsKey('fallback')) {
+          diagnostics.add(
+            GenuxDiagnostic(
+              code: 'action.bindingMissing',
+              message: 'State path $bindValue does not exist and has no fallback.',
+              location: location,
+            ),
+          );
+        }
+      } on FormatException catch (exception) {
+        diagnostics.add(
+          GenuxDiagnostic(
+            code: 'action.bindingPath',
+            message: exception.message.toString(),
+            location: location,
+          ),
+        );
+      }
+      return;
+    }
+
+    // Invalid $bind value
+    diagnostics.add(
+      GenuxDiagnostic(
+        code: 'action.bindingPath',
+        message: '\$bind must be a JSON Pointer string or source object.',
+        location: location,
+      ),
+    );
     return;
   }
 
@@ -793,10 +981,30 @@ Object? _resolveActionValue(Object? value, Map<String, Object?> state) {
   }
   if (value is Map) {
     if (value.containsKey(r'$bind')) {
-      final resolved = GenuxJsonPointer.parse(
-        value[r'$bind']! as String,
-      ).read(state);
-      return resolved.exists ? resolved.value : value['fallback'];
+      final bindValue = value[r'$bind'];
+
+      // Handle explicit source object
+      if (bindValue is Map) {
+        final source = bindValue['source'] as String?;
+        final path = bindValue['path'] as String;
+
+        // At validation time, only resolve state bindings
+        if (source == 'state' || source == null) {
+          final resolved = GenuxJsonPointer.parse(path).read(state);
+          return resolved.exists ? resolved.value : value['fallback'];
+        }
+
+        // Item and event bindings cannot be resolved at validation time
+        return null;
+      }
+
+      // Handle string shorthand
+      if (bindValue is String) {
+        final resolved = GenuxJsonPointer.parse(bindValue).read(state);
+        return resolved.exists ? resolved.value : value['fallback'];
+      }
+
+      return null;
     }
     return <String, Object?>{
       for (final entry in value.entries)

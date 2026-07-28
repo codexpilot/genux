@@ -534,6 +534,7 @@ final class _PreviewCard extends StatelessWidget {
       'component.lab' => 'Component Lab · complete catalog',
       'customer.summary' => '$customerName · Summary View',
       'customer.edit' => '$customerName · Customer editor',
+      'customer.list' => 'Customer List · CollectionView demo',
       final String code => code,
       _ => 'Loading Genux View',
     };

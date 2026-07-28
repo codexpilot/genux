@@ -81,6 +81,7 @@ final class GenuxSlotDefinition {
     int? minChildren,
     int? maxChildren,
     this.acceptedComponents,
+    this.introducesContext = GenuxContextKind.none,
   }) : minChildren = minChildren ?? (required ? 1 : 0),
        maxChildren = maxChildren ?? (multiple ? null : 1),
        assert((minChildren ?? (required ? 1 : 0)) >= 0),
@@ -92,9 +93,19 @@ final class GenuxSlotDefinition {
   final int minChildren;
   final int? maxChildren;
   final Set<String>? acceptedComponents;
+  final GenuxContextKind introducesContext;
 
   bool get required => minChildren > 0;
   bool get multiple => maxChildren != 1;
+}
+
+/// Context introduced by a component slot.
+enum GenuxContextKind {
+  /// No context introduced.
+  none,
+
+  /// Item template context with {key, index, data}.
+  item,
 }
 
 final class GenuxComponentDefinition {
@@ -200,6 +211,7 @@ Map<String, GenuxSlotDefinition> _freezeSlots(
       acceptedComponents: entry.value.acceptedComponents == null
           ? null
           : Set<String>.unmodifiable(entry.value.acceptedComponents!),
+      introducesContext: entry.value.introducesContext,
     ),
 };
 

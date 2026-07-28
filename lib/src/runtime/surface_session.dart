@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import '../compiler/document_compiler.dart';
+import '../model/evaluation_context.dart';
 import '../state/surface_store.dart';
 
 final class GenuxActionInvocation {
@@ -87,6 +88,7 @@ final class GenuxSurfaceSession {
     required String nodeId,
     required String event,
     Object? payload,
+    GenuxEvaluationContext context = GenuxEvaluationContext.empty,
   }) async {
     final node = document.nodes[nodeId];
     if (node == null) {
@@ -109,7 +111,13 @@ final class GenuxSurfaceSession {
         );
       }
 
-      final arguments = compiledEvent.action.resolveArgs(store.state);
+      final augmentedContext = GenuxEvaluationContext(
+        itemKey: context.itemKey,
+        itemIndex: context.itemIndex,
+        itemData: context.itemData,
+        eventPayload: payload,
+      );
+      final arguments = compiledEvent.action.resolveArgs(store.state, augmentedContext);
       for (final definition
           in compiledEvent.action.definition.arguments.entries) {
         final exists = arguments.containsKey(definition.key);

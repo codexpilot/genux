@@ -72,6 +72,7 @@ final class GenuxCatalogReference {
 
 final class GenuxBinding {
   const GenuxBinding({
+    this.source,
     required this.path,
     this.fallback,
     this.hasFallback = false,
@@ -79,24 +80,38 @@ final class GenuxBinding {
 
   factory GenuxBinding.fromJson(Object? json, String location) {
     if (json is String) {
+      // Shorthand: plain string is a state binding
       return GenuxBinding(path: json);
     }
     final object = _asObjectMap(json, location);
-    _expectOnlyKeys(object, const {'path', 'fallback'}, location);
+    _expectOnlyKeys(object, const {'source', 'path', 'fallback'}, location);
+
+    final sourceName = object['source'] as String?;
     return GenuxBinding(
+      source: sourceName,
       path: _requiredString(object, 'path', location),
       fallback: _freezeJson(object['fallback']),
       hasFallback: object.containsKey('fallback'),
     );
   }
 
+  /// Binding source: 'state', 'item', or 'event'. Null defaults to 'state'.
+  final String? source;
+
   final String path;
   final Object? fallback;
   final bool hasFallback;
 
-  Object toJson() => hasFallback
-      ? <String, Object?>{'path': path, 'fallback': fallback}
-      : path;
+  Object toJson() {
+    if (source == null && !hasFallback) {
+      return path;
+    }
+    return <String, Object?>{
+      'source': source,
+      'path': path,
+      if (hasFallback) 'fallback': fallback,
+    }..removeWhere((key, value) => value == null);
+  }
 }
 
 final class GenuxNode {
