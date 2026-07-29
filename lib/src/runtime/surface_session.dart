@@ -111,12 +111,7 @@ final class GenuxSurfaceSession {
         );
       }
 
-      final augmentedContext = GenuxEvaluationContext(
-        itemKey: context.itemKey,
-        itemIndex: context.itemIndex,
-        itemData: context.itemData,
-        eventPayload: payload,
-      );
+      final augmentedContext = context.withEventPayload(payload);
       final arguments = compiledEvent.action.resolveArgs(store.state, augmentedContext);
       for (final definition
           in compiledEvent.action.definition.arguments.entries) {

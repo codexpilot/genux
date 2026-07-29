@@ -8,7 +8,7 @@ final class GenuxEvaluationContext {
     this.itemKey,
     this.itemIndex,
     this.itemData,
-    this.eventPayload,
+    this._eventPayload = _absentEventPayload,
   });
 
   /// Stable item identity extracted from the item object.
@@ -20,8 +20,8 @@ final class GenuxEvaluationContext {
   /// The complete item object from the items array.
   final Map<String, Object?>? itemData;
 
-  /// Event payload for action argument resolution.
-  final Object? eventPayload;
+  /// Internal event payload storage.
+  final Object? _eventPayload;
 
   /// Empty context with no local values.
   static const empty = GenuxEvaluationContext();
@@ -30,7 +30,19 @@ final class GenuxEvaluationContext {
   bool get hasItemContext => itemData != null;
 
   /// Whether this context has event payload available.
-  bool get hasEventContext => eventPayload != null;
+  bool get hasEventContext => !identical(_eventPayload, _absentEventPayload);
+
+  /// Gets the event payload if present, null otherwise.
+  Object? get eventPayload => hasEventContext ? _eventPayload : null;
+
+  /// Creates a new context with an event payload.
+  GenuxEvaluationContext withEventPayload(Object? payload) =>
+      GenuxEvaluationContext(
+        itemKey: itemKey,
+        itemIndex: itemIndex,
+        itemData: itemData,
+        eventPayload: payload,
+      );
 
   /// Converts item context to a map structure for pointer resolution.
   ///
@@ -58,10 +70,17 @@ final class GenuxEvaluationContext {
       throw StateError('Event context is not available.');
     }
     return {
-      'data': eventPayload,
+      'data': _eventPayload,
     };
   }
 }
+
+/// Internal sentinel for absent event payload.
+final class _AbsentEventPayload {
+  const _AbsentEventPayload();
+}
+
+const _absentEventPayload = _AbsentEventPayload();
 
 /// Source of a binding value.
 enum GenuxBindingSource {

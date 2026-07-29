@@ -16,10 +16,10 @@ Genux deliberately has two roles:
   state store, capability session, pure-Dart View coordinator, Flutter registry,
   and `GenuxSurfaceHost` can be embedded in Aix runtime frontend applications.
 - **Showcase application:** this repository's native Flutter app is an
-  interactive reference consumer. It lets people experience the live JSON-driven
-  customer editor, summary, and Component Lab Views, navigate between their
-  retained sessions, inspect state/actions/source, browse the released catalog,
-  and exercise rejection and safety behavior.
+  interactive DartPad-style reference consumer with a two-pane layout: JSON
+  editor on the left and live runtime view on the right. Experience the
+  JSON-driven customer editor, summary, Component Lab, and customer list Views
+  with real-time editing, view navigation, and immediate visual feedback.
 
 The showcase uses the same exported APIs as another application; it is not a
 separate demo renderer.

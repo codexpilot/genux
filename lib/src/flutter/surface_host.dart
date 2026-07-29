@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../compiler/document_compiler.dart';
 import '../model/choice_item.dart';
 import '../model/evaluation_context.dart';
+import '../model/json_pointer.dart';
 import '../runtime/surface_session.dart';
 import '../state/surface_store.dart';
 import 'component_scope.dart';
@@ -93,8 +94,16 @@ final class _GenuxNodeHostState extends State<_GenuxNodeHost> {
     if (widget.node.bindings.isEmpty) {
       return;
     }
-    final paths = widget.node.bindings.values.map((binding) => binding.pointer);
-    _subscription = widget.session.store.subscribe(paths, (_) {
+    // A7: Only subscribe to state bindings, not item bindings
+    final statePaths = <GenuxJsonPointer>{
+      for (final binding in widget.node.bindings.values)
+        if (binding.source == GenuxBindingSource.state)
+          binding.pointer,
+    };
+    if (statePaths.isEmpty) {
+      return;
+    }
+    _subscription = widget.session.store.subscribe(statePaths, (_) {
       if (mounted) {
         setState(() {});
       }

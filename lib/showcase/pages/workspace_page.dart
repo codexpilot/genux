@@ -596,11 +596,28 @@ final class _PreviewCard extends StatelessWidget {
                     child: CircularProgressIndicator(),
                   ),
                 ),
-                (final active?, _) => GenuxSurfaceHost(
-                  key: const ValueKey('showcase-surface-host'),
-                  session: active,
-                  catalog: runtime.flutterCatalog,
-                ),
+                (final active?, _) => () {
+                  // A8: Detect CollectionView and apply bounded viewport
+                  final hasCollectionView = active.document.nodes.values.any(
+                    (node) => node.component.code == 'CollectionView',
+                  );
+
+                  final host = GenuxSurfaceHost(
+                    key: const ValueKey('showcase-surface-host'),
+                    session: active,
+                    catalog: runtime.flutterCatalog,
+                  );
+
+                  // Wrap in bounded viewport if CollectionView detected
+                  return hasCollectionView
+                      ? Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 500),
+                            child: host,
+                          ),
+                        )
+                      : host;
+                }(),
               },
             ),
             if (navigationBusy) const LinearProgressIndicator(minHeight: 3),

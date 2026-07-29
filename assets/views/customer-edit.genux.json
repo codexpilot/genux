@@ -3,7 +3,7 @@
   "view": {
     "id": "1001",
     "code": "customer.edit",
-    "revision": 6,
+    "revision": 7,
     "kind": "view"
   },
   "catalog": {
@@ -34,6 +34,10 @@
       "capability": "view.open",
       "args": {"viewCode": "component.lab"}
     },
+    "openCustomerList": {
+      "capability": "view.open",
+      "args": {"viewCode": "customer.list"}
+    },
     "openSummary": {
       "capability": "view.open",
       "args": {"viewCode": "customer.summary"}
@@ -59,7 +63,7 @@
       "bind": {"busy": "/ui/saving"},
       "slots": {
         "content": ["heading", "intro", "sectionDivider", "profileCard"],
-        "actions": ["componentLabButton", "summaryButton", "saveButton"]
+        "actions": ["componentLabButton", "customerListButton", "summaryButton", "saveButton"]
       }
     },
     {
@@ -136,6 +140,13 @@
       "version": 1,
       "props": {"label": "Open Component Lab", "variant": "secondary"},
       "events": {"pressed": "openComponentLab"}
+    },
+    {
+      "id": "customerListButton",
+      "component": "Button",
+      "version": 1,
+      "props": {"label": "Open Customer List", "variant": "secondary"},
+      "events": {"pressed": "openCustomerList"}
     },
     {
       "id": "summaryButton",

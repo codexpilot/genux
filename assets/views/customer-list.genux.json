@@ -3,7 +3,7 @@
   "view": {
     "id": "3001",
     "code": "customer.list",
-    "revision": 1,
+    "revision": 2,
     "kind": "view"
   },
   "catalog": {
@@ -65,8 +65,12 @@
     "selectCustomer": {
       "capability": "customer.select",
       "args": {
-        "customerId": {"$bind": {"source": "item", "path": "/data/id"}},
-        "customerName": {"$bind": {"source": "item", "path": "/data/name"}}
+        "customerId": {
+          "$bind": {"source": "event", "path": "/data/key"}
+        },
+        "customerName": {
+          "$bind": {"source": "event", "path": "/data/data/name"}
+        }
       }
     }
   },
@@ -108,7 +112,7 @@
       "props": {
         "itemKey": "id",
         "layout": "list",
-        "itemHeight": 88,
+        "itemHeight": 120,
         "padding": 0,
         "emptyMessage": "No customers found"
       },

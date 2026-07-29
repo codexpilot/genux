@@ -3,6 +3,9 @@ import 'package:flutter/services.dart';
 
 import '../../genux_flutter.dart';
 
+// A7: Typed stable identity for collection items
+typedef _ItemIdentity = (Type, Object);
+
 /// Material implementation of CollectionView component.
 ///
 /// Supports list and grid layouts with virtualized rendering, stable item
@@ -52,7 +55,7 @@ Widget buildCollectionView(BuildContext context, GenuxComponentScope scope) {
 
   // Preflight: validate items and extract keys
   final validatedItems = <_ValidatedItem>[];
-  final seenKeys = <String>{};
+  final seenKeys = <_ItemIdentity>{};
 
   for (var index = 0; index < items.length; index++) {
     final item = items[index];
@@ -82,25 +85,25 @@ Widget buildCollectionView(BuildContext context, GenuxComponentScope scope) {
       );
     }
 
-    // Preserve key type but convert to string for widget keys
+    // A7: Preserve key type identity
     if (keyValue is! String && keyValue is! num && keyValue is! bool) {
       return _CollectionViewError(
         message: 'Item key must be string, number, or boolean, got ${keyValue.runtimeType}.',
       );
     }
 
-    final keyString = keyValue.toString();
-    if (seenKeys.contains(keyString)) {
+    final identity = (keyValue.runtimeType, keyValue);
+    if (seenKeys.contains(identity)) {
       return _CollectionViewError(
-        message: 'Duplicate item key: $keyString',
+        message: 'Duplicate item key: $keyValue (${keyValue.runtimeType})',
       );
     }
-    seenKeys.add(keyString);
+    seenKeys.add(identity);
 
     validatedItems.add(_ValidatedItem(
       index: index,
       key: keyValue,
-      keyString: keyString,
+      identity: identity,
       data: itemData,
     ));
   }
@@ -123,13 +126,13 @@ final class _ValidatedItem {
   const _ValidatedItem({
     required this.index,
     required this.key,
-    required this.keyString,
+    required this.identity,
     required this.data,
   });
 
   final int index;
   final Object key; // Preserves original type
-  final String keyString; // For widget keys
+  final _ItemIdentity identity; // Typed stable identity
   final Map<String, Object?> data;
 }
 
@@ -147,14 +150,26 @@ class _CollectionListView extends StatelessWidget {
     final itemHeight = scope.property<num>('itemHeight')?.toDouble() ?? 72.0;
     final padding = scope.property<num>('padding')?.toDouble() ?? 0.0;
 
+    // A7: Build identity-to-index map for findChildIndexCallback
+    final identityToIndex = <_ItemIdentity, int>{
+      for (var i = 0; i < items.length; i++) items[i].identity: i,
+    };
+
     return Semantics(
       label: 'List with ${items.length} items',
       child: ListView.builder(
+        primary: false,
         padding: EdgeInsets.all(padding),
         itemCount: items.length,
         itemExtent: itemHeight,
         itemBuilder: (context, index) {
           return _buildItem(context, items[index]);
+        },
+        findChildIndexCallback: (Key key) {
+          if (key is ValueKey<_ItemIdentity>) {
+            return identityToIndex[key.value];
+          }
+          return null;
         },
       ),
     );
@@ -167,26 +182,27 @@ class _CollectionListView extends StatelessWidget {
       itemData: item.data,
     );
 
+    // A7: Use typed identity as ValueKey on the outermost widget
     return Semantics(
       button: true,
       enabled: true,
       label: 'Item ${item.index + 1} of ${items.length}',
-      child: InkWell(
-        key: ValueKey(item.keyString),
-        onTap: () => _handleItemInvoked(item),
-        child: Focus(
-          onKeyEvent: (node, event) {
-            if (event is KeyDownEvent &&
-                (event.logicalKey == LogicalKeyboardKey.enter ||
-                    event.logicalKey == LogicalKeyboardKey.space)) {
-              _handleItemInvoked(item);
-              return KeyEventResult.handled;
-            }
-            return KeyEventResult.ignored;
-          },
+      child: Focus(
+        onKeyEvent: (node, event) {
+          if (event is KeyDownEvent &&
+              (event.logicalKey == LogicalKeyboardKey.enter ||
+                  event.logicalKey == LogicalKeyboardKey.space)) {
+            _handleItemInvoked(item);
+            return KeyEventResult.handled;
+          }
+          return KeyEventResult.ignored;
+        },
+        child: InkWell(
+          key: ValueKey<_ItemIdentity>(item.identity),
+          onTap: () => _handleItemInvoked(item),
           child: scope.buildItemTemplate(
             'itemTemplate',
-            item.keyString,
+            _encodeIdentityString(item.identity),
             evaluationContext,
           ),
         ),
@@ -220,9 +236,15 @@ class _CollectionGridView extends StatelessWidget {
     final spacing = scope.property<num>('spacing')?.toDouble() ?? 8.0;
     final padding = scope.property<num>('padding')?.toDouble() ?? 0.0;
 
+    // A7: Build identity-to-index map for findChildIndexCallback
+    final identityToIndex = <_ItemIdentity, int>{
+      for (var i = 0; i < items.length; i++) items[i].identity: i,
+    };
+
     return Semantics(
       label: 'Grid with ${items.length} items, $columns columns',
       child: GridView.builder(
+        primary: false,
         padding: EdgeInsets.all(padding),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: columns,
@@ -233,6 +255,12 @@ class _CollectionGridView extends StatelessWidget {
         itemCount: items.length,
         itemBuilder: (context, index) {
           return _buildItem(context, items[index]);
+        },
+        findChildIndexCallback: (Key key) {
+          if (key is ValueKey<_ItemIdentity>) {
+            return identityToIndex[key.value];
+          }
+          return null;
         },
       ),
     );
@@ -245,26 +273,27 @@ class _CollectionGridView extends StatelessWidget {
       itemData: item.data,
     );
 
+    // A7: Use typed identity as ValueKey on the outermost widget
     return Semantics(
       button: true,
       enabled: true,
       label: 'Item ${item.index + 1} of ${items.length}',
-      child: InkWell(
-        key: ValueKey(item.keyString),
-        onTap: () => _handleItemInvoked(item),
-        child: Focus(
-          onKeyEvent: (node, event) {
-            if (event is KeyDownEvent &&
-                (event.logicalKey == LogicalKeyboardKey.enter ||
-                    event.logicalKey == LogicalKeyboardKey.space)) {
-              _handleItemInvoked(item);
-              return KeyEventResult.handled;
-            }
-            return KeyEventResult.ignored;
-          },
+      child: Focus(
+        onKeyEvent: (node, event) {
+          if (event is KeyDownEvent &&
+              (event.logicalKey == LogicalKeyboardKey.enter ||
+                  event.logicalKey == LogicalKeyboardKey.space)) {
+            _handleItemInvoked(item);
+            return KeyEventResult.handled;
+          }
+          return KeyEventResult.ignored;
+        },
+        child: InkWell(
+          key: ValueKey<_ItemIdentity>(item.identity),
+          onTap: () => _handleItemInvoked(item),
           child: scope.buildItemTemplate(
             'itemTemplate',
-            item.keyString,
+            _encodeIdentityString(item.identity),
             evaluationContext,
           ),
         ),
@@ -298,6 +327,20 @@ Widget buildExpanded(BuildContext context, GenuxComponentScope scope) {
     flex: flex,
     child: children.first,
   );
+}
+
+/// Encodes typed identity into a string for template instance keys.
+/// Format: type-prefix:value
+String _encodeIdentityString(_ItemIdentity identity) {
+  final (type, value) = identity;
+  if (type == String) {
+    return 's:$value';
+  } else if (type == int || type == double) {
+    return 'n:$value';
+  } else if (type == bool) {
+    return 'b:$value';
+  }
+  return 'u:$value'; // Unknown type fallback
 }
 
 class _CollectionViewError extends StatelessWidget {

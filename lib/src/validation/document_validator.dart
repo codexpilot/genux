@@ -404,6 +404,10 @@ final class GenuxDocumentValidator {
     );
 
     final capabilityPattern = RegExp(r'^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)+$');
+
+    // A2: Track context requirements for each action
+    final actionRequirements = <String, Set<_ActionContextRequirement>>{};
+
     for (final action in document.actions.entries) {
       final location = '/actions/${_escapePointerSegment(action.key)}';
       if (!_validIdentifier(action.key)) {
@@ -428,14 +432,25 @@ final class GenuxDocumentValidator {
           '$location/capability',
         );
       }
+
+      final requirements = <_ActionContextRequirement>{};
+
       for (final arg in action.value.args.entries) {
         final diagnosticsBefore = diagnostics.length;
-        _validateActionValue(
+
+        // A2-A4: Use new analyzer
+        final analysis = _analyzeActionValue(
           arg.value,
           '$location/args/${arg.key}',
           document.state,
           diagnostics,
         );
+
+        // Track requirements
+        if (analysis is _DeferredActionValue) {
+          requirements.addAll(analysis.requirements);
+        }
+
         final argumentDefinition = capability?.arguments[arg.key];
         if (capability != null && argumentDefinition == null) {
           error(
@@ -445,17 +460,37 @@ final class GenuxDocumentValidator {
           );
         } else if (argumentDefinition != null &&
             diagnostics.length == diagnosticsBefore) {
-          final resolved = _resolveActionValue(arg.value, document.state);
-          // Only type-check if resolved (null means item/event binding at validation time)
-          if (resolved != null && !argumentDefinition.type.accepts(resolved)) {
-            error(
-              'action.argumentType',
-              'Expected ${argumentDefinition.type.displayName}.',
-              '$location/args/${arg.key}',
-            );
+          // A3: Type-check known values (including null)
+          if (analysis is _KnownActionValue) {
+            if (!argumentDefinition.type.accepts(analysis.value)) {
+              // A4: Check if this came from a fallback
+              final argValue = arg.value;
+              final hasBinding = argValue is Map && argValue.containsKey(r'$bind');
+              final hasFallback = argValue is Map && argValue.containsKey('fallback');
+
+              if (hasBinding && hasFallback) {
+                // Error is in the fallback
+                error(
+                  'action.argumentType',
+                  'Expected ${argumentDefinition.type.displayName}.',
+                  '$location/args/${arg.key}/fallback',
+                );
+              } else {
+                // Error is in the main value
+                error(
+                  'action.argumentType',
+                  'Expected ${argumentDefinition.type.displayName}.',
+                  '$location/args/${arg.key}',
+                );
+              }
+            }
           }
+          // Deferred values are type-checked at runtime
         }
       }
+
+      actionRequirements[action.key] = requirements;
+
       if (capability != null) {
         for (final argument in capability.arguments.entries) {
           if (argument.value.required &&
@@ -470,6 +505,40 @@ final class GenuxDocumentValidator {
       }
     }
 
+    // A2: Validate action context requirements at every use site
+    final nodeContexts = _collectNodeItemContexts(document, catalog);
+
+    for (final node in document.nodes.values) {
+      final component = catalog.component(node.component);
+      if (component == null) continue;
+
+      final contexts = nodeContexts[node.id];
+      final hasItemContext = contexts != null &&
+          contexts.isNotEmpty &&
+          contexts.every((hasItem) => hasItem);
+
+      for (final eventEntry in node.events.entries) {
+        final eventName = eventEntry.key;
+        final actionId = eventEntry.value;
+        final requirements = actionRequirements[actionId] ?? {};
+
+        final location = '/nodes/${_escapePointerSegment(node.id)}/events/$eventName';
+
+        // Check if item context is required but not available
+        if (requirements.contains(_ActionContextRequirement.item) &&
+            !hasItemContext) {
+          error(
+            'action.contextUnavailable',
+            'Action $actionId requires item context but is bound to an event outside item templates.',
+            location,
+          );
+        }
+
+        // Event context is always available at event use sites (this is where events fire)
+        // So no validation needed for _ActionContextRequirement.event
+      }
+    }
+
     return GenuxValidationResult(diagnostics);
   }
 }
@@ -477,6 +546,345 @@ final class GenuxDocumentValidator {
 bool _validIdentifier(String value) =>
     value.length <= 128 &&
     RegExp(r'^[A-Za-z0-9][A-Za-z0-9._:-]*$').hasMatch(value);
+
+// A1: Terminating context analysis types
+typedef _ContextState = ({String nodeId, bool hasItemContext});
+
+// A2-A4: Action value analysis types
+enum _ActionContextRequirement { item, event }
+
+enum _KnownJsonShape { unknown, list, object }
+
+sealed class _StaticActionResolution {
+  const _StaticActionResolution();
+}
+
+final class _KnownActionValue extends _StaticActionResolution {
+  const _KnownActionValue(this.value);
+  final Object? value;
+}
+
+final class _DeferredActionValue extends _StaticActionResolution {
+  const _DeferredActionValue({
+    required this.requirements,
+    required this.knownShape,
+  });
+  final Set<_ActionContextRequirement> requirements;
+  final _KnownJsonShape knownShape;
+}
+
+final class _InvalidActionValue extends _StaticActionResolution {
+  const _InvalidActionValue();
+}
+
+/// Collects all lexical contexts each node is reachable in.
+///
+/// Returns a map from node ID to the set of context flags seen across all paths.
+/// Uses BFS with visited-state tracking to terminate for cycles, self-cycles,
+/// over-depth graphs, and invalid topologies.
+Map<String, Set<bool>> _collectNodeItemContexts(
+  GenuxDocument document,
+  GenuxCatalog catalog,
+) {
+  final nodeContexts = <String, Set<bool>>{};
+
+  if (!document.nodes.containsKey(document.root)) {
+    return nodeContexts;
+  }
+
+  final queue = <_ContextState>[];
+  final visited = <_ContextState>{};
+
+  queue.add((nodeId: document.root, hasItemContext: false));
+
+  while (queue.isNotEmpty) {
+    final state = queue.removeAt(0);
+
+    if (visited.contains(state)) {
+      continue;
+    }
+    visited.add(state);
+
+    nodeContexts.putIfAbsent(state.nodeId, () => <bool>{}).add(state.hasItemContext);
+
+    final node = document.nodes[state.nodeId];
+    if (node == null) continue;
+
+    final component = catalog.component(node.component);
+    if (component == null) continue;
+
+    for (final slotEntry in node.slots.entries) {
+      final slotDef = component.slots[slotEntry.key];
+      if (slotDef == null) continue;
+
+      final introducesItem = slotDef.introducesContext == GenuxContextKind.item;
+      final childHasItemContext = state.hasItemContext || introducesItem;
+
+      for (final childId in slotEntry.value) {
+        final childState = (nodeId: childId, hasItemContext: childHasItemContext);
+        if (!visited.contains(childState)) {
+          queue.add(childState);
+        }
+      }
+    }
+  }
+
+  return nodeContexts;
+}
+
+/// Helper to check if a value contains any $bind expressions.
+bool _containsBinding(Object? value) {
+  if (value is Map) {
+    if (value.containsKey(r'$bind')) {
+      return true;
+    }
+    return value.values.any(_containsBinding);
+  }
+  if (value is List) {
+    return value.any(_containsBinding);
+  }
+  return false;
+}
+
+/// A2-A4: Analyzes an action argument value to determine its static resolution,
+/// context requirements, and known shape.
+_StaticActionResolution _analyzeActionValue(
+  Object? value,
+  String location,
+  Map<String, Object?> state,
+  List<GenuxDiagnostic> diagnostics,
+) {
+  void error(String code, String message) {
+    diagnostics.add(
+      GenuxDiagnostic(code: code, message: message, location: location),
+    );
+  }
+
+  // Literals are fully known (including null)
+  if (value == null || value is bool || value is num || value is String) {
+    return _KnownActionValue(value);
+  }
+
+  // Lists
+  if (value is List) {
+    final items = <_StaticActionResolution>[];
+    var allKnown = true;
+    final requirements = <_ActionContextRequirement>{};
+
+    for (var index = 0; index < value.length; index++) {
+      final itemAnalysis = _analyzeActionValue(
+        value[index],
+        '$location/$index',
+        state,
+        diagnostics,
+      );
+      items.add(itemAnalysis);
+
+      if (itemAnalysis is _DeferredActionValue) {
+        allKnown = false;
+        requirements.addAll(itemAnalysis.requirements);
+      } else if (itemAnalysis is _InvalidActionValue) {
+        return const _InvalidActionValue();
+      }
+    }
+
+    if (allKnown) {
+      return _KnownActionValue([
+        for (final item in items)
+          if (item is _KnownActionValue) item.value
+      ]);
+    }
+
+    return _DeferredActionValue(
+      requirements: requirements,
+      knownShape: _KnownJsonShape.list,
+    );
+  }
+
+  if (value is! Map) {
+    error('action.nonJsonValue', 'Action arguments must contain only JSON values.');
+    return const _InvalidActionValue();
+  }
+
+  // Check for binding
+  if (value.containsKey(r'$bind')) {
+    final bindValue = value[r'$bind'];
+
+    // Validate binding shape
+    final allowed = {r'$bind', 'fallback'};
+    if (value.keys.any((key) => key is! String || !allowed.contains(key))) {
+      error('action.bindingShape', 'A bound argument only supports \$bind and fallback.');
+      return const _InvalidActionValue();
+    }
+
+    // Handle explicit source object
+    if (bindValue is Map) {
+      final source = bindValue['source'];
+      final path = bindValue['path'];
+
+      if (source != null && source is! String) {
+        error('action.bindingSource', 'Binding source must be a string.');
+        return const _InvalidActionValue();
+      }
+
+      if (path is! String) {
+        error('action.bindingPath', 'Binding path must be a JSON Pointer string.');
+        return const _InvalidActionValue();
+      }
+
+      final sourceStr = source as String? ?? 'state';
+      if (sourceStr != 'state' && sourceStr != 'item' && sourceStr != 'event') {
+        error('action.unknownSource', 'Binding source must be "state", "item", or "event".');
+        return const _InvalidActionValue();
+      }
+
+      GenuxJsonPointer pointer;
+      try {
+        pointer = GenuxJsonPointer.parse(path);
+      } on FormatException catch (e) {
+        error('action.bindingPath', e.message);
+        return const _InvalidActionValue();
+      }
+
+      // A3: State bindings can be resolved statically
+      if (sourceStr == 'state') {
+        final resolved = pointer.read(state);
+        if (resolved.exists) {
+          return _KnownActionValue(resolved.value);
+        }
+        // A4: Validate fallback independently
+        if (value.containsKey('fallback')) {
+          final fallbackValue = value['fallback'];
+          if (_containsBinding(fallbackValue)) {
+            error('action.bindingFallback', 'Fallback cannot contain bindings.');
+            return const _InvalidActionValue();
+          }
+          final fallbackAnalysis = _analyzeActionValue(
+            fallbackValue,
+            '$location/fallback',
+            state,
+            diagnostics,
+          );
+          if (fallbackAnalysis is _KnownActionValue) {
+            return _KnownActionValue(fallbackAnalysis.value);
+          }
+          return const _InvalidActionValue();
+        }
+        error('action.bindingMissing', 'State path $path does not exist and has no fallback.');
+        return const _InvalidActionValue();
+      }
+
+      // A2: Item/event bindings are deferred
+      final requirement = sourceStr == 'item'
+          ? _ActionContextRequirement.item
+          : _ActionContextRequirement.event;
+
+      // A4: Validate fallback independently (must be literal, no bindings)
+      if (value.containsKey('fallback')) {
+        final fallbackAnalysis = _analyzeActionValue(
+          value['fallback'],
+          '$location/fallback',
+          state,
+          diagnostics,
+        );
+        if (fallbackAnalysis is _InvalidActionValue) {
+          return const _InvalidActionValue();
+        }
+        if (fallbackAnalysis is _DeferredActionValue) {
+          error('action.bindingFallback', 'Fallback cannot contain bindings.');
+          return const _InvalidActionValue();
+        }
+      }
+
+      return _DeferredActionValue(
+        requirements: {requirement},
+        knownShape: _KnownJsonShape.unknown,
+      );
+    }
+
+    // Handle string shorthand (implies state source)
+    if (bindValue is String) {
+      GenuxJsonPointer pointer;
+      try {
+        pointer = GenuxJsonPointer.parse(bindValue);
+      } on FormatException catch (e) {
+        error('action.bindingPath', e.message);
+        return const _InvalidActionValue();
+      }
+
+      final resolved = pointer.read(state);
+      if (resolved.exists) {
+        return _KnownActionValue(resolved.value);
+      }
+
+      // A4: Validate fallback independently
+      if (value.containsKey('fallback')) {
+        final fallbackValue = value['fallback'];
+        if (_containsBinding(fallbackValue)) {
+          error('action.bindingFallback', 'Fallback cannot contain bindings.');
+          return const _InvalidActionValue();
+        }
+        final fallbackAnalysis = _analyzeActionValue(
+          fallbackValue,
+          '$location/fallback',
+          state,
+          diagnostics,
+        );
+        if (fallbackAnalysis is _KnownActionValue) {
+          return _KnownActionValue(fallbackAnalysis.value);
+        }
+        return const _InvalidActionValue();
+      }
+
+      error('action.bindingMissing', 'State path $bindValue does not exist and has no fallback.');
+      return const _InvalidActionValue();
+    }
+
+    error('action.bindingPath', '\$bind must be a JSON Pointer string or source object.');
+    return const _InvalidActionValue();
+  }
+
+  // Regular object
+  final fields = <String, _StaticActionResolution>{};
+  var allKnown = true;
+  final requirements = <_ActionContextRequirement>{};
+
+  for (final entry in value.entries) {
+    final key = entry.key;
+    if (key is! String) {
+      error('action.nonStringKey', 'Action object keys must be strings.');
+      return const _InvalidActionValue();
+    }
+
+    final fieldAnalysis = _analyzeActionValue(
+      entry.value,
+      '$location/$key',
+      state,
+      diagnostics,
+    );
+    fields[key] = fieldAnalysis;
+
+    if (fieldAnalysis is _DeferredActionValue) {
+      allKnown = false;
+      requirements.addAll(fieldAnalysis.requirements);
+    } else if (fieldAnalysis is _InvalidActionValue) {
+      return const _InvalidActionValue();
+    }
+  }
+
+  if (allKnown) {
+    return _KnownActionValue({
+      for (final entry in fields.entries)
+        if (entry.value is _KnownActionValue)
+          entry.key: (entry.value as _KnownActionValue).value
+    });
+  }
+
+  return _DeferredActionValue(
+    requirements: requirements,
+    knownShape: _KnownJsonShape.object,
+  );
+}
 
 void _validateBindingsWithContext(
   GenuxDocument document,
@@ -490,33 +898,8 @@ void _validateBindingsWithContext(
     );
   }
 
-  // Traverse from root and track which nodes have item context
-  final nodesWithItemContext = <String>{};
-
-  void traverse(String nodeId, bool hasItemContext) {
-    if (hasItemContext) {
-      nodesWithItemContext.add(nodeId);
-    }
-
-    final node = document.nodes[nodeId];
-    if (node == null) return;
-
-    final component = catalog.component(node.component);
-    if (component == null) return;
-
-    // Check which slots introduce item context
-    for (final slotEntry in node.slots.entries) {
-      final slotDef = component.slots[slotEntry.key];
-      if (slotDef == null) continue;
-
-      final introducesItem = slotDef.introducesContext == GenuxContextKind.item;
-      for (final childId in slotEntry.value) {
-        traverse(childId, hasItemContext || introducesItem);
-      }
-    }
-  }
-
-  traverse(document.root, false);
+  // Collect all contexts for each node using terminating BFS
+  final nodeContexts = _collectNodeItemContexts(document, catalog);
 
   // Now validate all bindings with context information
   for (final node in document.nodes.values) {
@@ -524,7 +907,11 @@ void _validateBindingsWithContext(
     final component = catalog.component(node.component);
     if (component == null) continue;
 
-    final hasItemContext = nodesWithItemContext.contains(node.id);
+    final contexts = nodeContexts[node.id];
+    final isReachable = contexts != null && contexts.isNotEmpty;
+    final allPathsHaveItemContext = contexts != null &&
+        contexts.isNotEmpty &&
+        contexts.every((hasItem) => hasItem);
 
     for (final binding in node.bindings.entries) {
       final channel = component.channels[binding.key];
@@ -543,16 +930,21 @@ void _validateBindingsWithContext(
         continue;
       }
 
-      // Validate item source requires item context
-      if (source == 'item' && !hasItemContext) {
-        error(
-          'binding.itemOutsideContext',
-          'Item bindings are only valid inside item-template slots.',
-          bindingLoc,
-        );
-        continue;
+      // Validate item source requires item context on all paths
+      if (source == 'item') {
+        if (!isReachable) {
+          // Unreachable nodes already have graph.unreachable; don't cascade
+          continue;
+        }
+        if (!allPathsHaveItemContext) {
+          error(
+            'binding.itemOutsideContext',
+            'Item bindings require item context on every reachable path.',
+            bindingLoc,
+          );
+          continue;
+        }
       }
-
       // Validate event source not allowed in node bindings
       if (source == 'event') {
         error(
@@ -795,221 +1187,3 @@ void _validateGraph(
   }
 }
 
-void _validateActionValue(
-  Object? value,
-  String location,
-  Map<String, Object?> state,
-  List<GenuxDiagnostic> diagnostics,
-) {
-  if (value == null || value is bool || value is num || value is String) {
-    return;
-  }
-  if (value is List) {
-    for (var index = 0; index < value.length; index += 1) {
-      _validateActionValue(
-        value[index],
-        '$location/$index',
-        state,
-        diagnostics,
-      );
-    }
-    return;
-  }
-  if (value is! Map) {
-    diagnostics.add(
-      GenuxDiagnostic(
-        code: 'action.nonJsonValue',
-        message: 'Action arguments must contain only JSON values.',
-        location: location,
-      ),
-    );
-    return;
-  }
-
-  if (value.containsKey(r'$bind')) {
-    final bindValue = value[r'$bind'];
-
-    // Handle explicit source object: {"$bind": {"source": "...", "path": "..."}}
-    if (bindValue is Map) {
-      final allowed = {r'$bind', 'fallback'};
-      if (value.keys.any((key) => key is! String || !allowed.contains(key))) {
-        diagnostics.add(
-          GenuxDiagnostic(
-            code: 'action.bindingShape',
-            message: 'A bound argument only supports \$bind and fallback.',
-            location: location,
-          ),
-        );
-        return;
-      }
-
-      final source = bindValue['source'];
-      final path = bindValue['path'];
-
-      if (source != null && source is! String) {
-        diagnostics.add(
-          GenuxDiagnostic(
-            code: 'action.bindingSource',
-            message: 'Binding source must be a string.',
-            location: location,
-          ),
-        );
-        return;
-      }
-
-      if (source != null && source != 'state' && source != 'item' && source != 'event') {
-        diagnostics.add(
-          GenuxDiagnostic(
-            code: 'action.unknownSource',
-            message: 'Binding source must be "state", "item", or "event".',
-            location: location,
-          ),
-        );
-        return;
-      }
-
-      if (path is! String) {
-        diagnostics.add(
-          GenuxDiagnostic(
-            code: 'action.bindingPath',
-            message: 'Binding path must be a JSON Pointer string.',
-            location: location,
-          ),
-        );
-        return;
-      }
-
-      try {
-        GenuxJsonPointer.parse(path);
-        // For state bindings, validate against document state
-        if (source == 'state' || source == null) {
-          final resolved = GenuxJsonPointer.parse(path).read(state);
-          if (!resolved.exists && !value.containsKey('fallback')) {
-            diagnostics.add(
-              GenuxDiagnostic(
-                code: 'action.bindingMissing',
-                message: 'State path $path does not exist and has no fallback.',
-                location: location,
-              ),
-            );
-          }
-        }
-        // Item and event bindings are validated at runtime
-      } on FormatException catch (exception) {
-        diagnostics.add(
-          GenuxDiagnostic(
-            code: 'action.bindingPath',
-            message: exception.message.toString(),
-            location: location,
-          ),
-        );
-      }
-      return;
-    }
-
-    // Handle string shorthand: {"$bind": "/path"}
-    if (bindValue is String) {
-      final allowed = {r'$bind', 'fallback'};
-      if (value.keys.any((key) => key is! String || !allowed.contains(key))) {
-        diagnostics.add(
-          GenuxDiagnostic(
-            code: 'action.bindingShape',
-            message: 'A bound argument only supports \$bind and fallback.',
-            location: location,
-          ),
-        );
-        return;
-      }
-
-      try {
-        final resolved = GenuxJsonPointer.parse(bindValue).read(state);
-        if (!resolved.exists && !value.containsKey('fallback')) {
-          diagnostics.add(
-            GenuxDiagnostic(
-              code: 'action.bindingMissing',
-              message: 'State path $bindValue does not exist and has no fallback.',
-              location: location,
-            ),
-          );
-        }
-      } on FormatException catch (exception) {
-        diagnostics.add(
-          GenuxDiagnostic(
-            code: 'action.bindingPath',
-            message: exception.message.toString(),
-            location: location,
-          ),
-        );
-      }
-      return;
-    }
-
-    // Invalid $bind value
-    diagnostics.add(
-      GenuxDiagnostic(
-        code: 'action.bindingPath',
-        message: '\$bind must be a JSON Pointer string or source object.',
-        location: location,
-      ),
-    );
-    return;
-  }
-
-  for (final entry in value.entries) {
-    if (entry.key is! String) {
-      diagnostics.add(
-        GenuxDiagnostic(
-          code: 'action.nonStringKey',
-          message: 'Action object keys must be strings.',
-          location: location,
-        ),
-      );
-      continue;
-    }
-    _validateActionValue(
-      entry.value,
-      '$location/${entry.key}',
-      state,
-      diagnostics,
-    );
-  }
-}
-
-Object? _resolveActionValue(Object? value, Map<String, Object?> state) {
-  if (value is List) {
-    return [for (final item in value) _resolveActionValue(item, state)];
-  }
-  if (value is Map) {
-    if (value.containsKey(r'$bind')) {
-      final bindValue = value[r'$bind'];
-
-      // Handle explicit source object
-      if (bindValue is Map) {
-        final source = bindValue['source'] as String?;
-        final path = bindValue['path'] as String;
-
-        // At validation time, only resolve state bindings
-        if (source == 'state' || source == null) {
-          final resolved = GenuxJsonPointer.parse(path).read(state);
-          return resolved.exists ? resolved.value : value['fallback'];
-        }
-
-        // Item and event bindings cannot be resolved at validation time
-        return null;
-      }
-
-      // Handle string shorthand
-      if (bindValue is String) {
-        final resolved = GenuxJsonPointer.parse(bindValue).read(state);
-        return resolved.exists ? resolved.value : value['fallback'];
-      }
-
-      return null;
-    }
-    return <String, Object?>{
-      for (final entry in value.entries)
-        entry.key! as String: _resolveActionValue(entry.value, state),
-    };
-  }
-  return value;
-}
