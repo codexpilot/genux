@@ -25,6 +25,7 @@ GenuxCatalog createGenuxCoreV2Catalog() {
     components: [
       ...v1.components.values,
       GenuxComponentDefinition(
+        id: 11,
         code: 'CollectionView',
         version: 1,
         properties: const {
@@ -95,6 +96,7 @@ GenuxCatalog createGenuxCoreV2Catalog() {
         },
       ),
       GenuxComponentDefinition(
+        id: 12,
         code: 'Expanded',
         version: 1,
         properties: const {

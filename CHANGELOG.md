@@ -32,7 +32,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **CollectionView Tests**: Comprehensive test coverage with keyboard interaction tests
 
 ### Changed
-- **Showcase Architecture**: Simplified from three-tab navigation (Workspace, Catalog, Runtime) to single two-pane workspace
+- **Showcase Architecture**: Simplified to single workspace with bottom navigation bar (JSON and PREVIEW)
 - **Document Validator**: Replaced old procedural validation (~220 lines) with analyzer-based approach
   - Better error messages with precise locations
   - Cleaner separation of concerns (analyze → validate → type-check)

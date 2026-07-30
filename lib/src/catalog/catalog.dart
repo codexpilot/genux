@@ -112,6 +112,7 @@ final class GenuxComponentDefinition {
   GenuxComponentDefinition({
     required this.code,
     required this.version,
+    this.id,
     Map<String, GenuxPropertyDefinition> properties = const {},
     Map<String, GenuxChannelDefinition> channels = const {},
     Map<String, GenuxEventDefinition> events = const {},
@@ -124,6 +125,9 @@ final class GenuxComponentDefinition {
       throw ArgumentError(
         'Component code must be non-empty and version positive.',
       );
+    }
+    if (id != null && id! < 1) {
+      throw ArgumentError('Component ID must be positive when provided.');
     }
     final memberCount =
         properties.length + channels.length + events.length + slots.length;
@@ -141,6 +145,7 @@ final class GenuxComponentDefinition {
   }
 
   final String code;
+  final int? id; // Numeric registry ID
   final int version;
   final Map<String, GenuxPropertyDefinition> properties;
   final Map<String, GenuxChannelDefinition> channels;
@@ -156,6 +161,10 @@ final class GenuxCatalog {
     required Iterable<GenuxComponentDefinition> components,
   }) : components = UnmodifiableMapView({
          for (final component in components) component.code: component,
+       }),
+       componentsById = UnmodifiableMapView({
+         for (final component in components)
+           if (component.id != null) component.id!: component,
        }) {
     if (id.isEmpty ||
         version < 1 ||
@@ -168,14 +177,21 @@ final class GenuxCatalog {
     if (this.components.length != components.length) {
       throw ArgumentError('Component codes must be unique within a catalog.');
     }
+    // Validate numeric IDs are unique
+    final ids = components.where((c) => c.id != null).map((c) => c.id!).toList();
+    if (ids.toSet().length != ids.length) {
+      throw ArgumentError('Component IDs must be unique within a catalog.');
+    }
   }
 
   final String id;
   final int version;
   final String checksum;
   final Map<String, GenuxComponentDefinition> components;
+  final Map<int, GenuxComponentDefinition> componentsById;
 
   GenuxComponentDefinition? component(String code) => components[code];
+  GenuxComponentDefinition? componentById(int id) => componentsById[id];
 }
 
 Map<String, GenuxPropertyDefinition> _freezeProperties(

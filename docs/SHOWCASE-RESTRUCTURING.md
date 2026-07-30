@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Genux showcase application has been successfully restructured into a DartPad-style two-pane layout, providing a more focused and intuitive development experience.
+The Genux showcase application has been successfully restructured with a bottom navigation bar interface, providing a more focused and intuitive development experience.
 
 ## What Changed
 
@@ -46,7 +46,7 @@ The Genux showcase application has been successfully restructured into a DartPad
 ## Technical Implementation
 
 ### New Files
-- `lib/showcase/pages/workspace_page_v2.dart` - Main two-pane workspace
+- `lib/showcase/pages/workspace_page_v3.dart` - Main workspace with bottom navigation
 - `docs/README.md` - Documentation index
 - `CHANGELOG.md` - Project changelog
 
@@ -68,7 +68,7 @@ The Genux showcase application has been successfully restructured into a DartPad
 - Switch replaces text labels
 
 ### Wide Screens (≥ 1280px)
-- Full two-pane layout
+- Full bottom navigation bar interface
 - Comfortable editing space
 - Side-by-side comparison
 
@@ -131,7 +131,7 @@ flutter run -d windows
 
 ### Editing Views
 
-1. The JSON editor shows the current view's source
+1. The JSON editor view shows the current view's source
 2. Make changes to the JSON
 3. Changes apply automatically (if auto-apply is on)
 4. Or click the play button to apply manually

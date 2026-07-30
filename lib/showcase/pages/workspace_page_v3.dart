@@ -7,7 +7,7 @@ import 'package:genux/genux_flutter.dart';
 
 import '../showcase_runtime.dart';
 
-/// Two-tab workspace: JSON editor tab and runtime view tab (like DartPad).
+/// Bottom navigation workspace: JSON editor and runtime view with bottom navbar.
 final class WorkspacePageV3 extends StatefulWidget {
   const WorkspacePageV3({
     required this.runtime,
@@ -36,10 +36,9 @@ final class WorkspacePageV3 extends StatefulWidget {
   State<WorkspacePageV3> createState() => _WorkspacePageV3State();
 }
 
-final class _WorkspacePageV3State extends State<WorkspacePageV3>
-    with SingleTickerProviderStateMixin {
+final class _WorkspacePageV3State extends State<WorkspacePageV3> {
   late final GenuxViewCoordinator _views;
-  late final TabController _tabController;
+  int _currentIndex = 0; // 0 = JSON, 1 = Preview
   GenuxViewStackSubscription? _viewSubscription;
   final Map<String, String> _sources = {};
   GenuxSurfaceSession? _session;
@@ -56,7 +55,6 @@ final class _WorkspacePageV3State extends State<WorkspacePageV3>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
     _views = GenuxViewCoordinator(
       compiler: widget.runtime.compiler,
       sourceLoader: _loadViewSource,
@@ -69,7 +67,6 @@ final class _WorkspacePageV3State extends State<WorkspacePageV3>
   @override
   void dispose() {
     _viewSubscription?.cancel();
-    _tabController.dispose();
     _jsonController.dispose();
     _debounceTimer?.cancel();
     super.dispose();
@@ -293,28 +290,31 @@ final class _WorkspacePageV3State extends State<WorkspacePageV3>
               onPressed: _popView,
             ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(
-              icon: Icon(Icons.code),
-              text: 'JSON Source',
-            ),
-            Tab(
-              icon: Icon(Icons.play_arrow),
-              text: 'Runtime View',
-            ),
-          ],
-        ),
       ),
-      body: TabBarView(
-        controller: _tabController,
+      body: IndexedStack(
+        index: _currentIndex,
         children: [
-          // Tab 1: JSON Editor
+          // Page 0: JSON Editor
           _buildJsonEditorTab(scheme),
 
-          // Tab 2: Runtime View
+          // Page 1: Runtime View
           _buildRuntimeViewTab(scheme, session, loadError),
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() => _currentIndex = index);
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.code),
+            label: 'JSON',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.visibility),
+            label: 'PREVIEW',
+          ),
         ],
       ),
     );
@@ -367,8 +367,8 @@ final class _WorkspacePageV3State extends State<WorkspacePageV3>
               FilledButton.icon(
                 onPressed: () {
                   _applyJsonChanges();
-                  // Switch to runtime view to see result
-                  _tabController.animateTo(1);
+                  // Switch to preview to see result
+                  setState(() => _currentIndex = 1);
                 },
                 icon: const Icon(Icons.play_arrow, size: 18),
                 label: const Text('Apply & View'),

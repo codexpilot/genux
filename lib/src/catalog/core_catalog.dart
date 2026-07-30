@@ -13,6 +13,7 @@ GenuxCatalog createGenuxCoreCatalog() {
     checksum: _coreCatalogChecksum,
     components: [
       GenuxComponentDefinition(
+        id: 1,
         code: 'Column',
         version: 1,
         properties: const {
@@ -36,6 +37,7 @@ GenuxCatalog createGenuxCoreCatalog() {
         },
       ),
       GenuxComponentDefinition(
+        id: 2,
         code: 'Text',
         version: 1,
         properties: const {
@@ -58,6 +60,7 @@ GenuxCatalog createGenuxCoreCatalog() {
         },
       ),
       GenuxComponentDefinition(
+        id: 3,
         code: 'TextField',
         version: 1,
         properties: const {
@@ -101,6 +104,7 @@ GenuxCatalog createGenuxCoreCatalog() {
         },
       ),
       GenuxComponentDefinition(
+        id: 4,
         code: 'Checkbox',
         version: 1,
         properties: const {
@@ -126,6 +130,7 @@ GenuxCatalog createGenuxCoreCatalog() {
         },
       ),
       GenuxComponentDefinition(
+        id: 5,
         code: 'ComboBox',
         version: 1,
         properties: const {
@@ -163,6 +168,7 @@ GenuxCatalog createGenuxCoreCatalog() {
         },
       ),
       GenuxComponentDefinition(
+        id: 6,
         code: 'Button',
         version: 1,
         properties: const {
@@ -192,6 +198,7 @@ GenuxCatalog createGenuxCoreCatalog() {
         events: const {'pressed': GenuxEventDefinition()},
       ),
       GenuxComponentDefinition(
+        id: 7,
         code: 'Form',
         version: 1,
         channels: const {
@@ -214,6 +221,7 @@ GenuxCatalog createGenuxCoreCatalog() {
         },
       ),
       GenuxComponentDefinition(
+        id: 8,
         code: 'Row',
         version: 1,
         properties: const {
@@ -237,6 +245,7 @@ GenuxCatalog createGenuxCoreCatalog() {
         },
       ),
       GenuxComponentDefinition(
+        id: 9,
         code: 'Card',
         version: 1,
         properties: const {
@@ -250,6 +259,7 @@ GenuxCatalog createGenuxCoreCatalog() {
         },
       ),
       GenuxComponentDefinition(
+        id: 10,
         code: 'Divider',
         version: 1,
         properties: const {

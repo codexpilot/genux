@@ -206,15 +206,33 @@ final class GenuxDocumentValidator {
           '$location/version',
         );
       }
-      final component = catalog.component(node.component);
+
+      // Resolve component by numeric ID first, then fall back to string name
+      final component = node.componentId != null
+          ? catalog.componentById(node.componentId!)
+          : catalog.component(node.component);
+
       if (component == null) {
+        final identifier = node.componentId != null
+            ? 'ID ${node.componentId}'
+            : node.component;
         error(
           'component.unknown',
-          'Component ${node.component} is not in the catalog.',
-          '$location/component',
+          'Component $identifier is not in the catalog.',
+          node.componentId != null ? '$location/componentId' : '$location/component',
         );
         continue;
       }
+
+      // Validate numeric ID matches string name if both are provided
+      if (node.componentId != null && component.code != node.component) {
+        error(
+          'component.mismatch',
+          'Component ID ${node.componentId} resolves to ${component.code}, but node specifies ${node.component}.',
+          '$location/componentId',
+        );
+      }
+
       if (node.version != component.version) {
         error(
           'component.versionMismatch',
@@ -509,7 +527,9 @@ final class GenuxDocumentValidator {
     final nodeContexts = _collectNodeItemContexts(document, catalog);
 
     for (final node in document.nodes.values) {
-      final component = catalog.component(node.component);
+      final component = node.componentId != null
+          ? catalog.componentById(node.componentId!)
+          : catalog.component(node.component);
       if (component == null) continue;
 
       final contexts = nodeContexts[node.id];
@@ -610,7 +630,9 @@ Map<String, Set<bool>> _collectNodeItemContexts(
     final node = document.nodes[state.nodeId];
     if (node == null) continue;
 
-    final component = catalog.component(node.component);
+    final component = node.componentId != null
+        ? catalog.componentById(node.componentId!)
+        : catalog.component(node.component);
     if (component == null) continue;
 
     for (final slotEntry in node.slots.entries) {
@@ -904,7 +926,9 @@ void _validateBindingsWithContext(
   // Now validate all bindings with context information
   for (final node in document.nodes.values) {
     final location = '/nodes/${_escapePointerSegment(node.id)}';
-    final component = catalog.component(node.component);
+    final component = node.componentId != null
+        ? catalog.componentById(node.componentId!)
+        : catalog.component(node.component);
     if (component == null) continue;
 
     final contexts = nodeContexts[node.id];

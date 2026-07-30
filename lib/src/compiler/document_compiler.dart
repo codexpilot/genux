@@ -327,7 +327,17 @@ final class GenuxDocumentCompiler {
 
     final compiledNodes = <String, GenuxCompiledNode>{};
     for (final node in draft.nodes.values) {
-      final component = catalog.component(node.component)!;
+      // Resolve component by numeric ID first, then fall back to string name
+      final component = node.componentId != null
+          ? catalog.componentById(node.componentId!)
+          : catalog.component(node.component);
+
+      if (component == null) {
+        throw StateError(
+          'Component not found: ${node.componentId != null ? "id=${node.componentId}" : node.component}',
+        );
+      }
+
       final properties = <String, Object?>{};
       final literalInputs = <String, Object?>{};
       for (final prop in node.props.entries) {

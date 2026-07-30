@@ -118,6 +118,7 @@ final class GenuxNode {
   GenuxNode({
     required this.id,
     required this.component,
+    this.componentId,
     required this.version,
     Map<String, Object?> props = const {},
     Map<String, GenuxBinding> bindings = const {},
@@ -136,6 +137,7 @@ final class GenuxNode {
     _expectOnlyKeys(json, const {
       'id',
       'component',
+      'componentId',
       'version',
       'props',
       'bind',
@@ -182,9 +184,16 @@ final class GenuxNode {
       slots[entry.key] = children;
     }
 
+    // Read componentId if present
+    final componentId = json['componentId'];
+    if (componentId != null && componentId is! int) {
+      throw FormatException('$location.componentId must be an integer.');
+    }
+
     return GenuxNode(
       id: _requiredString(json, 'id', location),
       component: _requiredString(json, 'component', location),
+      componentId: componentId as int?,
       version: _requiredInt(json, 'version', location),
       props: _optionalObjectMap(json, 'props', location),
       bindings: bindings,
@@ -195,6 +204,7 @@ final class GenuxNode {
 
   final String id;
   final String component;
+  final int? componentId; // Numeric registry ID (preferred)
   final int version;
   final Map<String, Object?> props;
   final Map<String, GenuxBinding> bindings;
@@ -204,6 +214,7 @@ final class GenuxNode {
   Map<String, Object?> toJson() => {
     'id': id,
     'component': component,
+    if (componentId != null) 'componentId': componentId,
     'version': version,
     if (props.isNotEmpty) 'props': props,
     if (bindings.isNotEmpty)

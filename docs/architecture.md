@@ -239,16 +239,16 @@ The repository is both a reusable private package and the reference native app.
 state, runtime session, and View coordinator. `package:genux/genux_flutter.dart`
 adds the Flutter registry, Material implementations, and `GenuxSurfaceHost`.
 
-The showcase consumes those public exports to provide three product-facing
-experiences: a live MultiView Customer Workspace, a catalog browser, and Runtime &
-Safety inspection. The Workspace opens `customer.edit` revision 6,
-`customer.summary` revision 1, and `component.lab` revision 1 as independent
+The showcase consumes those public exports to provide a live MultiView Customer
+Workspace with a bottom navigation bar (JSON editor and runtime preview). The
+Workspace opens `customer.edit` revision 6, `customer.summary` revision 1,
+`customer.list` revision 1, and `component.lab` revision 1 as independent
 documents. **Open Component Lab** reaches the live 43-node catalog specimen;
-interactions update its isolated state and record local `demo.event` intents in
-the Actions inspector. Returning from either child View reveals the exact retained
-editor session. The showcase is an executable specification and integration
-harness, not a second rendering path. A feature is not considered integrated when
-it only works in showcase-specific widgets.
+interactions update its isolated state and record local `demo.event` intents.
+Returning from either child View reveals the exact retained editor session. The
+showcase is an executable specification and integration harness, not a second
+rendering path. A feature is not considered integrated when it only works in
+showcase-specific widgets.
 
 ## Performance strategy
 

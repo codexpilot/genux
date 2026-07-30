@@ -31,24 +31,24 @@
 
 #### Before → After
 ```
-OLD: Three-tab navigation          NEW: DartPad-style two-pane
-├── Workspace (with 3 sub-tabs)    ├── JSON Editor (left)
-├── Component Catalog               └── Runtime View (right)
+OLD: Three-tab navigation          NEW: Bottom navigation bar
+├── Workspace (with 3 sub-tabs)    ├── JSON (bottom nav)
+├── Component Catalog               └── PREVIEW (bottom nav)
 └── Runtime & Safety
 ```
 
 #### Key Features Implemented
-- ✅ Real-time JSON editor with monospace font
+- ✅ Real-time JSON editor with bottom navigation
 - ✅ Auto-apply toggle with 1-second debounce
 - ✅ Manual apply button (play icon)
 - ✅ Live compilation error display (red error bar)
-- ✅ Responsive design (420px to 1280px+)
+- ✅ Bottom navigation bar for easy switching
 - ✅ View navigation with back button
 - ✅ State preservation across navigation
 - ✅ Automatic CollectionView viewport (A8)
 
 #### Files Created/Modified
-- ✅ `lib/showcase/pages/workspace_page_v2.dart` (new)
+- ✅ `lib/showcase/pages/workspace_page_v3.dart` (bottom navigation layout)
 - ✅ `lib/showcase/showcase_app.dart` (simplified)
 - ✅ `test/widget_test.dart` (updated)
 
@@ -172,7 +172,7 @@ flutter test --no-pub
 
 # Run showcase
 flutter run -d macos
-# Expected: DartPad-style two-pane UI launches
+# Expected: Bottom navigation bar UI launches
 ```
 
 ## Key Achievements
@@ -192,13 +192,13 @@ flutter run -d macos
 - Switch between 3 tabs to see different aspects
 - Navigate to catalog page for component list
 - Check runtime page for safety testing
-- Edit JSON in separate inspector tab
+- Edit JSON in separate view
 
 ### After
-- **Single workspace** with everything visible
+- **Bottom navigation workspace** with JSON and PREVIEW views
 - **Immediate feedback** on JSON changes
 - **Live compilation** with inline errors
-- **Familiar interface** (like DartPad)
+- **Familiar interface** with bottom navbar
 - **Faster iteration** cycle
 
 ## Next Steps (Optional Enhancements)
