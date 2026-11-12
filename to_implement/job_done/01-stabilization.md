@@ -40,9 +40,18 @@ Recorded against `main` at `16982ea`, reviewed 2026-11-12. Updated with addition
 - [x] **GuxToast** - Tests for message, colors, JSON. See [toast tests](../../test/gux_toast_test.dart).
 - [x] **GuxAlert** - Tests for message, title, icon, colors, JSON. See [alert tests](../../test/gux_alert_test.dart).
 
+## P0 Test Coverage - Checkbox (commit 0aead4c)
+
+- [x] **GuxCheckbox** - Tests for checked/unchecked/indeterminate states, tristate cycling, keyboard (Space/Enter), tap, disabled state, focus, autofocus. See [checkbox tests](../../test/gux_checkbox_test.dart).
+
+## P0 Test Coverage - Dialog and Progress Indicator (commit 60ef3b6)
+
+- [x] **GuxDialog** - Tests for title, content, action buttons, styling, background color, padding, width constraints, border radius, scrollable content. See [dialog tests](../../test/gux_dialog_test.dart).
+- [x] **GuxProgressIndicator** - Tests for determinate/indeterminate progress, animation, custom sizing, semantics labels/values, JSON roundtrip with null value handling. See [progress indicator tests](../../test/gux_progress_indicator_test.dart).
+
 ## Summary
 
-At this baseline (commit 6fde7aa), `flutter analyze` passed and `flutter test` passed **375 tests** with one skipped. All 9 audited controls now have basic test coverage. Color serialization bug fixed across all 12 style classes. These checks do not cover all remaining acceptance criteria.
+At this baseline (commit 60ef3b6), `flutter analyze` passed and `flutter test` passed **402 tests** with one skipped. All 11 audited controls now have basic test coverage. Color serialization bug fixed across all 12 style classes. These checks do not cover all remaining acceptance criteria.
 
 **Test Growth:**
 - Initial: 297 tests
@@ -50,6 +59,8 @@ At this baseline (commit 6fde7aa), `flutter analyze` passed and `flutter test` p
 - After simple controls: 341 tests (+24)
 - After interactive/overlay controls: 371 tests (+30)
 - After color serialization fix: 375 tests (+4)
+- After checkbox: 387 tests (+12)
+- After dialog and progress indicator: 402 tests (+15)
 
 ## Remaining P0 Work
 
