@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 /// Visual styling for [GuxRadio].
@@ -34,6 +35,9 @@ class GuxRadioStyle {
   /// Size of the inner dot when checked.
   final double dotSize;
 
+  /// Color when disabled.
+  final Color disabledColor;
+
   const GuxRadioStyle({
     this.borderColor = const Color(0xFFD1D5DB),
     this.checkedColor = const Color(0xFF3B82F6),
@@ -41,6 +45,7 @@ class GuxRadioStyle {
     this.borderWidth = 2.0,
     this.size = 20.0,
     this.dotSize = 8.0,
+    this.disabledColor = const Color(0xFFD1D5DB),
   });
 
   /// Creates a radio style from JSON.
@@ -58,6 +63,9 @@ class GuxRadioStyle {
       borderWidth: (json['borderWidth'] as num?)?.toDouble() ?? 2.0,
       size: (json['size'] as num?)?.toDouble() ?? 20.0,
       dotSize: (json['dotSize'] as num?)?.toDouble() ?? 8.0,
+      disabledColor: json['disabledColor'] != null
+          ? _parseColor(json['disabledColor'] as String)
+          : const Color(0xFFD1D5DB),
     );
   }
 
@@ -70,6 +78,7 @@ class GuxRadioStyle {
       'borderWidth': borderWidth,
       'size': size,
       'dotSize': dotSize,
+      'disabledColor': _colorToHex(disabledColor),
     };
   }
 
@@ -85,33 +94,37 @@ class GuxRadioStyle {
 
 /// A radio button for selecting one option from a group.
 ///
-/// Inspired by shadcn/ui Radio Group component. Used for mutually
-/// exclusive selections where only one option can be chosen at a time.
+/// Inspired by shadcn/ui Radio Group component. Supports keyboard activation
+/// (Space/Enter), visible focus indication, and proper accessibility semantics
+/// for mutually exclusive selections.
 ///
 /// Example:
 /// ```dart
 /// GuxRadio(
 ///   value: 'option1',
-///   groupValue: 'option1',
-///   onChanged: (value) => print('Selected: $value'),
+///   groupValue: selectedValue,
+///   onChanged: (value) => setState(() => selectedValue = value),
 ///   style: GuxRadioStyle(
 ///     checkedColor: Color(0xFF3B82F6),
 ///     borderColor: Color(0xFFD1D5DB),
 ///   ),
 /// )
 /// ```
-class GuxRadio extends StatelessWidget {
+class GuxRadio extends StatefulWidget {
   /// The value represented by this radio button.
   final String value;
 
   /// The currently selected value for the radio group.
   final String? groupValue;
 
-  /// Called when the radio button is tapped.
+  /// Called when the radio button is selected.
   final ValueChanged<String>? onChanged;
 
   /// Visual styling for the radio button.
   final GuxRadioStyle style;
+
+  /// Semantic label for accessibility.
+  final String? semanticsLabel;
 
   const GuxRadio({
     super.key,
@@ -119,6 +132,7 @@ class GuxRadio extends StatelessWidget {
     required this.groupValue,
     this.onChanged,
     required this.style,
+    this.semanticsLabel,
   });
 
   /// Creates a radio button from JSON.
@@ -136,19 +150,19 @@ class GuxRadio extends StatelessWidget {
   /// ```
   factory GuxRadio.fromJson(
     Map<String, dynamic> json, {
-    Map<String, VoidCallback>? actions,
+    Map<String, ValueChanged<String>>? actions,
   }) {
     final styleJson = json['style'] as Map<String, dynamic>?;
+    final actionKey = json['onChanged'] as String?;
 
     return GuxRadio(
       value: json['value'] as String? ?? '',
       groupValue: json['groupValue'] as String?,
-      onChanged: actions?['onChanged'] != null
-          ? (_) => actions!['onChanged']!()
-          : null,
+      onChanged: (actionKey != null && actions != null) ? actions[actionKey] : null,
       style: styleJson != null
           ? GuxRadioStyle.fromJson(styleJson)
           : const GuxRadioStyle(),
+      semanticsLabel: json['semanticsLabel'] as String?,
     );
   }
 
@@ -158,38 +172,113 @@ class GuxRadio extends StatelessWidget {
       'value': value,
       if (groupValue != null) 'groupValue': groupValue,
       'style': style.toJson(),
+      if (semanticsLabel != null) 'semanticsLabel': semanticsLabel,
     };
   }
 
-  bool get _isSelected => value == groupValue;
+  @override
+  State<GuxRadio> createState() => _GuxRadioState();
+}
+
+class _GuxRadioState extends State<GuxRadio> {
+  bool _isFocused = false;
+  final FocusNode _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(_handleFocusChange);
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_handleFocusChange);
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _handleFocusChange() {
+    setState(() {
+      _isFocused = _focusNode.hasFocus;
+    });
+  }
+
+  bool get _isSelected => widget.value == widget.groupValue;
+  bool get _isEnabled => widget.onChanged != null;
+
+  void _handleSelect() {
+    if (_isEnabled && !_isSelected) {
+      widget.onChanged!(widget.value);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onChanged != null ? () => onChanged!(value) : null,
-      child: Container(
-        width: style.size,
-        height: style.size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: _isSelected ? style.checkedColor : const Color(0x00000000),
-          border: Border.all(
-            color: _isSelected ? style.checkedColor : style.borderColor,
-            width: style.borderWidth,
+    final effectiveBorderColor = _isEnabled
+        ? (_isSelected ? widget.style.checkedColor : widget.style.borderColor)
+        : widget.style.disabledColor;
+
+    final effectiveBackgroundColor = _isEnabled
+        ? (_isSelected ? widget.style.checkedColor : const Color(0x00000000))
+        : Color.fromARGB((0.3 * 255).round(),
+            (widget.style.disabledColor.r * 255).round(),
+            (widget.style.disabledColor.g * 255).round(),
+            (widget.style.disabledColor.b * 255).round());
+
+    return Semantics(
+      inMutuallyExclusiveGroup: true,
+      checked: _isSelected,
+      enabled: _isEnabled,
+      label: widget.semanticsLabel,
+      child: Focus(
+        focusNode: _focusNode,
+        onKeyEvent: (node, event) {
+          if (!_isEnabled) return KeyEventResult.ignored;
+          if (event is KeyDownEvent) {
+            if (event.logicalKey == LogicalKeyboardKey.space ||
+                event.logicalKey == LogicalKeyboardKey.enter) {
+              _handleSelect();
+              return KeyEventResult.handled;
+            }
+          }
+          return KeyEventResult.ignored;
+        },
+        child: GestureDetector(
+          onTap: _isEnabled ? _handleSelect : null,
+          child: Container(
+            width: widget.style.size,
+            height: widget.style.size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: effectiveBackgroundColor,
+              border: Border.all(
+                color: _isFocused && _isEnabled
+                    ? widget.style.checkedColor
+                    : effectiveBorderColor,
+                width: _isFocused && _isEnabled
+                    ? widget.style.borderWidth + 1.0
+                    : widget.style.borderWidth,
+              ),
+            ),
+            child: _isSelected
+                ? Center(
+                    child: Container(
+                      width: widget.style.dotSize,
+                      height: widget.style.dotSize,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: _isEnabled
+                            ? widget.style.dotColor
+                            : Color.fromARGB((0.5 * 255).round(),
+                                (widget.style.dotColor.r * 255).round(),
+                                (widget.style.dotColor.g * 255).round(),
+                                (widget.style.dotColor.b * 255).round()),
+                      ),
+                    ),
+                  )
+                : null,
           ),
         ),
-        child: _isSelected
-            ? Center(
-                child: Container(
-                  width: style.dotSize,
-                  height: style.dotSize,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: style.dotColor,
-                  ),
-                ),
-              )
-            : null,
       ),
     );
   }

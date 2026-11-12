@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 /// Visual styling for [GuxSwitch].
@@ -46,6 +47,9 @@ class GuxSwitchStyle {
   /// Padding between thumb and track edge.
   final double thumbPadding;
 
+  /// Color when disabled.
+  final Color disabledColor;
+
   const GuxSwitchStyle({
     this.offColor = const Color(0xFFE5E7EB),
     this.onColor = const Color(0xFF3B82F6),
@@ -57,6 +61,7 @@ class GuxSwitchStyle {
     this.height = 24.0,
     this.thumbSize = 20.0,
     this.thumbPadding = 2.0,
+    this.disabledColor = const Color(0xFFD1D5DB),
   });
 
   /// Creates a switch style from JSON.
@@ -80,6 +85,9 @@ class GuxSwitchStyle {
       height: (json['height'] as num?)?.toDouble() ?? 24.0,
       thumbSize: (json['thumbSize'] as num?)?.toDouble() ?? 20.0,
       thumbPadding: (json['thumbPadding'] as num?)?.toDouble() ?? 2.0,
+      disabledColor: json['disabledColor'] != null
+          ? _parseColor(json['disabledColor'] as String)
+          : const Color(0xFFD1D5DB),
     );
   }
 
@@ -96,6 +104,7 @@ class GuxSwitchStyle {
       'height': height,
       'thumbSize': thumbSize,
       'thumbPadding': thumbPadding,
+      'disabledColor': _colorToHex(disabledColor),
     };
   }
 
@@ -111,21 +120,21 @@ class GuxSwitchStyle {
 
 /// A toggle switch for on/off state.
 ///
-/// Inspired by shadcn/ui Switch component. Used for binary settings
-/// and preference toggles.
+/// Inspired by shadcn/ui Switch component. Supports keyboard activation
+/// (Space/Enter), visible focus indication, and proper accessibility semantics.
 ///
 /// Example:
 /// ```dart
 /// GuxSwitch(
 ///   value: true,
-///   onChanged: (newValue) => print('Switch: $newValue'),
+///   onChanged: (newValue) => setState(() => value = newValue),
 ///   style: GuxSwitchStyle(
 ///     onColor: Color(0xFF3B82F6),
 ///     offColor: Color(0xFFE5E7EB),
 ///   ),
 /// )
 /// ```
-class GuxSwitch extends StatelessWidget {
+class GuxSwitch extends StatefulWidget {
   /// Current state of the switch.
   final bool value;
 
@@ -135,11 +144,15 @@ class GuxSwitch extends StatelessWidget {
   /// Visual styling for the switch.
   final GuxSwitchStyle style;
 
+  /// Semantic label for accessibility.
+  final String? semanticsLabel;
+
   const GuxSwitch({
     super.key,
     required this.value,
     this.onChanged,
     required this.style,
+    this.semanticsLabel,
   });
 
   /// Creates a switch from JSON.
@@ -167,6 +180,7 @@ class GuxSwitch extends StatelessWidget {
       style: styleJson != null
           ? GuxSwitchStyle.fromJson(styleJson)
           : const GuxSwitchStyle(),
+      semanticsLabel: json['semanticsLabel'] as String?,
     );
   }
 
@@ -175,48 +189,110 @@ class GuxSwitch extends StatelessWidget {
     return {
       'value': value,
       'style': style.toJson(),
+      if (semanticsLabel != null) 'semanticsLabel': semanticsLabel,
     };
   }
 
   @override
-  Widget build(BuildContext context) {
-    final backgroundColor = value ? style.onColor : style.offColor;
-    final thumbOffset = value
-        ? style.width - style.thumbSize - style.thumbPadding
-        : style.thumbPadding;
+  State<GuxSwitch> createState() => _GuxSwitchState();
+}
 
-    return GestureDetector(
-      onTap: onChanged != null ? () => onChanged!(!value) : null,
-      child: Container(
-        width: style.width,
-        height: style.height,
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          border: style.borderWidth > 0 && style.borderColor != null
-              ? Border.all(
-                  color: style.borderColor!,
-                  width: style.borderWidth,
-                )
-              : null,
-          borderRadius: BorderRadius.circular(style.borderRadius),
-        ),
-        child: Stack(
-          children: [
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeInOut,
-              left: thumbOffset,
-              top: style.thumbPadding,
-              child: Container(
-                width: style.thumbSize,
-                height: style.thumbSize,
-                decoration: BoxDecoration(
-                  color: style.thumbColor,
-                  shape: BoxShape.circle,
-                ),
-              ),
+class _GuxSwitchState extends State<GuxSwitch> {
+  bool _isFocused = false;
+  final FocusNode _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(_handleFocusChange);
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_handleFocusChange);
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _handleFocusChange() {
+    setState(() {
+      _isFocused = _focusNode.hasFocus;
+    });
+  }
+
+  bool get _isEnabled => widget.onChanged != null;
+
+  void _handleToggle() {
+    if (_isEnabled) {
+      widget.onChanged!(!widget.value);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final backgroundColor = _isEnabled
+        ? (widget.value ? widget.style.onColor : widget.style.offColor)
+        : widget.style.disabledColor;
+    final thumbOffset = widget.value
+        ? widget.style.width - widget.style.thumbSize - widget.style.thumbPadding
+        : widget.style.thumbPadding;
+
+    return Semantics(
+      toggled: widget.value,
+      enabled: _isEnabled,
+      label: widget.semanticsLabel,
+      child: Focus(
+        focusNode: _focusNode,
+        onKeyEvent: (node, event) {
+          if (!_isEnabled) return KeyEventResult.ignored;
+          if (event is KeyDownEvent) {
+            if (event.logicalKey == LogicalKeyboardKey.space ||
+                event.logicalKey == LogicalKeyboardKey.enter) {
+              _handleToggle();
+              return KeyEventResult.handled;
+            }
+          }
+          return KeyEventResult.ignored;
+        },
+        child: GestureDetector(
+          onTap: _isEnabled ? _handleToggle : null,
+          child: Container(
+            width: widget.style.width,
+            height: widget.style.height,
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              border: _isFocused && _isEnabled
+                  ? Border.all(
+                      color: widget.style.onColor,
+                      width: 2.0,
+                    )
+                  : widget.style.borderWidth > 0 && widget.style.borderColor != null
+                      ? Border.all(
+                          color: widget.style.borderColor!,
+                          width: widget.style.borderWidth,
+                        )
+                      : null,
+              borderRadius: BorderRadius.circular(widget.style.borderRadius),
             ),
-          ],
+            child: Stack(
+              children: [
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeInOut,
+                  left: thumbOffset,
+                  top: widget.style.thumbPadding,
+                  child: Container(
+                    width: widget.style.thumbSize,
+                    height: widget.style.thumbSize,
+                    decoration: BoxDecoration(
+                      color: widget.style.thumbColor,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

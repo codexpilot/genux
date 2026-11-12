@@ -14,27 +14,36 @@ not in Genux core.
 
 The package exports:
 
-- `GenuxSummaryLines`: three single-line text values with configurable styles
-  and spacing. Long text is visually ellipsized.
-- `GenuxWorkspaceScaffold`: a bounded workspace layout with a body and optional
-  top, bottom, and leading side regions. The caller supplies the region sizes
-  and may provide the background color and text style.
-- `GenuxButton`: a host-styled button with pointer, keyboard, focus, and disabled
-  states. `GenuxButtonStyle` supplies its colors, dimensions, and text style.
-- `GenuxProgressIndicator`: a compact determinate or indeterminate indicator
-  with host-supplied colors and optional accessibility labels.
-- `GenuxNavigation`: a configurable vertical navigation rail with caller-owned
-  selection, icons, labels, and callbacks.
-- `GenuxDropdown`: a controlled selection field with keyboard navigation,
-  status states, and an anchored menu. The menu closes on viewport or local
-  text-direction or scaling changes and uses fresh bounds when reopened.
-- `GenuxTextField`: an early low-level text input with host-owned text, labels,
+- `GuxButton`: a host-styled button with pointer, keyboard, focus, and disabled
+  states. `GuxButtonStyle` supplies its colors, dimensions, and text style.
+- `GuxCheckbox`: a checkbox control with optional tristate support.
+- `GuxTextField`: a low-level text input with host-owned text, labels,
   styling and validation. Keyboard selection works, but platform selection
   handles, a context menu, and accessibility copy/cut/paste actions are not yet
   implemented; it is not a drop-in replacement for a full-featured text field.
-- `GenuxDialog` and `showGenuxDialog`: a host-styled dialog surface and route.
+- `GuxTextInput`: a single-line text input with validation support.
+- `GuxDropdown`: a controlled selection field with keyboard navigation,
+  status states, and an anchored menu. The menu closes on viewport or local
+  text-direction or scaling changes and uses fresh bounds when reopened.
+- `GuxProgressIndicator`: a compact determinate or indeterminate indicator
+  with host-supplied colors and optional accessibility labels.
+- `GuxDialog` and `showGuxDialog`: a host-styled dialog surface and route.
   Supply a localized barrier label, and constrain or shrink-wrap any scrollable
   child placed inside dialog content.
+- `GuxNavigation`: a configurable vertical navigation rail with caller-owned
+  selection, icons, labels, and callbacks.
+- `GuxWorkspaceScaffold`: a bounded workspace layout with a body and optional
+  top, bottom, and leading side regions. The caller supplies the region sizes
+  and may provide the background color and text style.
+- `GuxToggle`: a toggle switch control.
+- `GuxSlider`: a slider for selecting values from a range with keyboard, pointer,
+  and touch support.
+- `GuxSwitch`: a toggle switch for on/off state with focus and keyboard support.
+- `GuxRadio`: a radio button for mutually exclusive selections with focus and
+  keyboard support.
+- `GuxCard`, `GuxBadge`, `GuxAvatar`, `GuxAccordion`, `GuxTabs`, `GuxSheet`,
+  `GuxToast`, `GuxAlert`, `GuxSeparator`: additional UI components for common
+  interface patterns.
 
 These primitives are an initial migration foundation, not yet a complete
 replacement for ContextStudio's UI. See the [component inventory and plan](docs/contextstudio-migration.md)
@@ -65,8 +74,8 @@ actions, arbitrary widget constructors, or external resource access. See the
 [version 1 schema](schema/genux-presentation-v1.schema.json) and
 [dashboard example](examples/dashboard.json).
 
-Parse JSON text with `GenuxPresentationDocument.parse`, then give the validated
-document to `GenuxPresentationView`. The embedding app supplies text direction
+Parse JSON text with `GuxPresentationDocument.parse`, then give the validated
+document to `GuxPresentationView`. The embedding app supplies text direction
 and inherited text style; give the preview bounded constraints:
 
 ```dart
@@ -74,7 +83,7 @@ import 'package:flutter/widgets.dart';
 import 'package:genux/genux.dart';
 
 Widget preview(String jsonText) {
-  final document = GenuxPresentationDocument.parse(jsonText);
+  final document = GuxPresentationDocument.parse(jsonText);
   return Directionality(
     textDirection: TextDirection.ltr,
     child: DefaultTextStyle(
@@ -82,7 +91,7 @@ Widget preview(String jsonText) {
       child: SizedBox(
         width: 640,
         height: 320,
-        child: GenuxPresentationView(document: document),
+        child: GuxPresentationView(document: document),
       ),
     ),
   );
@@ -90,7 +99,7 @@ Widget preview(String jsonText) {
 ```
 
 The parser rejects invalid JSON, unsupported versions or node types, unknown
-fields, and invalid values with `GenuxFormatException`, which includes a JSON
+fields, and invalid values with `GuxFormatException`, which includes a JSON
 path. Both input and normalized serialization must fit within 262,144 UTF-8
 bytes. Other limits include 32 node levels, 512 nodes, 100 children per column,
 and 4,096 Unicode code points per text value. Spacing must be between 0 and

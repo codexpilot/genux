@@ -80,8 +80,16 @@ GuxScaffold(
     title: Text('My Screen'),
     actions: [
       GuxButton(
+        style: GuxButtonStyle(
+          backgroundColor: Color(0xFF3B82F6),
+          hoverColor: Color(0xFF2563EB),
+          pressedColor: Color(0xFF1D4ED8),
+          disabledColor: Color(0xFF9CA3AF),
+          foregroundColor: Color(0xFFFFFFFF),
+          disabledForegroundColor: Color(0xFFD1D5DB),
+        ),
         onPressed: () => print('Action'),
-        child: Icon(Icons.settings),
+        child: Text('Settings'),
       ),
     ],
   ),
