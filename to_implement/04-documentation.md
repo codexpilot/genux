@@ -6,9 +6,9 @@ Make the README a reliable starting point, provide a discoverable reference for 
 
 ## Immediate corrections
 
-- [ ] Replace obsolete `Genux*` symbols in [README](../README.md) and examples with current `Gux*` names. Check every snippet against the public package entry point, including the static presentation example.
+- [ ] Check examples and every snippet against the public package entry point, and replace any remaining obsolete `Genux*` symbols. The README catalog and static preview naming corrections are recorded in [completed work](job_done/01-stabilization.md).
 - [ ] Describe actual SDK constraints and runtime dependencies from `pubspec.yaml`; retain the precise UI-independence boundary without claiming Flutter is the only dependency. Explain Git dependency pinning and upgrade behavior.
-- [ ] Correct [routing examples](../docs/routing-and-navigation.md), including required `GuxButtonStyle`, and explain `GuxApp` route behavior and any changes made under the routing milestone. Avoid Material-only icons in purported framework-independent examples or explicitly explain host ownership.
+- [ ] Verify all [routing examples](../docs/routing-and-navigation.md) and explain `GuxApp` route behavior and any changes made under the routing milestone. Avoid Material-only icons in purported framework-independent examples or explicitly explain host ownership. The scaffold button example has been corrected; see [completed work](job_done/01-stabilization.md).
 - [ ] Fix [example app documentation](../example/README.md): use a supported child shape or register a factory, put progress colors at the expected level, correct component counts and malformed-input claims, and link to real documentation. Verify examples against the app actually shipped.
 - [ ] Clarify that the static preview is experimental and separate from component JSON. Describe the catalog as schema declarations, and do not describe an A2UI adapter as complete without protocol evidence. Label old migration/phase reports with baseline date and historical status; retain them as history rather than current reference.
 

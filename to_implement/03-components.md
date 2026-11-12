@@ -1,5 +1,7 @@
 # 03 — Component coverage roadmap
 
+For the concrete, prioritized shared business UI inventory, implementation status and acceptance criteria, use [05 — Basic component catalog](05-basic-components.md). This roadmap covers the broader shadcn-inspired inventory and audit; its waves are not a second count of the basic families. Use the priorities and delivery slices in 05 for overlapping work.
+
 ## Reference and current coverage
 
 Reference snapshot: [official shadcn/ui component index](https://ui.shadcn.com/docs/components), reviewed 2026-11-12. It changes over time; refresh the matrix before each release. The list below is a scope inventory, not a claim of parity. The source is a web/React catalog: implement equivalent useful Flutter behavior with native platform conventions, not React dependencies or an assumed pixel-for-pixel clone.

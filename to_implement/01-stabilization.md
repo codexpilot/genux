@@ -4,21 +4,28 @@ Tasks below describe outcomes and acceptance checks. Add a failing regression te
 
 ## P0: controls and routing
 
-- [ ] Make `GuxSlider` a controlled value selector with `onChanged`, tap/drag, keyboard adjustments, disabled state and usable semantics. Validate min/max/value, zero range and narrow/unbounded layouts; honor RTL and divisions if offered. Test pointer, keyboard, semantics, bounds, RTL and disabled behavior. Define a migration for existing callers before changing the constructor.
-- [ ] Give `GuxSwitch` and `GuxRadio` focus, visible focus indication, Space/Enter activation and correct checked/selected/disabled semantics. Test pointer, keyboard, disabled and assistive-technology actions; agree on grouping and arrow-key behavior for radio groups.
+- [ ] Finish `GuxSlider` correctness and accessibility. Add focused regression tests for each issue:
+  - Snap divisions relative to `min`, so nonzero minima and both endpoints remain reachable by pointer, keyboard and semantics.
+  - Return ignored for unhandled keys, including Tab, so focus traversal and ancestor shortcuts work.
+  - Define and validate zero-width ranges and division counts; prevent non-finite values and exceptions during interaction.
+  - Make RTL rendering, pointer mapping and arrow-key behavior consistent; test the visible thumb and track as well as callbacks.
+  - Validate min/max/value and narrow or unbounded layouts; test pointer, keyboard, semantics, bounds and disabled behavior.
+- [ ] Finish `GuxSwitch`, `GuxRadio` and `GuxSlider` disabled focus behavior: exclude disabled controls from keyboard traversal and prevent disabled pointer interactions from taking focus. Test transitions between enabled and disabled states.
+- [ ] Resolve the `GuxRadio.fromJson` callback compatibility break: the action map changed from `VoidCallback` to `ValueChanged<String>` and now requires a JSON action key. Preserve existing callers and lookup behavior or document an explicit versioned migration; test both established and supported new contracts.
+- [ ] Complete switch and radio accessibility testing, including assistive-technology actions; agree on grouping and arrow-key behavior for radio groups.
 - [ ] Audit the other recently added controls (accordion, tabs, sheet, toast, alert, card, badge, avatar and separator) for keyboard, state, focus, accessibility, responsive layout and lifecycle gaps. Record actual status in the component matrix; fix failures rather than extrapolating from class names.
 - [ ] Define `GuxApp` routing: `/` must reliably reach `home` when a host supplies a named-route factory, and unknown route behavior must be explicit. Test startup, named and unknown routes, route settings, deep links, navigation and fallback ordering. Cover `GuxPageRoute` transitions, RTL and reduced motion.
 - [ ] Investigate the skipped touch long-press selection/handles test in `test/gux_text_field_test.dart`. Implement and verify platform-appropriate selection and copy behavior, or document a concrete platform limitation and tracked follow-up; do not merely remove the skip.
 
 ## P0: documentation truth
 
-- [ ] Correct the `Genux*`/`Gux*` names, actual runtime dependencies, catalog status, and README preview example. Fix the routing example's required button style and the example README's unregistered `Text` factory and incorrect progress JSON shape.
+- [ ] Verify remaining examples and catalog status, correct the README runtime dependency claim, and fix the example README's unregistered `Text` factory and incorrect progress JSON shape. The README naming/preview and routing button examples have received partial corrections; see [completed work](job_done/01-stabilization.md).
 - [ ] Mark historical completion reports as historical where they assert full serialization, accessibility or A2UI support. Follow the documentation deliverables and verification in [04-documentation.md](04-documentation.md).
 
 ## P1: JSON contracts and correctness
 
 - [ ] Specify three distinct boundaries: the bounded `schemaVersion: 1` static presentation document; the component JSON factory/renderer API; and the A2UI catalog/possible adapter. Document versioning, trusted inputs, error behavior, limits, host actions and compatibility for each. Preserve the existing static schema unless an explicit migration is approved.
-- [ ] Replace duplicated color conversions with a shared, versioned codec that preserves alpha (including transparent black and semi-transparent values), handles leading zeros, and defines consistent errors for malformed hex. Decide and document accepted `#RRGGBB`/`#AARRGGBB` forms and compatibility with old data. Test invalid, transparent, semi-transparent and opaque values and representative serializers, including toast's default shadow.
+- [ ] Integrate the existing standalone color codec into component serializers, replacing duplicated color conversions with a shared, versioned codec that preserves alpha (including transparent black and semi-transparent values), handles leading zeros, and defines consistent errors for malformed hex. Decide and document accepted `#RRGGBB`/`#AARRGGBB` forms and compatibility with old data. Test invalid, transparent, semi-transparent and opaque values and representative serializers, including toast's default shadow.
 - [ ] Define registry ownership and built-in registration: provide an explicit built-in setup or scoped registry with documented override and lifecycle rules. Preserve existing registration callers or publish a migration. Make the documented button example work from a fresh process; verify nested components, missing/unknown types and isolated registries.
 - [ ] Define list child semantics. Either support strings and typed children recursively or reject unsupported elements with a useful path; never silently drop them. Test empty, mixed, nested and malformed lists and unknown components.
 - [ ] State that arbitrary Flutter widgets and callbacks cannot round-trip as JSON. Choose explicit serializable configuration trees and action IDs for supported structures, or clearly label output as a partial snapshot. Address workspace children and navigation icons/actions; test supported round trips and rejection or disclosure of unsupported data.
