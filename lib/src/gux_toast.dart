@@ -14,6 +14,8 @@
 
 import 'package:flutter/widgets.dart';
 
+import 'json/gux_color_codec.dart';
+
 /// Visual styling for [GuxToast].
 class GuxToastStyle {
   /// Background color of the toast.
@@ -63,13 +65,13 @@ class GuxToastStyle {
   factory GuxToastStyle.fromJson(Map<String, dynamic> json) {
     return GuxToastStyle(
       backgroundColor: json['backgroundColor'] != null
-          ? _parseColor(json['backgroundColor'] as String)
+          ? GuxColorCodec.parse(json['backgroundColor'] as String)
           : const Color(0xFF1F2937),
       textColor: json['textColor'] != null
-          ? _parseColor(json['textColor'] as String)
+          ? GuxColorCodec.parse(json['textColor'] as String)
           : const Color(0xFFFFFFFF),
       borderColor: json['borderColor'] != null
-          ? _parseColor(json['borderColor'] as String)
+          ? GuxColorCodec.parse(json['borderColor'] as String)
           : null,
       borderWidth: (json['borderWidth'] as num?)?.toDouble() ?? 0.0,
       borderRadius: (json['borderRadius'] as num?)?.toDouble() ?? 6.0,
@@ -80,7 +82,7 @@ class GuxToastStyle {
       fontWeight: _parseFontWeight(json['fontWeight'] as String?),
       elevation: (json['elevation'] as num?)?.toDouble() ?? 4.0,
       shadowColor: json['shadowColor'] != null
-          ? _parseColor(json['shadowColor'] as String)
+          ? GuxColorCodec.parse(json['shadowColor'] as String)
           : const Color(0x33000000),
     );
   }
@@ -88,9 +90,9 @@ class GuxToastStyle {
   /// Converts this style to JSON.
   Map<String, dynamic> toJson() {
     return {
-      'backgroundColor': _colorToHex(backgroundColor),
-      'textColor': _colorToHex(textColor),
-      if (borderColor != null) 'borderColor': _colorToHex(borderColor!),
+      'backgroundColor': GuxColorCodec.toHex(backgroundColor),
+      'textColor': GuxColorCodec.toHex(textColor),
+      if (borderColor != null) 'borderColor': GuxColorCodec.toHex(borderColor!),
       'borderWidth': borderWidth,
       'borderRadius': borderRadius,
       'padding': {
@@ -100,19 +102,11 @@ class GuxToastStyle {
       'fontSize': fontSize,
       'fontWeight': _fontWeightToString(fontWeight),
       'elevation': elevation,
-      'shadowColor': _colorToHex(shadowColor),
+      'shadowColor': GuxColorCodec.toHex(shadowColor),
     };
   }
 
-  static Color _parseColor(String hex) {
-    final hexCode = hex.replaceAll('#', '');
-    return Color(int.parse('FF$hexCode', radix: 16));
-  }
 
-  static String _colorToHex(Color color) {
-    final argb = color.toARGB32().toRadixString(16).padLeft(8, '0').toUpperCase();
-    return '#${argb.substring(2)}'; // Remove alpha channel
-  }
 
   static EdgeInsets _parsePadding(Map<String, dynamic> json) {
     if (json.containsKey('horizontal') && json.containsKey('vertical')) {

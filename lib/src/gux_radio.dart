@@ -15,6 +15,8 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import 'json/gux_color_codec.dart';
+
 /// Visual styling for [GuxRadio].
 class GuxRadioStyle {
   /// Border color when unchecked.
@@ -52,19 +54,19 @@ class GuxRadioStyle {
   factory GuxRadioStyle.fromJson(Map<String, dynamic> json) {
     return GuxRadioStyle(
       borderColor: json['borderColor'] != null
-          ? _parseColor(json['borderColor'] as String)
+          ? GuxColorCodec.parse(json['borderColor'] as String)
           : const Color(0xFFD1D5DB),
       checkedColor: json['checkedColor'] != null
-          ? _parseColor(json['checkedColor'] as String)
+          ? GuxColorCodec.parse(json['checkedColor'] as String)
           : const Color(0xFF3B82F6),
       dotColor: json['dotColor'] != null
-          ? _parseColor(json['dotColor'] as String)
+          ? GuxColorCodec.parse(json['dotColor'] as String)
           : const Color(0xFFFFFFFF),
       borderWidth: (json['borderWidth'] as num?)?.toDouble() ?? 2.0,
       size: (json['size'] as num?)?.toDouble() ?? 20.0,
       dotSize: (json['dotSize'] as num?)?.toDouble() ?? 8.0,
       disabledColor: json['disabledColor'] != null
-          ? _parseColor(json['disabledColor'] as String)
+          ? GuxColorCodec.parse(json['disabledColor'] as String)
           : const Color(0xFFD1D5DB),
     );
   }
@@ -72,24 +74,14 @@ class GuxRadioStyle {
   /// Converts this style to JSON.
   Map<String, dynamic> toJson() {
     return {
-      'borderColor': _colorToHex(borderColor),
-      'checkedColor': _colorToHex(checkedColor),
-      'dotColor': _colorToHex(dotColor),
+      'borderColor': GuxColorCodec.toHex(borderColor),
+      'checkedColor': GuxColorCodec.toHex(checkedColor),
+      'dotColor': GuxColorCodec.toHex(dotColor),
       'borderWidth': borderWidth,
       'size': size,
       'dotSize': dotSize,
-      'disabledColor': _colorToHex(disabledColor),
+      'disabledColor': GuxColorCodec.toHex(disabledColor),
     };
-  }
-
-  static Color _parseColor(String hex) {
-    final hexCode = hex.replaceAll('#', '');
-    return Color(int.parse('FF$hexCode', radix: 16));
-  }
-
-  static String _colorToHex(Color color) {
-    final argb = color.toARGB32().toRadixString(16).padLeft(8, '0').toUpperCase();
-    return '#${argb.substring(2)}'; // Remove alpha channel
   }
 }
 

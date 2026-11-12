@@ -15,6 +15,8 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import 'json/gux_color_codec.dart';
+
 /// Visual styling for [GuxSlider].
 class GuxSliderStyle {
   /// Track color (inactive portion).
@@ -52,19 +54,19 @@ class GuxSliderStyle {
   factory GuxSliderStyle.fromJson(Map<String, dynamic> json) {
     return GuxSliderStyle(
       trackColor: json['trackColor'] != null
-          ? _parseColor(json['trackColor'] as String)
+          ? GuxColorCodec.parse(json['trackColor'] as String)
           : const Color(0xFFE5E7EB),
       activeTrackColor: json['activeTrackColor'] != null
-          ? _parseColor(json['activeTrackColor'] as String)
+          ? GuxColorCodec.parse(json['activeTrackColor'] as String)
           : const Color(0xFF3B82F6),
       thumbColor: json['thumbColor'] != null
-          ? _parseColor(json['thumbColor'] as String)
+          ? GuxColorCodec.parse(json['thumbColor'] as String)
           : const Color(0xFFFFFFFF),
       trackHeight: (json['trackHeight'] as num?)?.toDouble() ?? 4.0,
       thumbSize: (json['thumbSize'] as num?)?.toDouble() ?? 20.0,
       borderRadius: (json['borderRadius'] as num?)?.toDouble() ?? 2.0,
       disabledColor: json['disabledColor'] != null
-          ? _parseColor(json['disabledColor'] as String)
+          ? GuxColorCodec.parse(json['disabledColor'] as String)
           : const Color(0xFFD1D5DB),
     );
   }
@@ -72,25 +74,17 @@ class GuxSliderStyle {
   /// Converts this style to JSON.
   Map<String, dynamic> toJson() {
     return {
-      'trackColor': _colorToHex(trackColor),
-      'activeTrackColor': _colorToHex(activeTrackColor),
-      'thumbColor': _colorToHex(thumbColor),
+      'trackColor': GuxColorCodec.toHex(trackColor),
+      'activeTrackColor': GuxColorCodec.toHex(activeTrackColor),
+      'thumbColor': GuxColorCodec.toHex(thumbColor),
       'trackHeight': trackHeight,
       'thumbSize': thumbSize,
       'borderRadius': borderRadius,
-      'disabledColor': _colorToHex(disabledColor),
+      'disabledColor': GuxColorCodec.toHex(disabledColor),
     };
   }
 
-  static Color _parseColor(String hex) {
-    final hexCode = hex.replaceAll('#', '');
-    return Color(int.parse('FF$hexCode', radix: 16));
-  }
 
-  static String _colorToHex(Color color) {
-    final argb = color.toARGB32().toRadixString(16).padLeft(8, '0').toUpperCase();
-    return '#${argb.substring(2)}'; // Remove alpha channel
-  }
 }
 
 /// A slider for selecting a value from a range.

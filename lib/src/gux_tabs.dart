@@ -14,6 +14,8 @@
 
 import 'package:flutter/widgets.dart';
 
+import 'json/gux_color_codec.dart';
+
 /// Visual styling for [GuxTabs].
 class GuxTabsStyle {
   /// Background color of the tab bar.
@@ -83,22 +85,22 @@ class GuxTabsStyle {
   factory GuxTabsStyle.fromJson(Map<String, dynamic> json) {
     return GuxTabsStyle(
       backgroundColor: json['backgroundColor'] != null
-          ? _parseColor(json['backgroundColor'] as String)
+          ? GuxColorCodec.parse(json['backgroundColor'] as String)
           : const Color(0xFFF9FAFB),
       activeTabColor: json['activeTabColor'] != null
-          ? _parseColor(json['activeTabColor'] as String)
+          ? GuxColorCodec.parse(json['activeTabColor'] as String)
           : const Color(0xFFFFFFFF),
       inactiveTabColor: json['inactiveTabColor'] != null
-          ? _parseColor(json['inactiveTabColor'] as String)
+          ? GuxColorCodec.parse(json['inactiveTabColor'] as String)
           : const Color(0x00000000),
       activeTextColor: json['activeTextColor'] != null
-          ? _parseColor(json['activeTextColor'] as String)
+          ? GuxColorCodec.parse(json['activeTextColor'] as String)
           : const Color(0xFF1F2937),
       inactiveTextColor: json['inactiveTextColor'] != null
-          ? _parseColor(json['inactiveTextColor'] as String)
+          ? GuxColorCodec.parse(json['inactiveTextColor'] as String)
           : const Color(0xFF6B7280),
       borderColor: json['borderColor'] != null
-          ? _parseColor(json['borderColor'] as String)
+          ? GuxColorCodec.parse(json['borderColor'] as String)
           : null,
       borderWidth: (json['borderWidth'] as num?)?.toDouble() ?? 1.0,
       borderRadius: (json['borderRadius'] as num?)?.toDouble() ?? 6.0,
@@ -110,7 +112,7 @@ class GuxTabsStyle {
       inactiveFontWeight: _parseFontWeight(json['inactiveFontWeight'] as String?),
       tabBarHeight: (json['tabBarHeight'] as num?)?.toDouble() ?? 44.0,
       indicatorColor: json['indicatorColor'] != null
-          ? _parseColor(json['indicatorColor'] as String)
+          ? GuxColorCodec.parse(json['indicatorColor'] as String)
           : null,
       indicatorHeight: (json['indicatorHeight'] as num?)?.toDouble() ?? 2.0,
     );
@@ -119,12 +121,12 @@ class GuxTabsStyle {
   /// Converts this style to JSON.
   Map<String, dynamic> toJson() {
     return {
-      'backgroundColor': _colorToHex(backgroundColor),
-      'activeTabColor': _colorToHex(activeTabColor),
-      'inactiveTabColor': _colorToHex(inactiveTabColor),
-      'activeTextColor': _colorToHex(activeTextColor),
-      'inactiveTextColor': _colorToHex(inactiveTextColor),
-      if (borderColor != null) 'borderColor': _colorToHex(borderColor!),
+      'backgroundColor': GuxColorCodec.toHex(backgroundColor),
+      'activeTabColor': GuxColorCodec.toHex(activeTabColor),
+      'inactiveTabColor': GuxColorCodec.toHex(inactiveTabColor),
+      'activeTextColor': GuxColorCodec.toHex(activeTextColor),
+      'inactiveTextColor': GuxColorCodec.toHex(inactiveTextColor),
+      if (borderColor != null) 'borderColor': GuxColorCodec.toHex(borderColor!),
       'borderWidth': borderWidth,
       'borderRadius': borderRadius,
       'tabPadding': {
@@ -135,19 +137,9 @@ class GuxTabsStyle {
       'activeFontWeight': _fontWeightToString(activeFontWeight),
       'inactiveFontWeight': _fontWeightToString(inactiveFontWeight),
       'tabBarHeight': tabBarHeight,
-      if (indicatorColor != null) 'indicatorColor': _colorToHex(indicatorColor!),
+      if (indicatorColor != null) 'indicatorColor': GuxColorCodec.toHex(indicatorColor!),
       'indicatorHeight': indicatorHeight,
     };
-  }
-
-  static Color _parseColor(String hex) {
-    final hexCode = hex.replaceAll('#', '');
-    return Color(int.parse('FF$hexCode', radix: 16));
-  }
-
-  static String _colorToHex(Color color) {
-    final argb = color.toARGB32().toRadixString(16).padLeft(8, '0').toUpperCase();
-    return '#${argb.substring(2)}'; // Remove alpha channel
   }
 
   static EdgeInsets _parsePadding(Map<String, dynamic> json) {

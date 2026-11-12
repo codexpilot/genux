@@ -14,6 +14,8 @@
 
 import 'package:flutter/widgets.dart';
 
+import 'json/gux_color_codec.dart';
+
 /// Visual styling for [GuxAlert].
 class GuxAlertStyle {
   /// Background color of the alert.
@@ -63,13 +65,13 @@ class GuxAlertStyle {
   factory GuxAlertStyle.fromJson(Map<String, dynamic> json) {
     return GuxAlertStyle(
       backgroundColor: json['backgroundColor'] != null
-          ? _parseColor(json['backgroundColor'] as String)
+          ? GuxColorCodec.parse(json['backgroundColor'] as String)
           : const Color(0xFFF3F4F6),
       textColor: json['textColor'] != null
-          ? _parseColor(json['textColor'] as String)
+          ? GuxColorCodec.parse(json['textColor'] as String)
           : const Color(0xFF1F2937),
       borderColor: json['borderColor'] != null
-          ? _parseColor(json['borderColor'] as String)
+          ? GuxColorCodec.parse(json['borderColor'] as String)
           : null,
       borderWidth: (json['borderWidth'] as num?)?.toDouble() ?? 1.0,
       borderRadius: (json['borderRadius'] as num?)?.toDouble() ?? 8.0,
@@ -79,7 +81,7 @@ class GuxAlertStyle {
       fontSize: (json['fontSize'] as num?)?.toDouble() ?? 14.0,
       fontWeight: _parseFontWeight(json['fontWeight'] as String?),
       iconColor: json['iconColor'] != null
-          ? _parseColor(json['iconColor'] as String)
+          ? GuxColorCodec.parse(json['iconColor'] as String)
           : null,
       iconSize: (json['iconSize'] as num?)?.toDouble() ?? 20.0,
     );
@@ -88,9 +90,9 @@ class GuxAlertStyle {
   /// Converts this style to JSON.
   Map<String, dynamic> toJson() {
     return {
-      'backgroundColor': _colorToHex(backgroundColor),
-      'textColor': _colorToHex(textColor),
-      if (borderColor != null) 'borderColor': _colorToHex(borderColor!),
+      'backgroundColor': GuxColorCodec.toHex(backgroundColor),
+      'textColor': GuxColorCodec.toHex(textColor),
+      if (borderColor != null) 'borderColor': GuxColorCodec.toHex(borderColor!),
       'borderWidth': borderWidth,
       'borderRadius': borderRadius,
       'padding': {
@@ -101,20 +103,12 @@ class GuxAlertStyle {
       },
       'fontSize': fontSize,
       'fontWeight': _fontWeightToString(fontWeight),
-      if (iconColor != null) 'iconColor': _colorToHex(iconColor!),
+      if (iconColor != null) 'iconColor': GuxColorCodec.toHex(iconColor!),
       'iconSize': iconSize,
     };
   }
 
-  static Color _parseColor(String hex) {
-    final hexCode = hex.replaceAll('#', '');
-    return Color(int.parse('FF$hexCode', radix: 16));
-  }
 
-  static String _colorToHex(Color color) {
-    final argb = color.toARGB32().toRadixString(16).padLeft(8, '0').toUpperCase();
-    return '#${argb.substring(2)}'; // Remove alpha channel
-  }
 
   static EdgeInsets _parsePadding(Map<String, dynamic> json) {
     if (json.containsKey('all')) {

@@ -14,6 +14,8 @@
 
 import 'package:flutter/widgets.dart';
 
+import 'json/gux_color_codec.dart';
+
 /// Visual styling for [GuxAccordion].
 class GuxAccordionStyle {
   /// Background color of the accordion.
@@ -83,13 +85,13 @@ class GuxAccordionStyle {
   factory GuxAccordionStyle.fromJson(Map<String, dynamic> json) {
     return GuxAccordionStyle(
       backgroundColor: json['backgroundColor'] != null
-          ? _parseColor(json['backgroundColor'] as String)
+          ? GuxColorCodec.parse(json['backgroundColor'] as String)
           : const Color(0xFFFFFFFF),
       expandedBackgroundColor: json['expandedBackgroundColor'] != null
-          ? _parseColor(json['expandedBackgroundColor'] as String)
+          ? GuxColorCodec.parse(json['expandedBackgroundColor'] as String)
           : const Color(0xFFF9FAFB),
       borderColor: json['borderColor'] != null
-          ? _parseColor(json['borderColor'] as String)
+          ? GuxColorCodec.parse(json['borderColor'] as String)
           : null,
       borderWidth: (json['borderWidth'] as num?)?.toDouble() ?? 1.0,
       borderRadius: (json['borderRadius'] as num?)?.toDouble() ?? 8.0,
@@ -100,17 +102,17 @@ class GuxAccordionStyle {
           ? _parsePadding(json['contentPadding'] as Map<String, dynamic>)
           : const EdgeInsets.all(16.0),
       headerTextColor: json['headerTextColor'] != null
-          ? _parseColor(json['headerTextColor'] as String)
+          ? GuxColorCodec.parse(json['headerTextColor'] as String)
           : const Color(0xFF1F2937),
       headerFontSize: (json['headerFontSize'] as num?)?.toDouble() ?? 16.0,
       headerFontWeight:
           _parseFontWeight(json['headerFontWeight'] as String?),
       contentTextColor: json['contentTextColor'] != null
-          ? _parseColor(json['contentTextColor'] as String)
+          ? GuxColorCodec.parse(json['contentTextColor'] as String)
           : const Color(0xFF4B5563),
       contentFontSize: (json['contentFontSize'] as num?)?.toDouble() ?? 14.0,
       iconColor: json['iconColor'] != null
-          ? _parseColor(json['iconColor'] as String)
+          ? GuxColorCodec.parse(json['iconColor'] as String)
           : const Color(0xFF6B7280),
       iconSize: (json['iconSize'] as num?)?.toDouble() ?? 20.0,
       spacing: (json['spacing'] as num?)?.toDouble() ?? 0.0,
@@ -120,9 +122,9 @@ class GuxAccordionStyle {
   /// Converts this style to JSON.
   Map<String, dynamic> toJson() {
     return {
-      'backgroundColor': _colorToHex(backgroundColor),
-      'expandedBackgroundColor': _colorToHex(expandedBackgroundColor),
-      if (borderColor != null) 'borderColor': _colorToHex(borderColor!),
+      'backgroundColor': GuxColorCodec.toHex(backgroundColor),
+      'expandedBackgroundColor': GuxColorCodec.toHex(expandedBackgroundColor),
+      if (borderColor != null) 'borderColor': GuxColorCodec.toHex(borderColor!),
       'borderWidth': borderWidth,
       'borderRadius': borderRadius,
       'headerPadding': {
@@ -137,26 +139,18 @@ class GuxAccordionStyle {
         'right': contentPadding.right,
         'bottom': contentPadding.bottom,
       },
-      'headerTextColor': _colorToHex(headerTextColor),
+      'headerTextColor': GuxColorCodec.toHex(headerTextColor),
       'headerFontSize': headerFontSize,
       'headerFontWeight': _fontWeightToString(headerFontWeight),
-      'contentTextColor': _colorToHex(contentTextColor),
+      'contentTextColor': GuxColorCodec.toHex(contentTextColor),
       'contentFontSize': contentFontSize,
-      'iconColor': _colorToHex(iconColor),
+      'iconColor': GuxColorCodec.toHex(iconColor),
       'iconSize': iconSize,
       'spacing': spacing,
     };
   }
 
-  static Color _parseColor(String hex) {
-    final hexCode = hex.replaceAll('#', '');
-    return Color(int.parse('FF$hexCode', radix: 16));
-  }
 
-  static String _colorToHex(Color color) {
-    final argb = color.toARGB32().toRadixString(16).padLeft(8, '0').toUpperCase();
-    return '#${argb.substring(2)}'; // Remove alpha channel
-  }
 
   static EdgeInsets _parsePadding(Map<String, dynamic> json) {
     if (json.containsKey('all')) {

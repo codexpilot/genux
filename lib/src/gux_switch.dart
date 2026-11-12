@@ -15,6 +15,8 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import 'json/gux_color_codec.dart';
+
 /// Visual styling for [GuxSwitch].
 class GuxSwitchStyle {
   /// Background color when switch is off.
@@ -68,16 +70,16 @@ class GuxSwitchStyle {
   factory GuxSwitchStyle.fromJson(Map<String, dynamic> json) {
     return GuxSwitchStyle(
       offColor: json['offColor'] != null
-          ? _parseColor(json['offColor'] as String)
+          ? GuxColorCodec.parse(json['offColor'] as String)
           : const Color(0xFFE5E7EB),
       onColor: json['onColor'] != null
-          ? _parseColor(json['onColor'] as String)
+          ? GuxColorCodec.parse(json['onColor'] as String)
           : const Color(0xFF3B82F6),
       thumbColor: json['thumbColor'] != null
-          ? _parseColor(json['thumbColor'] as String)
+          ? GuxColorCodec.parse(json['thumbColor'] as String)
           : const Color(0xFFFFFFFF),
       borderColor: json['borderColor'] != null
-          ? _parseColor(json['borderColor'] as String)
+          ? GuxColorCodec.parse(json['borderColor'] as String)
           : null,
       borderWidth: (json['borderWidth'] as num?)?.toDouble() ?? 0.0,
       borderRadius: (json['borderRadius'] as num?)?.toDouble() ?? 12.0,
@@ -86,7 +88,7 @@ class GuxSwitchStyle {
       thumbSize: (json['thumbSize'] as num?)?.toDouble() ?? 20.0,
       thumbPadding: (json['thumbPadding'] as num?)?.toDouble() ?? 2.0,
       disabledColor: json['disabledColor'] != null
-          ? _parseColor(json['disabledColor'] as String)
+          ? GuxColorCodec.parse(json['disabledColor'] as String)
           : const Color(0xFFD1D5DB),
     );
   }
@@ -94,29 +96,21 @@ class GuxSwitchStyle {
   /// Converts this style to JSON.
   Map<String, dynamic> toJson() {
     return {
-      'offColor': _colorToHex(offColor),
-      'onColor': _colorToHex(onColor),
-      'thumbColor': _colorToHex(thumbColor),
-      if (borderColor != null) 'borderColor': _colorToHex(borderColor!),
+      'offColor': GuxColorCodec.toHex(offColor),
+      'onColor': GuxColorCodec.toHex(onColor),
+      'thumbColor': GuxColorCodec.toHex(thumbColor),
+      if (borderColor != null) 'borderColor': GuxColorCodec.toHex(borderColor!),
       'borderWidth': borderWidth,
       'borderRadius': borderRadius,
       'width': width,
       'height': height,
       'thumbSize': thumbSize,
       'thumbPadding': thumbPadding,
-      'disabledColor': _colorToHex(disabledColor),
+      'disabledColor': GuxColorCodec.toHex(disabledColor),
     };
   }
 
-  static Color _parseColor(String hex) {
-    final hexCode = hex.replaceAll('#', '');
-    return Color(int.parse('FF$hexCode', radix: 16));
-  }
 
-  static String _colorToHex(Color color) {
-    final argb = color.toARGB32().toRadixString(16).padLeft(8, '0').toUpperCase();
-    return '#${argb.substring(2)}'; // Remove alpha channel
-  }
 }
 
 /// A toggle switch for on/off state.

@@ -14,6 +14,8 @@
 
 import 'package:flutter/widgets.dart';
 
+import 'json/gux_color_codec.dart';
+
 /// Visual styling for [GuxAvatar].
 class GuxAvatarStyle {
   /// Background color (used when no image is provided).
@@ -51,13 +53,13 @@ class GuxAvatarStyle {
   factory GuxAvatarStyle.fromJson(Map<String, dynamic> json) {
     return GuxAvatarStyle(
       backgroundColor: json['backgroundColor'] != null
-          ? _parseColor(json['backgroundColor'] as String)
+          ? GuxColorCodec.parse(json['backgroundColor'] as String)
           : const Color(0xFFE5E7EB),
       textColor: json['textColor'] != null
-          ? _parseColor(json['textColor'] as String)
+          ? GuxColorCodec.parse(json['textColor'] as String)
           : const Color(0xFF1F2937),
       borderColor: json['borderColor'] != null
-          ? _parseColor(json['borderColor'] as String)
+          ? GuxColorCodec.parse(json['borderColor'] as String)
           : null,
       borderWidth: (json['borderWidth'] as num?)?.toDouble() ?? 0.0,
       size: (json['size'] as num?)?.toDouble() ?? 40.0,
@@ -69,9 +71,9 @@ class GuxAvatarStyle {
   /// Converts this style to JSON.
   Map<String, dynamic> toJson() {
     return {
-      'backgroundColor': _colorToHex(backgroundColor),
-      'textColor': _colorToHex(textColor),
-      if (borderColor != null) 'borderColor': _colorToHex(borderColor!),
+      'backgroundColor': GuxColorCodec.toHex(backgroundColor),
+      'textColor': GuxColorCodec.toHex(textColor),
+      if (borderColor != null) 'borderColor': GuxColorCodec.toHex(borderColor!),
       'borderWidth': borderWidth,
       'size': size,
       'fontSize': fontSize,
@@ -79,15 +81,7 @@ class GuxAvatarStyle {
     };
   }
 
-  static Color _parseColor(String hex) {
-    final hexCode = hex.replaceAll('#', '');
-    return Color(int.parse('FF$hexCode', radix: 16));
-  }
 
-  static String _colorToHex(Color color) {
-    final argb = color.toARGB32().toRadixString(16).padLeft(8, '0').toUpperCase();
-    return '#${argb.substring(2)}'; // Remove alpha channel
-  }
 
   static FontWeight _parseFontWeight(String? weight) {
     switch (weight) {
