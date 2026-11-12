@@ -243,13 +243,16 @@ class _GuxSliderState extends State<GuxSlider> {
       return value.clamp(widget.min, widget.max);
     }
     final step = (widget.max - widget.min) / widget.divisions!;
-    final snapped = (value / step).round() * step;
+    // Snap relative to min, not zero
+    final offsetFromMin = value - widget.min;
+    final snappedOffset = (offsetFromMin / step).round() * step;
+    final snapped = widget.min + snappedOffset;
     return snapped.clamp(widget.min, widget.max);
   }
 
-  void _handleKeyEvent(KeyEvent event) {
-    if (!_isEnabled) return;
-    if (event is! KeyDownEvent && event is! KeyRepeatEvent) return;
+  KeyEventResult _handleKeyEvent(KeyEvent event) {
+    if (!_isEnabled) return KeyEventResult.ignored;
+    if (event is! KeyDownEvent && event is! KeyRepeatEvent) return KeyEventResult.ignored;
 
     final isRtl = Directionality.of(context) == TextDirection.rtl;
     final step = widget.divisions != null
@@ -274,7 +277,10 @@ class _GuxSliderState extends State<GuxSlider> {
 
     if (newValue != null) {
       widget.onChanged!(_snapToGrid(newValue.clamp(widget.min, widget.max)));
+      return KeyEventResult.handled;
     }
+
+    return KeyEventResult.ignored;
   }
 
   @override
@@ -309,8 +315,7 @@ class _GuxSliderState extends State<GuxSlider> {
       child: Focus(
         focusNode: _focusNode,
         onKeyEvent: (node, event) {
-          _handleKeyEvent(event);
-          return KeyEventResult.handled;
+          return _handleKeyEvent(event);
         },
         child: SizedBox(
           height: widget.style.thumbSize,
