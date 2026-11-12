@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'json/gux_json_utils.dart';
 
 /// A checkbox with checked, unchecked, and indeterminate states.
 ///
@@ -22,6 +23,52 @@ class GuxCheckbox extends StatefulWidget {
   final bool tristate;
   final FocusNode? focusNode;
   final bool autofocus;
+
+  /// Create a GuxCheckbox from JSON
+  ///
+  /// Example JSON:
+  /// ```json
+  /// {
+  ///   "value": true,
+  ///   "onChanged": "handleCheckboxChange",
+  ///   "tristate": false,
+  ///   "autofocus": false,
+  ///   "style": {
+  ///     "checkedBackgroundColor": "#3B82F6",
+  ///     "uncheckedBackgroundColor": "#252525",
+  ///     "checkColor": "#FFFFFF"
+  ///   }
+  /// }
+  /// ```
+  factory GuxCheckbox.fromJson(
+    Map<String, dynamic> json, {
+    required Map<String, ValueChanged<bool?>> actions,
+    FocusNode? focusNode,
+  }) {
+    // Parse style
+    final styleJson = json['style'];
+    final Map<String, dynamic> styleMap;
+    if (styleJson == null) {
+      styleMap = {};
+    } else if (styleJson is Map<String, dynamic>) {
+      styleMap = styleJson;
+    } else if (styleJson is Map) {
+      styleMap = Map<String, dynamic>.from(styleJson);
+    } else {
+      styleMap = {};
+    }
+
+    final onChangedKey = json['onChanged'] as String?;
+
+    return GuxCheckbox(
+      value: json['value'] as bool?,
+      onChanged: onChangedKey != null ? actions[onChangedKey] : null,
+      style: GuxCheckboxStyle.fromJson(styleMap),
+      tristate: json['tristate'] as bool? ?? false,
+      focusNode: focusNode,
+      autofocus: json['autofocus'] as bool? ?? false,
+    );
+  }
 
   @override
   State<GuxCheckbox> createState() => _GuxCheckboxState();
@@ -184,6 +231,65 @@ class GuxCheckboxStyle {
   final double size;
   final double borderRadius;
   final double checkStrokeWidth;
+
+  /// Create from JSON
+  factory GuxCheckboxStyle.fromJson(Map<String, dynamic> json) {
+    return GuxCheckboxStyle(
+      checkedBackgroundColor:
+          GuxJsonUtils.parseColor(json['checkedBackgroundColor']) ??
+              const Color(0xFF3B82F6),
+      uncheckedBackgroundColor:
+          GuxJsonUtils.parseColor(json['uncheckedBackgroundColor']) ??
+              const Color(0xFF252525),
+      hoverBackgroundColor:
+          GuxJsonUtils.parseColor(json['hoverBackgroundColor']) ??
+              const Color(0xFF383838),
+      disabledBackgroundColor:
+          GuxJsonUtils.parseColor(json['disabledBackgroundColor']) ??
+              const Color(0xFF1F1F1F),
+      checkedBorderColor:
+          GuxJsonUtils.parseColor(json['checkedBorderColor']) ??
+              const Color(0xFF3B82F6),
+      uncheckedBorderColor:
+          GuxJsonUtils.parseColor(json['uncheckedBorderColor']) ??
+              const Color(0xFF484848),
+      disabledBorderColor:
+          GuxJsonUtils.parseColor(json['disabledBorderColor']) ??
+              const Color(0xFF383838),
+      checkColor: GuxJsonUtils.parseColor(json['checkColor']) ??
+          const Color(0xFFFFFFFF),
+      disabledCheckColor:
+          GuxJsonUtils.parseColor(json['disabledCheckColor']) ??
+              const Color(0xFF888888),
+      focusColor: GuxJsonUtils.parseColor(json['focusColor']) ??
+          const Color(0xFF3B82F6),
+      size: (json['size'] as num?)?.toDouble() ?? 18.0,
+      borderRadius: (json['borderRadius'] as num?)?.toDouble() ?? 3.0,
+      checkStrokeWidth: (json['checkStrokeWidth'] as num?)?.toDouble() ?? 2.0,
+    );
+  }
+
+  /// Convert to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'checkedBackgroundColor':
+          GuxJsonUtils.colorToString(checkedBackgroundColor),
+      'uncheckedBackgroundColor':
+          GuxJsonUtils.colorToString(uncheckedBackgroundColor),
+      'hoverBackgroundColor': GuxJsonUtils.colorToString(hoverBackgroundColor),
+      'disabledBackgroundColor':
+          GuxJsonUtils.colorToString(disabledBackgroundColor),
+      'checkedBorderColor': GuxJsonUtils.colorToString(checkedBorderColor),
+      'uncheckedBorderColor': GuxJsonUtils.colorToString(uncheckedBorderColor),
+      'disabledBorderColor': GuxJsonUtils.colorToString(disabledBorderColor),
+      'checkColor': GuxJsonUtils.colorToString(checkColor),
+      'disabledCheckColor': GuxJsonUtils.colorToString(disabledCheckColor),
+      'focusColor': GuxJsonUtils.colorToString(focusColor),
+      'size': size,
+      'borderRadius': borderRadius,
+      'checkStrokeWidth': checkStrokeWidth,
+    };
+  }
 }
 
 class _CheckmarkPainter extends CustomPainter {

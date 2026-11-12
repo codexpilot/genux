@@ -1,5 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'json/gux_json_utils.dart';
+import 'json/gux_json_renderer.dart';
 
 /// A destination or action displayed in a [GuxNavigation] rail.
 ///
@@ -17,6 +19,39 @@ class GuxNavigationItem {
   final String label;
   final VoidCallback? onSelected;
   final bool selected;
+
+  /// Create a GuxNavigationItem from JSON
+  ///
+  /// Example JSON:
+  /// ```json
+  /// {
+  ///   "icon": {"type": "Icon", "data": "home"},
+  ///   "label": "Home",
+  ///   "onSelected": "handleHomeSelected",
+  ///   "selected": true
+  /// }
+  /// ```
+  factory GuxNavigationItem.fromJson(
+    Map<String, dynamic> json, {
+    required Map<String, VoidCallback> actions,
+  }) {
+    final onSelectedKey = json['onSelected'] as String?;
+    return GuxNavigationItem(
+      icon: GuxJsonRenderer.parseChild(json['icon'], actions: actions),
+      label: json['label'] as String? ?? '',
+      onSelected: onSelectedKey != null ? actions[onSelectedKey] : null,
+      selected: json['selected'] as bool? ?? false,
+    );
+  }
+
+  /// Convert to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'label': label,
+      'selected': selected,
+      // Note: icon and onSelected cannot be serialized
+    };
+  }
 }
 
 /// A vertical icon navigation rail with optionally bottom-aligned actions.
@@ -53,6 +88,104 @@ class GuxNavigation extends StatelessWidget {
   final Color hoverColor;
   final Color focusColor;
   final double borderRadius;
+
+  /// Create a GuxNavigation from JSON
+  ///
+  /// Example JSON:
+  /// ```json
+  /// {
+  ///   "items": [
+  ///     {
+  ///       "icon": {"type": "Text", "data": "🏠"},
+  ///       "label": "Home",
+  ///       "onSelected": "handleHome",
+  ///       "selected": true
+  ///     }
+  ///   ],
+  ///   "bottomItems": [
+  ///     {
+  ///       "icon": {"type": "Text", "data": "⚙️"},
+  ///       "label": "Settings",
+  ///       "onSelected": "handleSettings"
+  ///     }
+  ///   ],
+  ///   "width": 44,
+  ///   "itemExtent": 40,
+  ///   "itemSpacing": 2,
+  ///   "backgroundColor": "#252525",
+  ///   "selectedColor": "#3B82F6",
+  ///   "hoverColor": "#383838",
+  ///   "focusColor": "#60A5FA",
+  ///   "borderRadius": 4
+  /// }
+  /// ```
+  factory GuxNavigation.fromJson(
+    Map<String, dynamic> json, {
+    required Map<String, VoidCallback> actions,
+  }) {
+    final itemsList = json['items'] as List<dynamic>?;
+    final bottomItemsList = json['bottomItems'] as List<dynamic>?;
+
+    return GuxNavigation(
+      items: itemsList
+              ?.map((item) {
+                if (item is Map<String, dynamic>) {
+                  return GuxNavigationItem.fromJson(item, actions: actions);
+                } else if (item is Map) {
+                  return GuxNavigationItem.fromJson(
+                    Map<String, dynamic>.from(item),
+                    actions: actions,
+                  );
+                }
+                throw ArgumentError('Invalid item type');
+              })
+              .toList() ??
+          [],
+      bottomItems: bottomItemsList
+              ?.map((item) {
+                if (item is Map<String, dynamic>) {
+                  return GuxNavigationItem.fromJson(item, actions: actions);
+                } else if (item is Map) {
+                  return GuxNavigationItem.fromJson(
+                    Map<String, dynamic>.from(item),
+                    actions: actions,
+                  );
+                }
+                throw ArgumentError('Invalid item type');
+              })
+              .toList() ??
+          [],
+      width: (json['width'] as num?)?.toDouble() ?? 44,
+      itemExtent: (json['itemExtent'] as num?)?.toDouble() ?? 40,
+      itemSpacing: (json['itemSpacing'] as num?)?.toDouble() ?? 2,
+      backgroundColor:
+          GuxJsonUtils.parseColor(json['backgroundColor']) ??
+              const Color(0x00000000),
+      selectedColor: GuxJsonUtils.parseColor(json['selectedColor']) ??
+          const Color(0x22000000),
+      hoverColor: GuxJsonUtils.parseColor(json['hoverColor']) ??
+          const Color(0x11000000),
+      focusColor: GuxJsonUtils.parseColor(json['focusColor']) ??
+          const Color(0x66000000),
+      borderRadius: (json['borderRadius'] as num?)?.toDouble() ?? 4,
+    );
+  }
+
+  /// Convert to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'items': items.map((item) => item.toJson()).toList(),
+      'bottomItems': bottomItems.map((item) => item.toJson()).toList(),
+      'width': width,
+      'itemExtent': itemExtent,
+      'itemSpacing': itemSpacing,
+      'backgroundColor': GuxJsonUtils.colorToString(backgroundColor),
+      'selectedColor': GuxJsonUtils.colorToString(selectedColor),
+      'hoverColor': GuxJsonUtils.colorToString(hoverColor),
+      'focusColor': GuxJsonUtils.colorToString(focusColor),
+      'borderRadius': borderRadius,
+    };
+  }
 
   @override
   Widget build(BuildContext context) {

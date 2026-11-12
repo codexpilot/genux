@@ -1,4 +1,6 @@
 import 'package:flutter/widgets.dart';
+import 'json/gux_json_utils.dart';
+import 'json/gux_json_renderer.dart';
 
 /// A host-styled dialog surface for use with a Navigator overlay.
 ///
@@ -33,6 +35,71 @@ class GuxDialog extends StatelessWidget {
   final double minWidth;
   final double maxWidth;
   final BorderRadiusGeometry borderRadius;
+
+  /// Create a GuxDialog from JSON
+  ///
+  /// Example JSON:
+  /// ```json
+  /// {
+  ///   "title": "Confirm Delete",
+  ///   "content": "Are you sure you want to delete this item?",
+  ///   "actions": [
+  ///     {"type": "gux.button", "props": {"child": "Cancel", "onPressed": "handleCancel"}},
+  ///     {"type": "gux.button", "props": {"child": "Delete", "onPressed": "handleDelete"}}
+  ///   ],
+  ///   "backgroundColor": "#252525",
+  ///   "padding": {"all": 20},
+  ///   "borderRadius": 8
+  /// }
+  /// ```
+  factory GuxDialog.fromJson(
+    Map<String, dynamic> json, {
+    required Map<String, VoidCallback> actions,
+  }) {
+    // Parse title
+    final titleJson = json['title'];
+    Widget? title;
+    if (titleJson is String) {
+      title = Text(titleJson);
+    } else if (titleJson is Map<String, dynamic>) {
+      title = GuxJsonRenderer.build(titleJson, actions: actions);
+    }
+
+    // Parse content
+    final contentJson = json['content'];
+    Widget? content;
+    if (contentJson is String) {
+      content = Text(contentJson);
+    } else if (contentJson is Map<String, dynamic>) {
+      content = GuxJsonRenderer.build(contentJson, actions: actions);
+    }
+
+    // Parse actions list
+    final actionsList = json['actions'] as List<dynamic>?;
+    final actionWidgets = actionsList != null
+        ? GuxJsonRenderer.buildAll(actionsList, actions: actions)
+        : <Widget>[];
+
+    return GuxDialog(
+      title: title,
+      content: content,
+      actions: actionWidgets,
+      backgroundColor: GuxJsonUtils.parseColor(json['backgroundColor']) ??
+          const Color(0xFF252525),
+      titleStyle: GuxJsonUtils.parseTextStyle(
+          json['titleStyle'] as Map<String, dynamic>?),
+      contentStyle: GuxJsonUtils.parseTextStyle(
+          json['contentStyle'] as Map<String, dynamic>?),
+      padding: GuxJsonUtils.parseEdgeInsets(json['padding']) ??
+          const EdgeInsets.all(20),
+      insetPadding: GuxJsonUtils.parseEdgeInsets(json['insetPadding']) ??
+          const EdgeInsets.all(24),
+      minWidth: (json['minWidth'] as num?)?.toDouble() ?? 0,
+      maxWidth: (json['maxWidth'] as num?)?.toDouble() ?? 560,
+      borderRadius: GuxJsonUtils.parseBorderRadius(json['borderRadius']) ??
+          const BorderRadius.all(Radius.circular(8)),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

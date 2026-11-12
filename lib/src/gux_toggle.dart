@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'json/gux_json_utils.dart';
 
 /// A toggle switch with on/off states.
 ///
@@ -21,6 +22,51 @@ class GuxToggle extends StatefulWidget {
   final GuxToggleStyle style;
   final FocusNode? focusNode;
   final bool autofocus;
+
+  /// Create a GuxToggle from JSON
+  ///
+  /// Example JSON:
+  /// ```json
+  /// {
+  ///   "value": true,
+  ///   "onChanged": "handleToggleChange",
+  ///   "autofocus": false,
+  ///   "style": {
+  ///     "activeTrackColor": "#3B82F6",
+  ///     "inactiveTrackColor": "#484848",
+  ///     "activeThumbColor": "#FFFFFF",
+  ///     "inactiveThumbColor": "#CCCCCC"
+  ///   }
+  /// }
+  /// ```
+  factory GuxToggle.fromJson(
+    Map<String, dynamic> json, {
+    required Map<String, ValueChanged<bool>> actions,
+    FocusNode? focusNode,
+  }) {
+    // Parse style
+    final styleJson = json['style'];
+    final Map<String, dynamic> styleMap;
+    if (styleJson == null) {
+      styleMap = {};
+    } else if (styleJson is Map<String, dynamic>) {
+      styleMap = styleJson;
+    } else if (styleJson is Map) {
+      styleMap = Map<String, dynamic>.from(styleJson);
+    } else {
+      styleMap = {};
+    }
+
+    final onChangedKey = json['onChanged'] as String?;
+
+    return GuxToggle(
+      value: json['value'] as bool? ?? false,
+      onChanged: onChangedKey != null ? actions[onChangedKey] : null,
+      style: GuxToggleStyle.fromJson(styleMap),
+      focusNode: focusNode,
+      autofocus: json['autofocus'] as bool? ?? false,
+    );
+  }
 
   @override
   State<GuxToggle> createState() => _GuxToggleState();
@@ -190,4 +236,49 @@ class GuxToggleStyle {
   final double height;
   final double thumbSize;
   final double thumbPadding;
+
+  /// Create from JSON
+  factory GuxToggleStyle.fromJson(Map<String, dynamic> json) {
+    return GuxToggleStyle(
+      activeTrackColor: GuxJsonUtils.parseColor(json['activeTrackColor']) ??
+          const Color(0xFF3B82F6),
+      inactiveTrackColor:
+          GuxJsonUtils.parseColor(json['inactiveTrackColor']) ??
+              const Color(0xFF484848),
+      disabledTrackColor:
+          GuxJsonUtils.parseColor(json['disabledTrackColor']) ??
+              const Color(0xFF383838),
+      activeThumbColor: GuxJsonUtils.parseColor(json['activeThumbColor']) ??
+          const Color(0xFFFFFFFF),
+      inactiveThumbColor:
+          GuxJsonUtils.parseColor(json['inactiveThumbColor']) ??
+              const Color(0xFFCCCCCC),
+      disabledThumbColor:
+          GuxJsonUtils.parseColor(json['disabledThumbColor']) ??
+              const Color(0xFF888888),
+      focusColor: GuxJsonUtils.parseColor(json['focusColor']) ??
+          const Color(0xFF3B82F6),
+      width: (json['width'] as num?)?.toDouble() ?? 40.0,
+      height: (json['height'] as num?)?.toDouble() ?? 20.0,
+      thumbSize: (json['thumbSize'] as num?)?.toDouble() ?? 14.0,
+      thumbPadding: (json['thumbPadding'] as num?)?.toDouble() ?? 2.0,
+    );
+  }
+
+  /// Convert to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'activeTrackColor': GuxJsonUtils.colorToString(activeTrackColor),
+      'inactiveTrackColor': GuxJsonUtils.colorToString(inactiveTrackColor),
+      'disabledTrackColor': GuxJsonUtils.colorToString(disabledTrackColor),
+      'activeThumbColor': GuxJsonUtils.colorToString(activeThumbColor),
+      'inactiveThumbColor': GuxJsonUtils.colorToString(inactiveThumbColor),
+      'disabledThumbColor': GuxJsonUtils.colorToString(disabledThumbColor),
+      'focusColor': GuxJsonUtils.colorToString(focusColor),
+      'width': width,
+      'height': height,
+      'thumbSize': thumbSize,
+      'thumbPadding': thumbPadding,
+    };
+  }
 }

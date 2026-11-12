@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
+import 'json/gux_json_utils.dart';
 
 /// A compact circular progress indicator without a UI framework dependency.
 ///
@@ -27,6 +28,46 @@ class GuxProgressIndicator extends StatefulWidget {
   final double? value;
   final String? semanticsLabel;
   final String? semanticsValue;
+
+  /// Create a GuxProgressIndicator from JSON
+  ///
+  /// Example JSON:
+  /// ```json
+  /// {
+  ///   "color": "#3B82F6",
+  ///   "trackColor": "#484848",
+  ///   "size": 16,
+  ///   "strokeWidth": 2,
+  ///   "value": 0.75,
+  ///   "semanticsLabel": "Loading progress",
+  ///   "semanticsValue": "75%"
+  /// }
+  /// ```
+  factory GuxProgressIndicator.fromJson(Map<String, dynamic> json) {
+    return GuxProgressIndicator(
+      color: GuxJsonUtils.parseColor(json['color']) ?? const Color(0xFF3B82F6),
+      trackColor: GuxJsonUtils.parseColor(json['trackColor']) ??
+          const Color(0xFF484848),
+      size: (json['size'] as num?)?.toDouble() ?? 16,
+      strokeWidth: (json['strokeWidth'] as num?)?.toDouble() ?? 2,
+      value: (json['value'] as num?)?.toDouble(),
+      semanticsLabel: json['semanticsLabel'] as String?,
+      semanticsValue: json['semanticsValue'] as String?,
+    );
+  }
+
+  /// Convert to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'color': GuxJsonUtils.colorToString(color),
+      'trackColor': GuxJsonUtils.colorToString(trackColor),
+      'size': size,
+      'strokeWidth': strokeWidth,
+      if (value != null) 'value': value,
+      if (semanticsLabel != null) 'semanticsLabel': semanticsLabel,
+      if (semanticsValue != null) 'semanticsValue': semanticsValue,
+    };
+  }
 
   @override
   State<GuxProgressIndicator> createState() => _GuxProgressIndicatorState();

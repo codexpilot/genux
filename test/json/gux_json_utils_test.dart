@@ -62,8 +62,8 @@ void main() {
     });
 
     test('converts color to hex string', () {
-      expect(GuxJsonUtils.colorToString(const Color(0xFFFF0000)), '#ffff0000');
-      expect(GuxJsonUtils.colorToString(const Color(0x80FF0000)), '#80ff0000');
+      expect(GuxJsonUtils.colorToString(const Color(0xFFFF0000)), '#FFFF0000');
+      expect(GuxJsonUtils.colorToString(const Color(0x80FF0000)), '#80FF0000');
     });
   });
 
@@ -204,7 +204,7 @@ void main() {
       final json = GuxJsonUtils.textStyleToJson(style);
       expect(json['fontSize'], 16);
       expect(json['fontWeight'], '700');
-      expect(json['color'], '#ffff0000');
+      expect(json['color'], '#FFFF0000');
     });
   });
 

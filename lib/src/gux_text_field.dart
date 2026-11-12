@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/widgets.dart';
+import 'json/gux_json_utils.dart';
 
 /// Host-provided labels and colors for the text selection menu.
 @immutable
@@ -26,6 +27,42 @@ class GuxTextSelectionMenuStyle {
   final Color hoverColor;
   final Color focusColor;
   final TextStyle textStyle;
+
+  /// Create from JSON
+  factory GuxTextSelectionMenuStyle.fromJson(Map<String, dynamic> json) {
+    return GuxTextSelectionMenuStyle(
+      cutLabel: json['cutLabel'] as String? ?? 'Cut',
+      copyLabel: json['copyLabel'] as String? ?? 'Copy',
+      pasteLabel: json['pasteLabel'] as String? ?? 'Paste',
+      selectAllLabel: json['selectAllLabel'] as String? ?? 'Select all',
+      backgroundColor: GuxJsonUtils.parseColor(json['backgroundColor']) ??
+          const Color(0xFF252525),
+      foregroundColor: GuxJsonUtils.parseColor(json['foregroundColor']) ??
+          const Color(0xFFECECEC),
+      hoverColor:
+          GuxJsonUtils.parseColor(json['hoverColor']) ?? const Color(0xFF383838),
+      focusColor:
+          GuxJsonUtils.parseColor(json['focusColor']) ?? const Color(0xFF3B82F6),
+      textStyle: GuxJsonUtils.parseTextStyle(
+              json['textStyle'] as Map<String, dynamic>?) ??
+          const TextStyle(fontSize: 14),
+    );
+  }
+
+  /// Convert to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'cutLabel': cutLabel,
+      'copyLabel': copyLabel,
+      'pasteLabel': pasteLabel,
+      'selectAllLabel': selectAllLabel,
+      'backgroundColor': GuxJsonUtils.colorToString(backgroundColor),
+      'foregroundColor': GuxJsonUtils.colorToString(foregroundColor),
+      'hoverColor': GuxJsonUtils.colorToString(hoverColor),
+      'focusColor': GuxJsonUtils.colorToString(focusColor),
+      'textStyle': GuxJsonUtils.textStyleToJson(textStyle),
+    };
+  }
 }
 
 /// Visual properties supplied by the embedding application for a text field.
@@ -58,6 +95,59 @@ class GuxTextFieldStyle {
   final TextStyle errorStyle;
   final EdgeInsetsGeometry padding;
   final BorderRadiusGeometry borderRadius;
+
+  /// Create from JSON
+  factory GuxTextFieldStyle.fromJson(Map<String, dynamic> json) {
+    return GuxTextFieldStyle(
+      textStyle: GuxJsonUtils.parseTextStyle(
+              json['textStyle'] as Map<String, dynamic>?) ??
+          const TextStyle(fontSize: 14, color: Color(0xFFECECEC)),
+      backgroundColor: GuxJsonUtils.parseColor(json['backgroundColor']) ??
+          const Color(0xFF252525),
+      disabledBackgroundColor:
+          GuxJsonUtils.parseColor(json['disabledBackgroundColor']) ??
+              const Color(0xFF1F1F1F),
+      borderColor:
+          GuxJsonUtils.parseColor(json['borderColor']) ?? const Color(0xFF484848),
+      focusedBorderColor: GuxJsonUtils.parseColor(json['focusedBorderColor']) ??
+          const Color(0xFF3B82F6),
+      errorBorderColor: GuxJsonUtils.parseColor(json['errorBorderColor']) ??
+          const Color(0xFFFF453A),
+      cursorColor:
+          GuxJsonUtils.parseColor(json['cursorColor']) ?? const Color(0xFF3B82F6),
+      selectionColor: GuxJsonUtils.parseColor(json['selectionColor']) ??
+          const Color(0x803B82F6),
+      placeholderStyle: GuxJsonUtils.parseTextStyle(
+              json['placeholderStyle'] as Map<String, dynamic>?) ??
+          const TextStyle(fontSize: 14, color: Color(0xFF8E8E8E)),
+      errorStyle: GuxJsonUtils.parseTextStyle(
+              json['errorStyle'] as Map<String, dynamic>?) ??
+          const TextStyle(fontSize: 12, color: Color(0xFFFF453A)),
+      padding: GuxJsonUtils.parseEdgeInsets(json['padding']) ??
+          const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      borderRadius: GuxJsonUtils.parseBorderRadius(json['borderRadius']) ??
+          const BorderRadius.all(Radius.circular(6)),
+    );
+  }
+
+  /// Convert to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'textStyle': GuxJsonUtils.textStyleToJson(textStyle),
+      'backgroundColor': GuxJsonUtils.colorToString(backgroundColor),
+      'disabledBackgroundColor':
+          GuxJsonUtils.colorToString(disabledBackgroundColor),
+      'borderColor': GuxJsonUtils.colorToString(borderColor),
+      'focusedBorderColor': GuxJsonUtils.colorToString(focusedBorderColor),
+      'errorBorderColor': GuxJsonUtils.colorToString(errorBorderColor),
+      'cursorColor': GuxJsonUtils.colorToString(cursorColor),
+      'selectionColor': GuxJsonUtils.colorToString(selectionColor),
+      'placeholderStyle': GuxJsonUtils.textStyleToJson(placeholderStyle),
+      'errorStyle': GuxJsonUtils.textStyleToJson(errorStyle),
+      'padding': GuxJsonUtils.edgeInsetsToJson(padding),
+      'borderRadius': GuxJsonUtils.borderRadiusToJson(borderRadius),
+    };
+  }
 }
 
 /// A framework-independent editable field with host-owned text and styling.
@@ -107,6 +197,136 @@ class GuxTextField extends StatefulWidget {
   final int maxLines;
   final bool autofocus;
   final GuxTextSelectionMenuStyle selectionMenuStyle;
+
+  /// Create a GuxTextField from JSON
+  ///
+  /// Note: The controller must be provided separately as it requires
+  /// stateful lifecycle management. This factory is primarily for
+  /// style and configuration serialization.
+  ///
+  /// Example JSON:
+  /// ```json
+  /// {
+  ///   "style": {
+  ///     "backgroundColor": "#252525",
+  ///     "borderColor": "#484848",
+  ///     "textStyle": {"fontSize": 14, "color": "#ECECEC"}
+  ///   },
+  ///   "semanticsLabel": "Email input",
+  ///   "placeholder": "Enter your email",
+  ///   "enabled": true,
+  ///   "maxLines": 1,
+  ///   "onChanged": "handleEmailChange"
+  /// }
+  /// ```
+  factory GuxTextField.fromJson(
+    Map<String, dynamic> json, {
+    required TextEditingController controller,
+    required Map<String, ValueChanged<String>> actions,
+    FocusNode? focusNode,
+  }) {
+    // Parse style with proper type handling
+    final styleJson = json['style'];
+    final Map<String, dynamic> styleMap;
+    if (styleJson == null) {
+      styleMap = {};
+    } else if (styleJson is Map<String, dynamic>) {
+      styleMap = styleJson;
+    } else if (styleJson is Map) {
+      styleMap = Map<String, dynamic>.from(styleJson);
+    } else {
+      styleMap = {};
+    }
+
+    // Parse selection menu style
+    final selectionMenuJson = json['selectionMenuStyle'];
+    final Map<String, dynamic> selectionMenuMap;
+    if (selectionMenuJson == null) {
+      selectionMenuMap = {};
+    } else if (selectionMenuJson is Map<String, dynamic>) {
+      selectionMenuMap = selectionMenuJson;
+    } else if (selectionMenuJson is Map) {
+      selectionMenuMap = Map<String, dynamic>.from(selectionMenuJson);
+    } else {
+      selectionMenuMap = {};
+    }
+
+    // Parse keyboard type
+    TextInputType? keyboardType;
+    final keyboardTypeStr = json['keyboardType'] as String?;
+    if (keyboardTypeStr != null) {
+      switch (keyboardTypeStr) {
+        case 'text':
+          keyboardType = TextInputType.text;
+          break;
+        case 'multiline':
+          keyboardType = TextInputType.multiline;
+          break;
+        case 'number':
+          keyboardType = TextInputType.number;
+          break;
+        case 'phone':
+          keyboardType = TextInputType.phone;
+          break;
+        case 'email':
+          keyboardType = TextInputType.emailAddress;
+          break;
+        case 'url':
+          keyboardType = TextInputType.url;
+          break;
+      }
+    }
+
+    // Parse text input action
+    TextInputAction? textInputAction;
+    final actionStr = json['textInputAction'] as String?;
+    if (actionStr != null) {
+      switch (actionStr) {
+        case 'done':
+          textInputAction = TextInputAction.done;
+          break;
+        case 'go':
+          textInputAction = TextInputAction.go;
+          break;
+        case 'search':
+          textInputAction = TextInputAction.search;
+          break;
+        case 'send':
+          textInputAction = TextInputAction.send;
+          break;
+        case 'next':
+          textInputAction = TextInputAction.next;
+          break;
+        case 'previous':
+          textInputAction = TextInputAction.previous;
+          break;
+      }
+    }
+
+    final onChangedKey = json['onChanged'] as String?;
+    final onSubmittedKey = json['onSubmitted'] as String?;
+
+    return GuxTextField(
+      controller: controller,
+      focusNode: focusNode,
+      style: GuxTextFieldStyle.fromJson(styleMap),
+      semanticsLabel: json['semanticsLabel'] as String? ?? '',
+      placeholder: json['placeholder'] as String?,
+      errorText: json['errorText'] as String?,
+      enabled: json['enabled'] as bool? ?? true,
+      readOnly: json['readOnly'] as bool? ?? false,
+      obscureText: json['obscureText'] as bool? ?? false,
+      keyboardType: keyboardType,
+      textInputAction: textInputAction,
+      onChanged: onChangedKey != null ? actions[onChangedKey] : null,
+      onSubmitted: onSubmittedKey != null ? actions[onSubmittedKey] : null,
+      maxLines: json['maxLines'] as int? ?? 1,
+      autofocus: json['autofocus'] as bool? ?? false,
+      selectionMenuStyle: selectionMenuMap.isEmpty
+          ? const GuxTextSelectionMenuStyle()
+          : GuxTextSelectionMenuStyle.fromJson(selectionMenuMap),
+    );
+  }
 
   @override
   State<GuxTextField> createState() => _GuxTextFieldState();
