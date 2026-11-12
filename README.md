@@ -19,6 +19,26 @@ The package exports:
 - `GenuxWorkspaceScaffold`: a bounded workspace layout with a body and optional
   top, bottom, and leading side regions. The caller supplies the region sizes
   and may provide the background color and text style.
+- `GenuxButton`: a host-styled button with pointer, keyboard, focus, and disabled
+  states. `GenuxButtonStyle` supplies its colors, dimensions, and text style.
+- `GenuxProgressIndicator`: a compact determinate or indeterminate indicator
+  with host-supplied colors and optional accessibility labels.
+- `GenuxNavigation`: a configurable vertical navigation rail with caller-owned
+  selection, icons, labels, and callbacks.
+- `GenuxDropdown`: a controlled selection field with keyboard navigation,
+  status states, and an anchored menu. The menu closes on viewport or local
+  text-direction or scaling changes and uses fresh bounds when reopened.
+- `GenuxTextField`: an early low-level text input with host-owned text, labels,
+  styling and validation. Keyboard selection works, but platform selection
+  handles, a context menu, and accessibility copy/cut/paste actions are not yet
+  implemented; it is not a drop-in replacement for a full-featured text field.
+- `GenuxDialog` and `showGenuxDialog`: a host-styled dialog surface and route.
+  Supply a localized barrier label, and constrain or shrink-wrap any scrollable
+  child placed inside dialog content.
+
+These primitives are an initial migration foundation, not yet a complete
+replacement for ContextStudio's UI. See the [component inventory and plan](docs/contextstudio-migration.md)
+and the [JSON and A2UI design notes](docs/json-and-a2ui-readiness.md).
 
 To use Genux from another Flutter application, add a Git dependency to its
 `pubspec.yaml`:
