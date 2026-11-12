@@ -42,18 +42,21 @@ Recorded against `main` at `16982ea`, reviewed 2026-11-12. Updated with addition
 
 ## Summary
 
-At this baseline (commit 6df6f9e), `flutter analyze` passed and `flutter test` passed **371 tests** with one skipped. All 9 audited controls now have basic test coverage. These checks do not cover all remaining acceptance criteria.
+At this baseline (commit 6fde7aa), `flutter analyze` passed and `flutter test` passed **375 tests** with one skipped. All 9 audited controls now have basic test coverage. Color serialization bug fixed across all 12 style classes. These checks do not cover all remaining acceptance criteria.
 
 **Test Growth:**
 - Initial: 297 tests
 - After P0 fixes: 317 tests (+20)
 - After simple controls: 341 tests (+24)
 - After interactive/overlay controls: 371 tests (+30)
+- After color serialization fix: 375 tests (+4)
 
 ## Remaining P0 Work
 
 Per [01-stabilization.md](../01-stabilization.md):
 - Implement GuxRadioGroup for arrow-key navigation within radio groups (deferred to P1)
 - Complete remaining documentation verification per [04-documentation.md](../04-documentation.md)
-- Integration of color codec into component serializers (tracked under P1 JSON work)
-- Fix color serialization bug in GuxTabsStyle._colorToHex (toARGB32 substring issue)
+  - README component names and examples verified ✓
+  - Routing documentation verified ✓
+  - Comprehensive example verification deferred to next phase
+- Additional acceptance criteria testing (RTL, performance, advanced accessibility)
