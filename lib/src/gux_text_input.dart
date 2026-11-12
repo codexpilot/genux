@@ -57,7 +57,7 @@ class GuxTextInput extends StatelessWidget {
         GuxTextField(
           controller: controller,
           style: errorMessage != null ? style.errorFieldStyle : style.fieldStyle,
-          placeholder: placeholder,
+          placeholder: placeholder ?? '',
           enabled: enabled,
           obscureText: obscureText,
           keyboardType: keyboardType,
