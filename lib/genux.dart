@@ -11,3 +11,6 @@ export 'src/genux_dropdown.dart';
 export 'src/genux_navigation.dart';
 export 'src/genux_progress_indicator.dart';
 export 'src/genux_text_field.dart';
+export 'src/genux_text_input.dart';
+export 'src/genux_checkbox.dart';
+export 'src/genux_toggle.dart';
