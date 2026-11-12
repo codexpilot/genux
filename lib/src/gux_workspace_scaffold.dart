@@ -8,8 +8,8 @@ import 'package:flutter/widgets.dart';
 /// the available space on very small windows, with the top bar taking priority
 /// over the bottom bar. Content inside the slots is responsible for adapting
 /// to its own constraints.
-class GenuxWorkspaceScaffold extends StatelessWidget {
-  const GenuxWorkspaceScaffold({
+class GuxWorkspaceScaffold extends StatelessWidget {
+  const GuxWorkspaceScaffold({
     super.key,
     required this.body,
     required this.topBarHeight,

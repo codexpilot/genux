@@ -5,8 +5,8 @@ import 'package:flutter/widgets.dart';
 /// Labels, colors, actions, and application behavior belong to the caller.
 /// The content scrolls when the available height is smaller than its contents.
 /// Scrollable children must be shrink-wrapped or given finite constraints.
-class GenuxDialog extends StatelessWidget {
-  const GenuxDialog({
+class GuxDialog extends StatelessWidget {
+  const GuxDialog({
     super.key,
     this.title,
     this.content,
@@ -98,7 +98,7 @@ class GenuxDialog extends StatelessWidget {
 /// Opens a dialog without coupling its content to a UI framework.
 ///
 /// [barrierLabel] must be supplied by the host, including localization.
-Future<T?> showGenuxDialog<T>({
+Future<T?> showGuxDialog<T>({
   required BuildContext context,
   required WidgetBuilder builder,
   required String barrierLabel,

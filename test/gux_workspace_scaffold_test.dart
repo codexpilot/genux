@@ -22,7 +22,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       _host(
-        const GenuxWorkspaceScaffold(
+        const GuxWorkspaceScaffold(
           topBarHeight: 44,
           bottomBarHeight: 26,
           sideBarWidth: 44,
@@ -44,7 +44,7 @@ void main() {
   testWidgets('omitted regions reserve no space', (tester) async {
     await tester.pumpWidget(
       _host(
-        const GenuxWorkspaceScaffold(
+        const GuxWorkspaceScaffold(
           topBarHeight: 44,
           bottomBarHeight: 26,
           sideBarWidth: 44,
@@ -58,7 +58,7 @@ void main() {
   testWidgets('clamps region sizes to small bounded viewports', (tester) async {
     await tester.pumpWidget(
       _host(
-        const GenuxWorkspaceScaffold(
+        const GuxWorkspaceScaffold(
           topBarHeight: 44,
           bottomBarHeight: 26,
           sideBarWidth: 44,
@@ -86,7 +86,7 @@ void main() {
       _host(
         const DefaultTextStyle(
           style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-          child: GenuxWorkspaceScaffold(
+          child: GuxWorkspaceScaffold(
             topBarHeight: 0,
             bottomBarHeight: 0,
             sideBarWidth: 0,

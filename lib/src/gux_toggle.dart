@@ -3,11 +3,11 @@ import 'package:flutter/widgets.dart';
 
 /// A toggle switch with on/off states.
 ///
-/// The host supplies all styling through [GenuxToggleStyle]. Supports pointer,
+/// The host supplies all styling through [GuxToggleStyle]. Supports pointer,
 /// keyboard (Space/Enter), and semantic activation. The switch animates between
 /// states over 150ms.
-class GenuxToggle extends StatefulWidget {
-  const GenuxToggle({
+class GuxToggle extends StatefulWidget {
+  const GuxToggle({
     super.key,
     required this.value,
     required this.onChanged,
@@ -18,15 +18,15 @@ class GenuxToggle extends StatefulWidget {
 
   final bool value;
   final ValueChanged<bool>? onChanged;
-  final GenuxToggleStyle style;
+  final GuxToggleStyle style;
   final FocusNode? focusNode;
   final bool autofocus;
 
   @override
-  State<GenuxToggle> createState() => _GenuxToggleState();
+  State<GuxToggle> createState() => _GuxToggleState();
 }
 
-class _GenuxToggleState extends State<GenuxToggle>
+class _GuxToggleState extends State<GuxToggle>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _position;
@@ -49,7 +49,7 @@ class _GenuxToggleState extends State<GenuxToggle>
   }
 
   @override
-  void didUpdateWidget(GenuxToggle oldWidget) {
+  void didUpdateWidget(GuxToggle oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.value != oldWidget.value) {
       if (widget.value) {
@@ -162,10 +162,10 @@ class _GenuxToggleState extends State<GenuxToggle>
   }
 }
 
-/// Visual properties for [GenuxToggle].
+/// Visual properties for [GuxToggle].
 @immutable
-class GenuxToggleStyle {
-  const GenuxToggleStyle({
+class GuxToggleStyle {
+  const GuxToggleStyle({
     required this.activeTrackColor,
     required this.inactiveTrackColor,
     required this.disabledTrackColor,

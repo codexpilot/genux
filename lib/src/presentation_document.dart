@@ -1,15 +1,15 @@
 import 'dart:convert';
 
-/// A problem in a Genux static presentation document.
-class GenuxFormatException implements Exception {
-  const GenuxFormatException(this.path, this.message);
+/// A problem in a Gux static presentation document.
+class GuxFormatException implements Exception {
+  const GuxFormatException(this.path, this.message);
 
   /// Location in the document, expressed as a JSON path.
   final String path;
   final String message;
 
   @override
-  String toString() => 'GenuxFormatException at $path: $message';
+  String toString() => 'GuxFormatException at $path: $message';
 }
 
 /// A validated, experimental internal static presentation document.
@@ -17,8 +17,8 @@ class GenuxFormatException implements Exception {
 /// This format only describes presentation. It does not define actions, data
 /// bindings, arbitrary widget constructors, or any external resource access.
 /// This format is not an A2UI protocol or a runtime binding artifact.
-class GenuxPresentationDocument {
-  GenuxPresentationDocument._(this.root);
+class GuxPresentationDocument {
+  GuxPresentationDocument._(this.root);
 
   static const int schemaVersion = 1;
   static const int maxInputBytes = 262144;
@@ -27,16 +27,16 @@ class GenuxPresentationDocument {
   static const int maxTextLength = 4096;
   static const int maxChildren = 100;
 
-  final GenuxNode root;
+  final GuxNode root;
 
   /// Parses JSON and validates all limits before returning a renderable tree.
   ///
   /// The only input entry point takes JSON text, so both the byte limit and the
   /// structural nesting preflight apply to every document.
-  static GenuxPresentationDocument parse(String source) {
+  static GuxPresentationDocument parse(String source) {
     if (source.length > maxInputBytes ||
         utf8.encode(source).length > maxInputBytes) {
-      throw const GenuxFormatException(
+      throw const GuxFormatException(
         r'$',
         'Input exceeds 262144 UTF-8 bytes',
       );
@@ -46,26 +46,26 @@ class GenuxPresentationDocument {
     try {
       decoded = jsonDecode(source);
     } on FormatException {
-      throw const GenuxFormatException(r'$', 'Invalid JSON');
+      throw const GuxFormatException(r'$', 'Invalid JSON');
     }
     final document = _object(decoded, r'$');
     _fields(document, const {'schemaVersion', 'root'}, r'$');
     final version = _required(document, 'schemaVersion', r'$');
     if (version is! num || !version.isFinite || version != schemaVersion) {
-      throw const GenuxFormatException(
+      throw const GuxFormatException(
         r'$.schemaVersion',
         'Unsupported schema version',
       );
     }
     final parser = _NodeParser();
-    final result = GenuxPresentationDocument._(
+    final result = GuxPresentationDocument._(
       parser.parse(_required(document, 'root', r'$'), r'$.root', 1),
     );
     // Normalization adds explicit defaults and can expand compact numbers.
     // Reject an expanded document here rather than returning a value whose own
     // serialized form could not subsequently be parsed under the byte limit.
     if (utf8.encode(result.toJsonString()).length > maxInputBytes) {
-      throw const GenuxFormatException(
+      throw const GuxFormatException(
         r'$',
         'Normalized JSON exceeds 262144 UTF-8 bytes',
       );
@@ -84,26 +84,26 @@ class GenuxPresentationDocument {
 }
 
 /// Base class for validated presentation nodes.
-sealed class GenuxNode {
-  const GenuxNode._();
+sealed class GuxNode {
+  const GuxNode._();
 
   /// Produces a fresh JSON-compatible representation.
   Map<String, Object?> toJson();
 }
 
-final class GenuxTextNode extends GenuxNode {
-  const GenuxTextNode._(this.text) : super._();
+final class GuxTextNode extends GuxNode {
+  const GuxTextNode._(this.text) : super._();
   final String text;
 
   @override
   Map<String, Object?> toJson() => {'type': 'text', 'text': text};
 }
 
-final class GenuxColumnNode extends GenuxNode {
-  GenuxColumnNode._(List<GenuxNode> children, this.spacing)
+final class GuxColumnNode extends GuxNode {
+  GuxColumnNode._(List<GuxNode> children, this.spacing)
     : children = List.unmodifiable(children),
       super._();
-  final List<GenuxNode> children;
+  final List<GuxNode> children;
   final double spacing;
 
   @override
@@ -114,8 +114,8 @@ final class GenuxColumnNode extends GenuxNode {
   };
 }
 
-final class GenuxSummaryLinesNode extends GenuxNode {
-  const GenuxSummaryLinesNode._(
+final class GuxSummaryLinesNode extends GuxNode {
+  const GuxSummaryLinesNode._(
     this.primary,
     this.secondary,
     this.tertiary,
@@ -136,8 +136,8 @@ final class GenuxSummaryLinesNode extends GenuxNode {
   };
 }
 
-final class GenuxWorkspaceNode extends GenuxNode {
-  const GenuxWorkspaceNode._({
+final class GuxWorkspaceNode extends GuxNode {
+  const GuxWorkspaceNode._({
     required this.body,
     required this.topBar,
     required this.bottomBar,
@@ -146,10 +146,10 @@ final class GenuxWorkspaceNode extends GenuxNode {
     required this.bottomBarHeight,
     required this.sideBarWidth,
   }) : super._();
-  final GenuxNode body;
-  final GenuxNode? topBar;
-  final GenuxNode? bottomBar;
-  final GenuxNode? sideBar;
+  final GuxNode body;
+  final GuxNode? topBar;
+  final GuxNode? bottomBar;
+  final GuxNode? sideBar;
   final double topBarHeight;
   final double bottomBarHeight;
   final double sideBarWidth;
@@ -170,35 +170,35 @@ final class GenuxWorkspaceNode extends GenuxNode {
 class _NodeParser {
   int _count = 0;
 
-  GenuxNode parse(Object? value, String path, int depth) {
-    if (depth > GenuxPresentationDocument.maxDepth) {
-      throw GenuxFormatException(path, 'Node depth exceeds 32');
+  GuxNode parse(Object? value, String path, int depth) {
+    if (depth > GuxPresentationDocument.maxDepth) {
+      throw GuxFormatException(path, 'Node depth exceeds 32');
     }
-    if (++_count > GenuxPresentationDocument.maxNodes) {
-      throw GenuxFormatException(path, 'Node count exceeds 512');
+    if (++_count > GuxPresentationDocument.maxNodes) {
+      throw GuxFormatException(path, 'Node count exceeds 512');
     }
     final object = _object(value, path);
     final type = _required(object, 'type', path);
     if (type is! String) {
-      throw GenuxFormatException('$path.type', 'Expected a string');
+      throw GuxFormatException('$path.type', 'Expected a string');
     }
     switch (type) {
       case 'text':
         _fields(object, const {'type', 'text'}, path);
-        return GenuxTextNode._(_text(object, 'text', path));
+        return GuxTextNode._(_text(object, 'text', path));
       case 'column':
         _fields(object, const {'type', 'children', 'spacing'}, path);
         final childrenValue = _required(object, 'children', path);
         if (childrenValue is! List) {
-          throw GenuxFormatException('$path.children', 'Expected an array');
+          throw GuxFormatException('$path.children', 'Expected an array');
         }
-        if (childrenValue.length > GenuxPresentationDocument.maxChildren) {
-          throw GenuxFormatException(
+        if (childrenValue.length > GuxPresentationDocument.maxChildren) {
+          throw GuxFormatException(
             '$path.children',
             'Array exceeds 100 items',
           );
         }
-        return GenuxColumnNode._([
+        return GuxColumnNode._([
           for (var i = 0; i < childrenValue.length; i++)
             parse(childrenValue[i], '$path.children[$i]', depth + 1),
         ], _number(object, 'spacing', path, 0, 200));
@@ -210,7 +210,7 @@ class _NodeParser {
           'tertiary',
           'spacing',
         }, path);
-        return GenuxSummaryLinesNode._(
+        return GuxSummaryLinesNode._(
           _text(object, 'primary', path),
           _text(object, 'secondary', path),
           _text(object, 'tertiary', path),
@@ -227,10 +227,10 @@ class _NodeParser {
           'bottomBarHeight',
           'sideBarWidth',
         }, path);
-        GenuxNode? optionalNode(String key) => object.containsKey(key)
+        GuxNode? optionalNode(String key) => object.containsKey(key)
             ? parse(object[key], '$path.$key', depth + 1)
             : null;
-        return GenuxWorkspaceNode._(
+        return GuxWorkspaceNode._(
           body: parse(_required(object, 'body', path), '$path.body', depth + 1),
           topBar: optionalNode('topBar'),
           bottomBar: optionalNode('bottomBar'),
@@ -240,21 +240,21 @@ class _NodeParser {
           sideBarWidth: _number(object, 'sideBarWidth', path, 44, 1000),
         );
       default:
-        throw GenuxFormatException('$path.type', 'Unknown widget type');
+        throw GuxFormatException('$path.type', 'Unknown widget type');
     }
   }
 }
 
 Map<String, dynamic> _object(Object? value, String path) {
   if (value is! Map<String, dynamic>) {
-    throw GenuxFormatException(path, 'Expected an object');
+    throw GuxFormatException(path, 'Expected an object');
   }
   return value;
 }
 
 Object? _required(Map<String, dynamic> object, String key, String path) {
   if (!object.containsKey(key)) {
-    throw GenuxFormatException('$path.$key', 'Required field is missing');
+    throw GuxFormatException('$path.$key', 'Required field is missing');
   }
   return object[key];
 }
@@ -264,7 +264,7 @@ void _fields(Map<String, dynamic> object, Set<String> allowed, String path) {
     ..sort();
   if (unknown.isNotEmpty) {
     // Bracket notation keeps arbitrary input keys unambiguous.
-    throw GenuxFormatException(
+    throw GuxFormatException(
       '$path[${jsonEncode(unknown.first)}]',
       'Unknown field',
     );
@@ -274,10 +274,10 @@ void _fields(Map<String, dynamic> object, Set<String> allowed, String path) {
 String _text(Map<String, dynamic> object, String key, String path) {
   final value = _required(object, key, path);
   if (value is! String) {
-    throw GenuxFormatException('$path.$key', 'Expected a string');
+    throw GuxFormatException('$path.$key', 'Expected a string');
   }
-  if (value.runes.length > GenuxPresentationDocument.maxTextLength) {
-    throw GenuxFormatException('$path.$key', 'String exceeds 4096 characters');
+  if (value.runes.length > GuxPresentationDocument.maxTextLength) {
+    throw GuxFormatException('$path.$key', 'String exceeds 4096 characters');
   }
   return value;
 }
@@ -292,7 +292,7 @@ double _number(
   if (!object.containsKey(key)) return fallback;
   final value = object[key];
   if (value is! num || !value.isFinite || value < 0 || value > max) {
-    throw GenuxFormatException(
+    throw GuxFormatException(
       '$path.$key',
       'Expected a finite number between 0 and ${max.toInt()}',
     );
@@ -318,8 +318,8 @@ void _checkStructuralNesting(String source) {
     } else if (code == 0x22) {
       inString = true;
     } else if (code == 0x7b || code == 0x5b) {
-      if (++depth > GenuxPresentationDocument.maxDepth * 2 + 2) {
-        throw const GenuxFormatException(r'$', 'JSON nesting exceeds limit');
+      if (++depth > GuxPresentationDocument.maxDepth * 2 + 2) {
+        throw const GuxFormatException(r'$', 'JSON nesting exceeds limit');
       }
     } else if (code == 0x7d || code == 0x5d) {
       depth--;

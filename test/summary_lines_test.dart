@@ -12,7 +12,7 @@ void main() {
         textDirection: TextDirection.ltr,
         child: Align(
           alignment: Alignment.topLeft,
-          child: GenuxSummaryLines(
+          child: GuxSummaryLines(
             primary: 'First',
             secondary: 'Second',
             tertiary: 'Third',
@@ -43,7 +43,7 @@ void main() {
           alignment: Alignment.topLeft,
           child: SizedBox(
             width: 80,
-            child: GenuxSummaryLines(
+            child: GuxSummaryLines(
               primary: longText,
               secondary: 'Second',
               tertiary: 'Third',

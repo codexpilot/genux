@@ -6,8 +6,8 @@ import 'package:flutter/widgets.dart';
 ///
 /// A null [value] indicates indeterminate progress. Pass a localized
 /// [semanticsLabel] and optionally [semanticsValue] for accessibility.
-class GenuxProgressIndicator extends StatefulWidget {
-  const GenuxProgressIndicator({
+class GuxProgressIndicator extends StatefulWidget {
+  const GuxProgressIndicator({
     super.key,
     required this.color,
     required this.trackColor,
@@ -29,10 +29,10 @@ class GenuxProgressIndicator extends StatefulWidget {
   final String? semanticsValue;
 
   @override
-  State<GenuxProgressIndicator> createState() => _GenuxProgressIndicatorState();
+  State<GuxProgressIndicator> createState() => _GuxProgressIndicatorState();
 }
 
-class _GenuxProgressIndicatorState extends State<GenuxProgressIndicator>
+class _GuxProgressIndicatorState extends State<GuxProgressIndicator>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
@@ -49,7 +49,7 @@ class _GenuxProgressIndicatorState extends State<GenuxProgressIndicator>
   }
 
   @override
-  void didUpdateWidget(covariant GenuxProgressIndicator oldWidget) {
+  void didUpdateWidget(covariant GuxProgressIndicator oldWidget) {
     super.didUpdateWidget(oldWidget);
     _updateAnimation();
   }

@@ -3,10 +3,10 @@ import 'package:flutter/widgets.dart';
 
 /// A checkbox with checked, unchecked, and indeterminate states.
 ///
-/// The host supplies all styling through [GenuxCheckboxStyle]. Supports pointer,
+/// The host supplies all styling through [GuxCheckboxStyle]. Supports pointer,
 /// keyboard (Space/Enter), and semantic activation.
-class GenuxCheckbox extends StatefulWidget {
-  const GenuxCheckbox({
+class GuxCheckbox extends StatefulWidget {
+  const GuxCheckbox({
     super.key,
     required this.value,
     required this.onChanged,
@@ -18,16 +18,16 @@ class GenuxCheckbox extends StatefulWidget {
 
   final bool? value;
   final ValueChanged<bool?>? onChanged;
-  final GenuxCheckboxStyle style;
+  final GuxCheckboxStyle style;
   final bool tristate;
   final FocusNode? focusNode;
   final bool autofocus;
 
   @override
-  State<GenuxCheckbox> createState() => _GenuxCheckboxState();
+  State<GuxCheckbox> createState() => _GuxCheckboxState();
 }
 
-class _GenuxCheckboxState extends State<GenuxCheckbox> {
+class _GuxCheckboxState extends State<GuxCheckbox> {
   final FocusNode _internalFocusNode = FocusNode();
   bool _focused = false;
   bool _hovered = false;
@@ -152,10 +152,10 @@ class _GenuxCheckboxState extends State<GenuxCheckbox> {
   }
 }
 
-/// Visual properties for [GenuxCheckbox].
+/// Visual properties for [GuxCheckbox].
 @immutable
-class GenuxCheckboxStyle {
-  const GenuxCheckboxStyle({
+class GuxCheckboxStyle {
+  const GuxCheckboxStyle({
     required this.checkedBackgroundColor,
     required this.uncheckedBackgroundColor,
     required this.hoverBackgroundColor,

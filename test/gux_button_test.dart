@@ -4,7 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:genux/genux.dart';
 
-const style = GenuxButtonStyle(
+const style = GuxButtonStyle(
   backgroundColor: Color(0xFF303030),
   hoverColor: Color(0xFF383838),
   pressedColor: Color(0xFF252525),
@@ -32,7 +32,7 @@ void main() {
     final semantics = tester.ensureSemantics();
     await tester.pumpWidget(
       host(
-        GenuxButton(
+        GuxButton(
           onPressed: () => presses++,
           style: style,
           focusNode: focus,
@@ -41,7 +41,7 @@ void main() {
       ),
     );
 
-    final button = find.byType(GenuxButton);
+    final button = find.byType(GuxButton);
     await tester.tap(button);
     expect(presses, 1);
 
@@ -77,14 +77,14 @@ void main() {
     final semantics = tester.ensureSemantics();
     await tester.pumpWidget(
       host(
-        const GenuxButton(
+        const GuxButton(
           onPressed: null,
           style: style,
           child: Text('Disabled'),
         ),
       ),
     );
-    final button = find.byType(GenuxButton);
+    final button = find.byType(GuxButton);
     expect(
       tester.getSemantics(button),
       matchesSemantics(
@@ -115,7 +115,7 @@ void main() {
         StatefulBuilder(
           builder: (context, setState) {
             update = setState;
-            return GenuxButton(
+            return GuxButton(
               onPressed: enabled ? () {} : null,
               style: style,
               child: const Text('Action'),
@@ -127,7 +127,7 @@ void main() {
     Color? color() => tester
         .widget<DecoratedBox>(
           find.descendant(
-            of: find.byType(GenuxButton),
+            of: find.byType(GuxButton),
             matching: find.byType(DecoratedBox),
           ),
         )

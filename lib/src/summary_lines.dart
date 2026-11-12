@@ -5,8 +5,8 @@ import 'package:flutter/widgets.dart';
 /// Labels and fallback values are supplied by the caller so the widget is
 /// independent of an application's domain and localization. The full text
 /// remains available to accessibility services when it is visually truncated.
-class GenuxSummaryLines extends StatelessWidget {
-  const GenuxSummaryLines({
+class GuxSummaryLines extends StatelessWidget {
+  const GuxSummaryLines({
     super.key,
     required this.primary,
     required this.secondary,

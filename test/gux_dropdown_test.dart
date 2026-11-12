@@ -4,9 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:genux/genux.dart';
 
 const options = [
-  GenuxDropdownOption(value: 1, label: 'One'),
-  GenuxDropdownOption(value: 2, label: 'Unavailable', enabled: false),
-  GenuxDropdownOption(value: 3, label: 'Three', subtitle: 'Third choice'),
+  GuxDropdownOption(value: 1, label: 'One'),
+  GuxDropdownOption(value: 2, label: 'Unavailable', enabled: false),
+  GuxDropdownOption(value: 3, label: 'Three', subtitle: 'Third choice'),
 ];
 
 Widget host(Widget child, {Alignment alignment = Alignment.topLeft}) =>
@@ -30,7 +30,7 @@ void main() {
     await tester.pumpWidget(
       host(
         StatefulBuilder(
-          builder: (context, update) => GenuxDropdown<int>(
+          builder: (context, update) => GuxDropdown<int>(
             options: options,
             value: selected,
             onChanged: (value) => update(() => selected = value),
@@ -56,7 +56,7 @@ void main() {
     int? selected;
     await tester.pumpWidget(
       host(
-        GenuxDropdown<int>(
+        GuxDropdown<int>(
           options: options,
           value: 1,
           onChanged: (value) => selected = value,
@@ -84,7 +84,7 @@ void main() {
     final semantics = tester.ensureSemantics();
     await tester.pumpWidget(
       host(
-        GenuxDropdown<int>(
+        GuxDropdown<int>(
           options: options,
           value: 1,
           onChanged: (_) {},
@@ -106,7 +106,7 @@ void main() {
     var retries = 0;
     await tester.pumpWidget(
       host(
-        const GenuxDropdown<int>(
+        const GuxDropdown<int>(
           options: [],
           value: null,
           onChanged: null,
@@ -116,12 +116,12 @@ void main() {
     );
     expect(find.text('Loading…'), findsOneWidget);
     await tester.pumpWidget(
-      host(const GenuxDropdown<int>(options: [], value: null, onChanged: null)),
+      host(const GuxDropdown<int>(options: [], value: null, onChanged: null)),
     );
     expect(find.text('No options available'), findsOneWidget);
     await tester.pumpWidget(
       host(
-        GenuxDropdown<int>(
+        GuxDropdown<int>(
           options: const [],
           value: null,
           onChanged: null,
@@ -144,7 +144,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
       host(
-        const GenuxDropdown<int>(
+        const GuxDropdown<int>(
           options: options,
           value: null,
           onChanged: _noop,
@@ -173,7 +173,7 @@ void main() {
             size: Size(320, 400),
             textScaler: TextScaler.linear(3),
           ),
-          child: GenuxDropdown<int>(
+          child: GuxDropdown<int>(
             options: options,
             value: null,
             onChanged: _noop,
@@ -190,7 +190,7 @@ void main() {
           alignment: Alignment.topLeft,
           child: SizedBox(
             width: 30,
-            child: GenuxDropdown<int>(
+            child: GuxDropdown<int>(
               options: [],
               value: null,
               onChanged: null,
@@ -214,7 +214,7 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
       await tester.pumpWidget(
         host(
-          const GenuxDropdown<int>(
+          const GuxDropdown<int>(
             options: options,
             value: null,
             onChanged: _noop,
@@ -257,7 +257,7 @@ void main() {
                     size: const Size(800, 600),
                     textScaler: TextScaler.linear(scale),
                   ),
-                  child: const GenuxDropdown<int>(
+                  child: const GuxDropdown<int>(
                     options: options,
                     value: null,
                     onChanged: _noop,
@@ -297,7 +297,7 @@ void main() {
     const optionSubtitle = Color(0xFFB4B4B4);
     const marker = Key('selected marker');
     const chevron = Key('custom chevron');
-    const referenceStyle = GenuxDropdownStyle(
+    const referenceStyle = GuxDropdownStyle(
       backgroundColor: activeBackground,
       disabledBackgroundColor: statusBackground,
       borderColor: Color(0xFF333333),
@@ -318,7 +318,7 @@ void main() {
     );
     await tester.pumpWidget(
       host(
-        const GenuxDropdown<int>(
+        const GuxDropdown<int>(
           options: options,
           value: 1,
           onChanged: _noop,
@@ -361,7 +361,7 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(
       host(
-        const GenuxDropdown<int>(
+        const GuxDropdown<int>(
           options: options,
           value: 1,
           enabled: false,
@@ -390,10 +390,10 @@ void main() {
             size: Size(320, 400),
             textScaler: TextScaler.linear(2),
           ),
-          child: GenuxDropdown<int>(
+          child: GuxDropdown<int>(
             options: List.generate(
               15,
-              (i) => GenuxDropdownOption(
+              (i) => GuxDropdownOption(
                 value: i,
                 label: 'Item $i',
                 subtitle: i.isEven ? 'Subtitle' : null,
@@ -401,7 +401,7 @@ void main() {
             ),
             value: 0,
             onChanged: _noop,
-            style: const GenuxDropdownStyle(
+            style: const GuxDropdownStyle(
               compactItems: true,
               itemHeight: 0,
               itemPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -433,7 +433,7 @@ void main() {
     int? selected;
     final wrappedOptions = List.generate(
       18,
-      (i) => GenuxDropdownOption(
+      (i) => GuxDropdownOption(
         value: i,
         label: i == 0 ? longLabel : 'Entry $i',
         subtitle: i == 0 ? longSubtitle : (i.isEven ? longSubtitle : null),
@@ -446,14 +446,14 @@ void main() {
             size: Size(800, 600),
             textScaler: TextScaler.linear(1.5),
           ),
-          child: GenuxDropdown<int>(
+          child: GuxDropdown<int>(
             options: wrappedOptions,
             value: 0,
             onChanged: (value) => selected = value,
             wrapOptions: true,
             selectedMarkerSize: const Size(14, 14),
             selectedMarker: const SizedBox(width: 14, height: 14),
-            style: const GenuxDropdownStyle(
+            style: const GuxDropdownStyle(
               compactItems: true,
               itemHeight: 0,
               maxMenuHeight: 500,
@@ -497,7 +497,7 @@ void main() {
     const leadingKey = Key('loading lead');
     await tester.pumpWidget(
       host(
-        const GenuxDropdown<int>(
+        const GuxDropdown<int>(
           options: [],
           value: null,
           onChanged: null,
@@ -520,15 +520,15 @@ void main() {
     int? selected;
     final many = List.generate(
       40,
-      (i) => GenuxDropdownOption(value: i, label: 'Option $i'),
+      (i) => GuxDropdownOption(value: i, label: 'Option $i'),
     );
     await tester.pumpWidget(
       host(
-        GenuxDropdown<int>(
+        GuxDropdown<int>(
           options: many,
           value: 0,
           onChanged: (value) => selected = value,
-          style: const GenuxDropdownStyle(maxMenuHeight: 88),
+          style: const GuxDropdownStyle(maxMenuHeight: 88),
         ),
       ),
     );

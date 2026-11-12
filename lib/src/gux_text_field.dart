@@ -4,8 +4,8 @@ import 'package:flutter/widgets.dart';
 
 /// Host-provided labels and colors for the text selection menu.
 @immutable
-class GenuxTextSelectionMenuStyle {
-  const GenuxTextSelectionMenuStyle({
+class GuxTextSelectionMenuStyle {
+  const GuxTextSelectionMenuStyle({
     this.cutLabel = 'Cut',
     this.copyLabel = 'Copy',
     this.pasteLabel = 'Paste',
@@ -30,8 +30,8 @@ class GenuxTextSelectionMenuStyle {
 
 /// Visual properties supplied by the embedding application for a text field.
 @immutable
-class GenuxTextFieldStyle {
-  const GenuxTextFieldStyle({
+class GuxTextFieldStyle {
+  const GuxTextFieldStyle({
     required this.textStyle,
     required this.backgroundColor,
     required this.disabledBackgroundColor,
@@ -67,8 +67,8 @@ class GenuxTextFieldStyle {
 /// The error text communicates a validation result; validation itself remains
 /// the caller's responsibility. Text selection uses Flutter's low-level
 /// gesture handling and a host-configurable selection menu.
-class GenuxTextField extends StatefulWidget {
-  const GenuxTextField({
+class GuxTextField extends StatefulWidget {
+  const GuxTextField({
     super.key,
     required this.controller,
     required this.style,
@@ -86,13 +86,13 @@ class GenuxTextField extends StatefulWidget {
     this.inputFormatters,
     this.maxLines = 1,
     this.autofocus = false,
-    this.selectionMenuStyle = const GenuxTextSelectionMenuStyle(),
+    this.selectionMenuStyle = const GuxTextSelectionMenuStyle(),
   }) : assert(maxLines > 0),
        assert(!obscureText || maxLines == 1);
 
   final TextEditingController controller;
   final FocusNode? focusNode;
-  final GenuxTextFieldStyle style;
+  final GuxTextFieldStyle style;
   final String semanticsLabel;
   final String? placeholder;
   final String? errorText;
@@ -106,19 +106,19 @@ class GenuxTextField extends StatefulWidget {
   final List<TextInputFormatter>? inputFormatters;
   final int maxLines;
   final bool autofocus;
-  final GenuxTextSelectionMenuStyle selectionMenuStyle;
+  final GuxTextSelectionMenuStyle selectionMenuStyle;
 
   @override
-  State<GenuxTextField> createState() => _GenuxTextFieldState();
+  State<GuxTextField> createState() => _GuxTextFieldState();
 }
 
-class _GenuxTextFieldState extends State<GenuxTextField>
+class _GuxTextFieldState extends State<GuxTextField>
     implements TextSelectionGestureDetectorBuilderDelegate {
   final FocusNode _internalFocusNode = FocusNode();
   @override
   final GlobalKey<EditableTextState> editableTextKey = GlobalKey();
   late final TextSelectionGestureDetectorBuilder _selectionBuilder =
-      _GenuxSelectionGestureBuilder(delegate: this);
+      _GuxSelectionGestureBuilder(delegate: this);
 
   FocusNode get _focusNode => widget.focusNode ?? _internalFocusNode;
   bool _showHandles = false;
@@ -129,7 +129,7 @@ class _GenuxTextFieldState extends State<GenuxTextField>
   bool get selectionEnabled => widget.enabled;
 
   @override
-  void didUpdateWidget(covariant GenuxTextField oldWidget) {
+  void didUpdateWidget(covariant GuxTextField oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.enabled && !widget.enabled) _focusNode.unfocus();
   }
@@ -224,7 +224,7 @@ class _GenuxTextFieldState extends State<GenuxTextField>
                                   inputFormatters: widget.inputFormatters,
                                   maxLines: widget.maxLines,
                                   autofocus: widget.autofocus && widget.enabled,
-                                  selectionControls: _GenuxSelectionControls(
+                                  selectionControls: _GuxSelectionControls(
                                     style.cursorColor,
                                   ),
                                   showSelectionHandles: _showHandles,
@@ -242,7 +242,7 @@ class _GenuxTextFieldState extends State<GenuxTextField>
                                     }
                                   },
                                   contextMenuBuilder: (context, editable) =>
-                                      _GenuxSelectionMenu(
+                                      _GuxSelectionMenu(
                                         editable: editable,
                                         style: widget.selectionMenuStyle,
                                       ),
@@ -269,9 +269,9 @@ class _GenuxTextFieldState extends State<GenuxTextField>
   }
 }
 
-class _GenuxSelectionGestureBuilder
+class _GuxSelectionGestureBuilder
     extends TextSelectionGestureDetectorBuilder {
-  _GenuxSelectionGestureBuilder({required super.delegate});
+  _GuxSelectionGestureBuilder({required super.delegate});
 
   @override
   void onSingleLongTapStart(LongPressStartDetails details) {
@@ -290,9 +290,9 @@ class _GenuxSelectionGestureBuilder
   }
 }
 
-class _GenuxSelectionControls extends TextSelectionControls
+class _GuxSelectionControls extends TextSelectionControls
     with TextSelectionHandleControls {
-  _GenuxSelectionControls(this.color);
+  _GuxSelectionControls(this.color);
   final Color color;
 
   @override
@@ -350,10 +350,10 @@ class _HandlePainter extends CustomPainter {
       color != oldDelegate.color || type != oldDelegate.type;
 }
 
-class _GenuxSelectionMenu extends StatelessWidget {
-  const _GenuxSelectionMenu({required this.editable, required this.style});
+class _GuxSelectionMenu extends StatelessWidget {
+  const _GuxSelectionMenu({required this.editable, required this.style});
   final EditableTextState editable;
-  final GenuxTextSelectionMenuStyle style;
+  final GuxTextSelectionMenuStyle style;
 
   String? _label(ContextMenuButtonItem item) =>
       item.label ??
@@ -446,7 +446,7 @@ class _SelectionMenuItem extends StatefulWidget {
   });
   final String label;
   final VoidCallback onPressed;
-  final GenuxTextSelectionMenuStyle style;
+  final GuxTextSelectionMenuStyle style;
   @override
   State<_SelectionMenuItem> createState() => _SelectionMenuItemState();
 }

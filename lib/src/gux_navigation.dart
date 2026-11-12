@@ -1,12 +1,12 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
-/// A destination or action displayed in a [GenuxNavigation] rail.
+/// A destination or action displayed in a [GuxNavigation] rail.
 ///
 /// [label] identifies the icon to assistive technologies. Set [onSelected] to
 /// null to disable the item. Selection is controlled by the caller.
-class GenuxNavigationItem {
-  const GenuxNavigationItem({
+class GuxNavigationItem {
+  const GuxNavigationItem({
     required this.icon,
     required this.label,
     required this.onSelected,
@@ -25,8 +25,8 @@ class GenuxNavigationItem {
 /// caller supplies colors and icons so the rail remains independent of a
 /// particular design system. A bounded height allows bottom items to align to
 /// the bottom; under unbounded height they follow the other items.
-class GenuxNavigation extends StatelessWidget {
-  const GenuxNavigation({
+class GuxNavigation extends StatelessWidget {
+  const GuxNavigation({
     super.key,
     required this.items,
     this.bottomItems = const [],
@@ -43,8 +43,8 @@ class GenuxNavigation extends StatelessWidget {
        assert(itemSpacing >= 0 && itemSpacing < double.infinity),
        assert(borderRadius >= 0 && borderRadius < double.infinity);
 
-  final List<GenuxNavigationItem> items;
-  final List<GenuxNavigationItem> bottomItems;
+  final List<GuxNavigationItem> items;
+  final List<GuxNavigationItem> bottomItems;
   final double width;
   final double itemExtent;
   final double itemSpacing;
@@ -56,7 +56,7 @@ class GenuxNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget buildItem(GenuxNavigationItem item) => _NavigationButton(
+    Widget buildItem(GuxNavigationItem item) => _NavigationButton(
       item: item,
       extent: itemExtent,
       spacing: itemSpacing,
@@ -107,7 +107,7 @@ class _NavigationButton extends StatefulWidget {
     required this.borderRadius,
   });
 
-  final GenuxNavigationItem item;
+  final GuxNavigationItem item;
   final double extent;
   final double spacing;
   final Color selectedColor;

@@ -14,15 +14,15 @@ void main() {
     'example parses and serializes deterministically through a round trip',
     () {
       final source = File('examples/dashboard.json').readAsStringSync();
-      final document = GenuxPresentationDocument.parse(source);
+      final document = GuxPresentationDocument.parse(source);
       final normalized = document.toJsonString();
       expect(
-        GenuxPresentationDocument.parse(normalized).toJsonString(),
+        GuxPresentationDocument.parse(normalized).toJsonString(),
         normalized,
       );
-      expect(document.root, isA<GenuxWorkspaceNode>());
-      final workspace = document.root as GenuxWorkspaceNode;
-      final column = workspace.body as GenuxColumnNode;
+      expect(document.root, isA<GuxWorkspaceNode>());
+      final workspace = document.root as GuxWorkspaceNode;
+      final column = workspace.body as GuxColumnNode;
       expect(column.children, hasLength(2));
       expect(() => column.children.add(column), throwsUnsupportedError);
       final detached = document.toJson();
@@ -40,14 +40,14 @@ void main() {
       final source = jsonEncode(item['document']);
       if (item['valid'] == true) {
         expect(
-          () => GenuxPresentationDocument.parse(source),
+          () => GuxPresentationDocument.parse(source),
           returnsNormally,
           reason: source,
         );
       } else {
         expect(
-          () => GenuxPresentationDocument.parse(source),
-          throwsA(isA<GenuxFormatException>()),
+          () => GuxPresentationDocument.parse(source),
+          throwsA(isA<GuxFormatException>()),
           reason: source,
         );
       }
@@ -69,17 +69,17 @@ void main() {
       return source;
     }
 
-    final accepted = GenuxPresentationDocument.parse(nearLimit(262100));
+    final accepted = GuxPresentationDocument.parse(nearLimit(262100));
     final normalized = accepted.toJsonString();
     expect(utf8.encode(normalized).length, lessThanOrEqualTo(262144));
     expect(
-      GenuxPresentationDocument.parse(normalized).toJsonString(),
+      GuxPresentationDocument.parse(normalized).toJsonString(),
       normalized,
     );
     expect(
-      () => GenuxPresentationDocument.parse(nearLimit(262143)),
+      () => GuxPresentationDocument.parse(nearLimit(262143)),
       throwsA(
-        isA<GenuxFormatException>().having(
+        isA<GuxFormatException>().having(
           (e) => e.message,
           'message',
           'Normalized JSON exceeds 262144 UTF-8 bytes',
@@ -91,9 +91,9 @@ void main() {
   test('reports stable paths for malformed, missing and unsafe properties', () {
     void error(String input, String path) {
       expect(
-        () => GenuxPresentationDocument.parse(input),
+        () => GuxPresentationDocument.parse(input),
         throwsA(
-          isA<GenuxFormatException>().having((e) => e.path, 'path', path),
+          isA<GuxFormatException>().having((e) => e.path, 'path', path),
         ),
       );
     }
@@ -121,13 +121,13 @@ void main() {
   test('enforces string, list, byte, total node and tree depth limits', () {
     expect(
       () =>
-          GenuxPresentationDocument.parse(jsonDocument(textNode('😀' * 4096))),
+          GuxPresentationDocument.parse(jsonDocument(textNode('😀' * 4096))),
       returnsNormally,
     );
     expect(
-      () => GenuxPresentationDocument.parse(jsonDocument(textNode('a' * 4097))),
+      () => GuxPresentationDocument.parse(jsonDocument(textNode('a' * 4097))),
       throwsA(
-        isA<GenuxFormatException>().having(
+        isA<GuxFormatException>().having(
           (e) => e.path,
           'path',
           r'$.root.text',
@@ -135,17 +135,17 @@ void main() {
       ),
     );
     expect(
-      () => GenuxPresentationDocument.parse(' ' * 262145),
-      throwsA(isA<GenuxFormatException>()),
+      () => GuxPresentationDocument.parse(' ' * 262145),
+      throwsA(isA<GuxFormatException>()),
     );
     expect(
-      () => GenuxPresentationDocument.parse(
+      () => GuxPresentationDocument.parse(
         jsonDocument({
           'type': 'column',
           'children': List.generate(101, (_) => textNode('a')),
         }),
       ),
-      throwsA(isA<GenuxFormatException>()),
+      throwsA(isA<GuxFormatException>()),
     );
     final many = {
       'type': 'column',
@@ -158,8 +158,8 @@ void main() {
       ),
     };
     expect(
-      () => GenuxPresentationDocument.parse(jsonDocument(many)),
-      throwsA(isA<GenuxFormatException>()),
+      () => GuxPresentationDocument.parse(jsonDocument(many)),
+      throwsA(isA<GuxFormatException>()),
     );
     Object nested = textNode('end');
     for (var i = 0; i < 31; i++) {
@@ -169,7 +169,7 @@ void main() {
       };
     }
     expect(
-      () => GenuxPresentationDocument.parse(jsonDocument(nested)),
+      () => GuxPresentationDocument.parse(jsonDocument(nested)),
       returnsNormally,
     );
     nested = {
@@ -177,12 +177,12 @@ void main() {
       'children': [nested],
     };
     expect(
-      () => GenuxPresentationDocument.parse(jsonDocument(nested)),
-      throwsA(isA<GenuxFormatException>()),
+      () => GuxPresentationDocument.parse(jsonDocument(nested)),
+      throwsA(isA<GuxFormatException>()),
     );
     expect(
-      () => GenuxPresentationDocument.parse('[' * 1000),
-      throwsA(isA<GenuxFormatException>()),
+      () => GuxPresentationDocument.parse('[' * 1000),
+      throwsA(isA<GuxFormatException>()),
     );
   });
 }

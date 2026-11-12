@@ -3,9 +3,9 @@ import 'dart:math' as math;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
-/// A value and its localized display text in a [GenuxDropdown].
-class GenuxDropdownOption<T> {
-  const GenuxDropdownOption({
+/// A value and its localized display text in a [GuxDropdown].
+class GuxDropdownOption<T> {
+  const GuxDropdownOption({
     required this.value,
     required this.label,
     this.subtitle,
@@ -18,9 +18,9 @@ class GenuxDropdownOption<T> {
   final bool enabled;
 }
 
-/// Colors and typography for a [GenuxDropdown].
-class GenuxDropdownStyle {
-  const GenuxDropdownStyle({
+/// Colors and typography for a [GuxDropdown].
+class GuxDropdownStyle {
+  const GuxDropdownStyle({
     this.backgroundColor = const Color(0xFF292929),
     this.disabledBackgroundColor,
     this.menuColor = const Color(0xFF292929),
@@ -86,8 +86,8 @@ class GenuxDropdownStyle {
 /// The host supplies localized labels and updates [value] after [onChanged].
 /// When an error and [onRetry] are provided, the field becomes a retry action.
 /// The menu requires an ancestor [Overlay], typically supplied by a Navigator.
-class GenuxDropdown<T> extends StatefulWidget {
-  const GenuxDropdown({
+class GuxDropdown<T> extends StatefulWidget {
+  const GuxDropdown({
     super.key,
     required this.options,
     required this.value,
@@ -108,13 +108,13 @@ class GenuxDropdown<T> extends StatefulWidget {
     this.wrapOptions = false,
     this.loadingLeading,
     this.loadingLeadingGap = 6,
-    this.style = const GenuxDropdownStyle(),
+    this.style = const GuxDropdownStyle(),
   }) : assert(
          !wrapOptions || selectedMarker == null || selectedMarkerSize != null,
        ),
        assert(loadingLeadingGap >= 0 && loadingLeadingGap < double.infinity);
 
-  final List<GenuxDropdownOption<T>> options;
+  final List<GuxDropdownOption<T>> options;
   final T? value;
   final ValueChanged<T>? onChanged;
   final bool Function(T option, T value)? valueEquals;
@@ -143,13 +143,13 @@ class GenuxDropdown<T> extends StatefulWidget {
   /// Optional leading visual in the loading state, excluded from semantics.
   final Widget? loadingLeading;
   final double loadingLeadingGap;
-  final GenuxDropdownStyle style;
+  final GuxDropdownStyle style;
 
   @override
-  State<GenuxDropdown<T>> createState() => _GenuxDropdownState<T>();
+  State<GuxDropdown<T>> createState() => _GuxDropdownState<T>();
 }
 
-class _GenuxDropdownState<T> extends State<GenuxDropdown<T>>
+class _GuxDropdownState<T> extends State<GuxDropdown<T>>
     with WidgetsBindingObserver {
   final _anchorKey = GlobalKey();
   final _link = LayerLink();
@@ -179,7 +179,7 @@ class _GenuxDropdownState<T> extends State<GenuxDropdown<T>>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _focusNode = FocusNode(debugLabel: 'Genux dropdown', onKeyEvent: _onKey);
+    _focusNode = FocusNode(debugLabel: 'Gux dropdown', onKeyEvent: _onKey);
   }
 
   @override
@@ -195,7 +195,7 @@ class _GenuxDropdownState<T> extends State<GenuxDropdown<T>>
   }
 
   @override
-  void didUpdateWidget(covariant GenuxDropdown<T> oldWidget) {
+  void didUpdateWidget(covariant GuxDropdown<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (_open && !_canOpen) {
       _close(rebuild: false);
@@ -225,7 +225,7 @@ class _GenuxDropdownState<T> extends State<GenuxDropdown<T>>
     super.dispose();
   }
 
-  bool _selected(GenuxDropdownOption<T> option) {
+  bool _selected(GuxDropdownOption<T> option) {
     final value = widget.value;
     if (value == null) return false;
     return widget.valueEquals?.call(option.value, value) ??
@@ -343,7 +343,7 @@ class _GenuxDropdownState<T> extends State<GenuxDropdown<T>>
     ];
   }
 
-  TextStyle _optionTextStyle(GenuxDropdownOption<T> option) {
+  TextStyle _optionTextStyle(GuxDropdownOption<T> option) {
     final style = widget.style;
     final selected = _selected(option);
     final color = !option.enabled
@@ -357,7 +357,7 @@ class _GenuxDropdownState<T> extends State<GenuxDropdown<T>>
     );
   }
 
-  TextStyle _optionSubtitleStyle(GenuxDropdownOption<T> option) {
+  TextStyle _optionSubtitleStyle(GuxDropdownOption<T> option) {
     final style = widget.style;
     final color = !option.enabled
         ? style.disabledColor

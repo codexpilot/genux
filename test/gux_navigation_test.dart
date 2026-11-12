@@ -25,15 +25,15 @@ void main() {
     var count = 0;
     await tester.pumpWidget(
       _host(
-        GenuxNavigation(
+        GuxNavigation(
           items: [
-            GenuxNavigationItem(
+            GuxNavigationItem(
               icon: const SizedBox(width: 12, height: 12),
               label: 'Home',
               selected: true,
               onSelected: () => count++,
             ),
-            const GenuxNavigationItem(
+            const GuxNavigationItem(
               icon: SizedBox(width: 12, height: 12),
               label: 'Disabled',
               onSelected: null,
@@ -74,9 +74,9 @@ void main() {
     var count = 0;
     await tester.pumpWidget(
       _host(
-        GenuxNavigation(
+        GuxNavigation(
           items: [
-            GenuxNavigationItem(
+            GuxNavigationItem(
               icon: const SizedBox(width: 12, height: 12),
               label: 'Open',
               onSelected: () => count++,
@@ -99,14 +99,14 @@ void main() {
     var secondCount = 0;
     await tester.pumpWidget(
       _host(
-        GenuxNavigation(
+        GuxNavigation(
           items: [
-            GenuxNavigationItem(
+            GuxNavigationItem(
               icon: const Text('A'),
               label: 'First',
               onSelected: () => firstCount++,
             ),
-            GenuxNavigationItem(
+            GuxNavigationItem(
               icon: const Text('B'),
               label: 'Second',
               onSelected: () => secondCount++,
@@ -127,15 +127,15 @@ void main() {
   testWidgets('anchors bottom items and scrolls in short, narrow bounds', (
     tester,
   ) async {
-    GenuxNavigationItem item(String label) =>
-        GenuxNavigationItem(icon: Text(label), label: label, onSelected: () {});
+    GuxNavigationItem item(String label) =>
+        GuxNavigationItem(icon: Text(label), label: label, onSelected: () {});
     await tester.pumpWidget(
-      _host(GenuxNavigation(items: [item('A')], bottomItems: [item('B')])),
+      _host(GuxNavigation(items: [item('A')], bottomItems: [item('B')])),
     );
     expect(tester.getBottomLeft(find.text('B')).dy, greaterThan(160));
     await tester.pumpWidget(
       _host(
-        GenuxNavigation(
+        GuxNavigation(
           items: [item('A'), item('B'), item('C')],
           bottomItems: [item('D')],
         ),

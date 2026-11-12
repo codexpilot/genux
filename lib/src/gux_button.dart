@@ -1,10 +1,10 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
-/// Visual properties for a [GenuxButton], independent of an app theme.
+/// Visual properties for a [GuxButton], independent of an app theme.
 @immutable
-class GenuxButtonStyle {
-  const GenuxButtonStyle({
+class GuxButtonStyle {
+  const GuxButtonStyle({
     required this.backgroundColor,
     required this.hoverColor,
     required this.pressedColor,
@@ -35,8 +35,8 @@ class GenuxButtonStyle {
 ///
 /// The child supplies the accessible label. Space and Enter activate the
 /// button, and a null [onPressed] disables pointer and keyboard activation.
-class GenuxButton extends StatefulWidget {
-  const GenuxButton({
+class GuxButton extends StatefulWidget {
+  const GuxButton({
     super.key,
     required this.onPressed,
     required this.style,
@@ -46,16 +46,16 @@ class GenuxButton extends StatefulWidget {
   });
 
   final VoidCallback? onPressed;
-  final GenuxButtonStyle style;
+  final GuxButtonStyle style;
   final Widget child;
   final FocusNode? focusNode;
   final bool autofocus;
 
   @override
-  State<GenuxButton> createState() => _GenuxButtonState();
+  State<GuxButton> createState() => _GuxButtonState();
 }
 
-class _GenuxButtonState extends State<GenuxButton> {
+class _GuxButtonState extends State<GuxButton> {
   final FocusNode _internalFocusNode = FocusNode();
   bool _hovered = false;
   bool _pressed = false;
@@ -70,7 +70,7 @@ class _GenuxButtonState extends State<GenuxButton> {
   }
 
   @override
-  void didUpdateWidget(covariant GenuxButton oldWidget) {
+  void didUpdateWidget(covariant GuxButton oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!_enabled) {
       _hovered = false;

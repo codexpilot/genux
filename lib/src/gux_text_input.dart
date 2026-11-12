@@ -1,14 +1,14 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
-import 'genux_text_field.dart';
+import 'gux_text_field.dart';
 
 /// A labeled text input field with validation display.
 ///
-/// Built on [GenuxTextField] with consistent label, placeholder, and error
-/// message layout. The host supplies all styling through [GenuxTextInputStyle].
-class GenuxTextInput extends StatelessWidget {
-  const GenuxTextInput({
+/// Built on [GuxTextField] with consistent label, placeholder, and error
+/// message layout. The host supplies all styling through [GuxTextInputStyle].
+class GuxTextInput extends StatelessWidget {
+  const GuxTextInput({
     super.key,
     required this.controller,
     required this.style,
@@ -27,7 +27,7 @@ class GenuxTextInput extends StatelessWidget {
   });
 
   final TextEditingController controller;
-  final GenuxTextInputStyle style;
+  final GuxTextInputStyle style;
   final String? labelText;
   final String? placeholder;
   final String? errorMessage;
@@ -54,7 +54,7 @@ class GenuxTextInput extends StatelessWidget {
           ),
           SizedBox(height: style.labelSpacing),
         ],
-        GenuxTextField(
+        GuxTextField(
           controller: controller,
           style: errorMessage != null ? style.errorFieldStyle : style.fieldStyle,
           placeholder: placeholder,
@@ -81,10 +81,10 @@ class GenuxTextInput extends StatelessWidget {
   }
 }
 
-/// Visual properties for [GenuxTextInput].
+/// Visual properties for [GuxTextInput].
 @immutable
-class GenuxTextInputStyle {
-  const GenuxTextInputStyle({
+class GuxTextInputStyle {
+  const GuxTextInputStyle({
     required this.fieldStyle,
     required this.errorFieldStyle,
     required this.labelStyle,
@@ -93,8 +93,8 @@ class GenuxTextInputStyle {
     this.errorSpacing = 4.0,
   });
 
-  final GenuxTextFieldStyle fieldStyle;
-  final GenuxTextFieldStyle errorFieldStyle;
+  final GuxTextFieldStyle fieldStyle;
+  final GuxTextFieldStyle errorFieldStyle;
   final TextStyle labelStyle;
   final TextStyle errorTextStyle;
   final double labelSpacing;

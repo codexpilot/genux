@@ -17,10 +17,10 @@ void main() {
           builder: (context) => Center(
             child: GestureDetector(
               onTap: () async {
-                result = await showGenuxDialog<String>(
+                result = await showGuxDialog<String>(
                   context: context,
                   barrierLabel: 'Dismiss dialog',
-                  builder: (context) => GenuxDialog(
+                  builder: (context) => GuxDialog(
                     title: const Text('Confirm'),
                     content: const Text('Continue?'),
                     actions: [
@@ -65,7 +65,7 @@ void main() {
           textDirection: TextDirection.ltr,
           child: DefaultTextStyle(
             style: TextStyle(fontSize: 14),
-            child: GenuxDialog(title: Text('Title'), actions: [Text('Done')]),
+            child: GuxDialog(title: Text('Title'), actions: [Text('Done')]),
           ),
         ),
       ),
@@ -86,7 +86,7 @@ void main() {
         textDirection: TextDirection.ltr,
         child: DefaultTextStyle(
           style: TextStyle(fontSize: 14),
-          child: GenuxDialog(minWidth: 300, title: Text('Title')),
+          child: GuxDialog(minWidth: 300, title: Text('Title')),
         ),
       ),
     );
@@ -109,7 +109,7 @@ void main() {
         textDirection: TextDirection.ltr,
         child: DefaultTextStyle(
           style: TextStyle(fontSize: 14),
-          child: GenuxDialog(
+          child: GuxDialog(
             title: Text('Long dialog'),
             content: SizedBox(height: 600, child: Text('Content')),
             actions: [Text('Done')],

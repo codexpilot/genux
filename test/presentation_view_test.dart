@@ -9,7 +9,7 @@ void main() {
   testWidgets(
     'renders the sample with workspace slots, summary and semantics',
     (tester) async {
-      final document = GenuxPresentationDocument.parse(
+      final document = GuxPresentationDocument.parse(
         File('examples/dashboard.json').readAsStringSync(),
       );
       final semantics = tester.ensureSemantics();
@@ -18,7 +18,7 @@ void main() {
           textDirection: TextDirection.ltr,
           child: DefaultTextStyle(
             style: const TextStyle(fontSize: 14, color: Color(0xFF000000)),
-            child: GenuxPresentationView(document: document),
+            child: GuxPresentationView(document: document),
           ),
         ),
       );
@@ -37,7 +37,7 @@ void main() {
   testWidgets('nested workspace in a scrolling column receives bounded space', (
     tester,
   ) async {
-    final document = GenuxPresentationDocument.parse(
+    final document = GuxPresentationDocument.parse(
       jsonEncode({
         'schemaVersion': 1,
         'root': {
@@ -57,7 +57,7 @@ void main() {
         textDirection: TextDirection.ltr,
         child: DefaultTextStyle(
           style: const TextStyle(fontSize: 14),
-          child: GenuxPresentationView(document: document),
+          child: GuxPresentationView(document: document),
         ),
       ),
     );
@@ -69,7 +69,7 @@ void main() {
   testWidgets('nested columns lay out and scroll without a viewport error', (
     tester,
   ) async {
-    final document = GenuxPresentationDocument.parse(
+    final document = GuxPresentationDocument.parse(
       jsonEncode({
         'schemaVersion': 1,
         'root': {
@@ -91,7 +91,7 @@ void main() {
         textDirection: TextDirection.ltr,
         child: DefaultTextStyle(
           style: const TextStyle(fontSize: 14),
-          child: GenuxPresentationView(document: document),
+          child: GuxPresentationView(document: document),
         ),
       ),
     );
@@ -102,7 +102,7 @@ void main() {
   testWidgets('small slots tolerate large text and right-to-left layout', (
     tester,
   ) async {
-    final document = GenuxPresentationDocument.parse(
+    final document = GuxPresentationDocument.parse(
       jsonEncode({
         'schemaVersion': 1,
         'root': {
@@ -138,7 +138,7 @@ void main() {
               child: SizedBox(
                 width: 30,
                 height: 30,
-                child: GenuxPresentationView(document: document),
+                child: GuxPresentationView(document: document),
               ),
             ),
           ),

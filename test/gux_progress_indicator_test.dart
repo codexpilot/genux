@@ -16,7 +16,7 @@ void main() {
           child: StatefulBuilder(
             builder: (context, setState) {
               update = setState;
-              return GenuxProgressIndicator(
+              return GuxProgressIndicator(
                 color: const Color(0xFF3B82F6),
                 trackColor: const Color(0xFF333333),
                 size: 24,
@@ -28,7 +28,7 @@ void main() {
         ),
       ),
     );
-    final indicator = find.byType(GenuxProgressIndicator);
+    final indicator = find.byType(GuxProgressIndicator);
     expect(tester.getSize(indicator), const Size.square(24));
     expect(
       tester.getSemantics(indicator),
@@ -53,7 +53,7 @@ void main() {
         child: Directionality(
           textDirection: TextDirection.ltr,
           child: Center(
-            child: GenuxProgressIndicator(
+            child: GuxProgressIndicator(
               color: Color(0xFF3B82F6),
               trackColor: Color(0xFF333333),
               semanticsLabel: 'Loading',
@@ -63,7 +63,7 @@ void main() {
       ),
     );
     expect(
-      tester.getSemantics(find.byType(GenuxProgressIndicator)),
+      tester.getSemantics(find.byType(GuxProgressIndicator)),
       matchesSemantics(label: 'Loading'),
     );
     await tester.pump(const Duration(seconds: 2));

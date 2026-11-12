@@ -7,7 +7,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:genux/genux.dart';
 
-const fieldStyle = GenuxTextFieldStyle(
+const fieldStyle = GuxTextFieldStyle(
   textStyle: TextStyle(color: Color(0xffeeeeee), fontSize: 14),
   backgroundColor: Color(0xff252525),
   disabledBackgroundColor: Color(0xff111111),
@@ -44,7 +44,7 @@ void main() {
     String? submitted;
     await tester.pumpWidget(
       host(
-        GenuxTextField(
+        GuxTextField(
           controller: controller,
           focusNode: focus,
           style: fieldStyle,
@@ -66,7 +66,7 @@ void main() {
           .hint,
       'Enter username',
     );
-    await tester.tap(find.byType(GenuxTextField));
+    await tester.tap(find.byType(GuxTextField));
     await tester.pump();
     expect(focus.hasFocus, isTrue);
     await tester.enterText(find.byType(EditableText), 'Alice');
@@ -101,7 +101,7 @@ void main() {
     final semantics = tester.ensureSemantics();
     await tester.pumpWidget(
       host(
-        GenuxTextField(
+        GuxTextField(
           controller: controller,
           style: fieldStyle,
           semanticsLabel: 'Password',
@@ -116,7 +116,7 @@ void main() {
       tester.widget<EditableText>(find.byType(EditableText)).obscureText,
       isTrue,
     );
-    final nodes = tester.getSemantics(find.byType(GenuxTextField));
+    final nodes = tester.getSemantics(find.byType(GuxTextField));
     expect(nodes.toStringDeep(), isNot(contains('secret')));
     await tester.pumpWidget(const SizedBox());
     semantics.dispose();
@@ -132,7 +132,7 @@ void main() {
     final semantics = tester.ensureSemantics();
     await tester.pumpWidget(
       host(
-        GenuxTextField(
+        GuxTextField(
           controller: controller,
           focusNode: focus,
           style: fieldStyle,
@@ -142,7 +142,7 @@ void main() {
         ),
       ),
     );
-    await tester.tap(find.byType(GenuxTextField), warnIfMissed: false);
+    await tester.tap(find.byType(GuxTextField), warnIfMissed: false);
     await tester.pump();
     expect(focus.hasFocus, isFalse);
     focus.requestFocus();
@@ -176,7 +176,7 @@ void main() {
     addTearDown(focus.dispose);
     await tester.pumpWidget(
       host(
-        GenuxTextField(
+        GuxTextField(
           controller: controller,
           focusNode: focus,
           style: fieldStyle,
@@ -185,7 +185,7 @@ void main() {
         ),
       ),
     );
-    await tester.tap(find.byType(GenuxTextField));
+    await tester.tap(find.byType(GuxTextField));
     await tester.pump();
     expect(focus.hasFocus, isTrue);
     expect(
@@ -216,11 +216,11 @@ void main() {
     addTearDown(controller.dispose);
     await tester.pumpWidget(
       host(
-        GenuxTextField(
+        GuxTextField(
           controller: controller,
           style: fieldStyle,
           semanticsLabel: 'Message',
-          selectionMenuStyle: const GenuxTextSelectionMenuStyle(
+          selectionMenuStyle: const GuxTextSelectionMenuStyle(
             copyLabel: 'Copy text',
           ),
         ),
@@ -251,7 +251,7 @@ void main() {
     addTearDown(controller.dispose);
     await tester.pumpWidget(
       host(
-        GenuxTextField(
+        GuxTextField(
           controller: controller,
           style: fieldStyle,
           semanticsLabel: 'Read only',
@@ -276,7 +276,7 @@ void main() {
 
     await tester.pumpWidget(
       host(
-        GenuxTextField(
+        GuxTextField(
           controller: controller,
           style: fieldStyle,
           semanticsLabel: 'Password',
@@ -304,7 +304,7 @@ void main() {
     addTearDown(controller.dispose);
     await tester.pumpWidget(
       host(
-        GenuxTextField(
+        GuxTextField(
           controller: controller,
           style: fieldStyle,
           semanticsLabel: 'Text',
@@ -335,7 +335,7 @@ void main() {
     addTearDown(controller.dispose);
     await tester.pumpWidget(
       host(
-        GenuxTextField(
+        GuxTextField(
           controller: controller,
           style: fieldStyle,
           semanticsLabel: 'Text',
