@@ -67,7 +67,7 @@ class GuxTextInput extends StatelessWidget {
           onSubmitted: onSubmitted,
           focusNode: focusNode,
           autofocus: autofocus,
-          semanticsLabel: labelText,
+          semanticsLabel: labelText ?? '',
         ),
         if (errorMessage != null) ...[
           SizedBox(height: style.errorSpacing),
