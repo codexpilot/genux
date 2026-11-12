@@ -51,6 +51,13 @@ class GuxApp extends StatelessWidget {
               pageBuilder: (context, animation, secondaryAnimation) => home,
             );
           },
+      onUnknownRoute: (settings) {
+        // Explicit unknown route handling: fall back to home
+        return PageRouteBuilder(
+          settings: settings,
+          pageBuilder: (context, animation, secondaryAnimation) => home,
+        );
+      },
     );
   }
 }

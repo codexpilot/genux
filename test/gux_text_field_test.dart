@@ -326,7 +326,13 @@ void main() {
     semantics.dispose();
   });
 
-  // Context menu and selection handles not yet implemented (README limitation)
+  // Context menu and selection handles require platform-specific implementation.
+  // Flutter's EditableText provides showSelectionHandles property but the actual
+  // handles and context menu rendering depend on TextSelectionControls which are
+  // framework-specific (Material/Cupertino). Genux needs a framework-independent
+  // implementation or explicit platform adapter integration.
+  // Tracked in P1 work: implement platform-appropriate selection UI or document
+  // as requiring host-provided TextSelectionControls.
   testWidgets(
     'touch long-press presents a selection and its handles',
     skip: true,
