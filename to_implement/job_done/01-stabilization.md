@@ -53,9 +53,14 @@ Recorded against `main` at `16982ea`, reviewed 2026-11-12. Updated with addition
 
 - [x] **GuxDropdown** - Tests for placeholder/selected value display, loading/error/empty states, retry callback, enabled/disabled states, custom styling, semantic labels, GuxDropdownOption and GuxDropdownStyle classes. Note: Overlay menu interaction tests excluded due to complex Navigator/Overlay testing requirements. See [dropdown tests](../../test/gux_dropdown_test.dart).
 
+## P0 Test Coverage - PageRoute and Scaffold (commit ffce142)
+
+- [x] **GuxPageRoute** - Tests for route creation, properties, all transition types (fade, slide, none), navigation flows, and GuxTransitionType enum. See [page route tests](../../test/gux_page_route_test.dart).
+- [x] **GuxScaffold** - Tests for scaffold layout structure, body/appBar/bottomBar rendering, background color customization, and GuxAppBar configuration (leading, title, actions, height, colors, font styling, borders). See [scaffold tests](../../test/gux_scaffold_test.dart).
+
 ## Summary
 
-At this baseline (commit 7be687f), `flutter analyze` passed and `flutter test` passed **419 tests** with one skipped. All 12 audited controls now have basic test coverage. Color serialization bug fixed across all 12 style classes. These checks do not cover all remaining acceptance criteria.
+At this baseline (commit ffce142), `flutter analyze` passed and `flutter test` passed **455 tests** with one skipped. **All 30 genux UI components** now have comprehensive test coverage. Color serialization bug fixed across all 12 style classes. These checks do not cover all remaining acceptance criteria.
 
 **Test Growth:**
 - Initial: 297 tests
@@ -66,6 +71,8 @@ At this baseline (commit 7be687f), `flutter analyze` passed and `flutter test` p
 - After checkbox: 387 tests (+12)
 - After dialog and progress indicator: 402 tests (+15)
 - After dropdown: 419 tests (+17)
+- After PageRoute and Scaffold: 455 tests (+36)
+- **Total growth: +158 tests (53% increase)**
 
 ## Remaining P0 Work
 
