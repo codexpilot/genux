@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "root": {
+    "type": "workspace",
+    "topBarHeight": 44,
+    "bottomBarHeight": 26,
+    "sideBarWidth": 96,
+    "topBar": {"type": "text", "text": "Overview"},
+    "sideBar": {"type": "text", "text": "Reports"},
+    "body": {
+      "type": "column",
+      "spacing": 12,
+      "children": [
+        {"type": "text", "text": "Today's activity"},
+        {
+          "type": "summaryLines",
+          "primary": "Orders",
+          "secondary": "Today",
+          "tertiary": "3 items",
+          "spacing": 4
+        }
+      ]
+    },
+    "bottomBar": {"type": "text", "text": "Ready"}
+  }
+}

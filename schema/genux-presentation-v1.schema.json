@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Experimental internal Genux static presentation, version 1",
+  "description": "Experimental internal format; not A2UI or a runtime binding artifact. Static presentation only. The parser also limits both the UTF-8 JSON input and its normalized serialized form to 262144 bytes, node depth to 32 levels (root is level 1), and the document to 512 nodes. These aggregate limits are enforced by the parser and cannot be fully expressed by this schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "root"],
+  "properties": {
+    "schemaVersion": {"type": "integer", "const": 1},
+    "root": {"$ref": "#/$defs/node"}
+  },
+  "$defs": {
+    "textValue": {"type": "string", "maxLength": 4096},
+    "spacing": {"type": "number", "minimum": 0, "maximum": 200},
+    "slotSize": {"type": "number", "minimum": 0, "maximum": 1000},
+    "node": {
+      "oneOf": [
+        {"$ref": "#/$defs/text"},
+        {"$ref": "#/$defs/column"},
+        {"$ref": "#/$defs/summaryLines"},
+        {"$ref": "#/$defs/workspace"}
+      ]
+    },
+    "text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "text"],
+      "properties": {
+        "type": {"const": "text"},
+        "text": {"$ref": "#/$defs/textValue"}
+      }
+    },
+    "column": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "children"],
+      "properties": {
+        "type": {"const": "column"},
+        "spacing": {"$ref": "#/$defs/spacing", "default": 0},
+        "children": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {"$ref": "#/$defs/node"}
+        }
+      }
+    },
+    "summaryLines": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "primary", "secondary", "tertiary"],
+      "properties": {
+        "type": {"const": "summaryLines"},
+        "primary": {"$ref": "#/$defs/textValue"},
+        "secondary": {"$ref": "#/$defs/textValue"},
+        "tertiary": {"$ref": "#/$defs/textValue"},
+        "spacing": {"$ref": "#/$defs/spacing", "default": 4}
+      }
+    },
+    "workspace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "body"],
+      "properties": {
+        "type": {"const": "workspace"},
+        "body": {"$ref": "#/$defs/node"},
+        "topBar": {"$ref": "#/$defs/node"},
+        "bottomBar": {"$ref": "#/$defs/node"},
+        "sideBar": {"$ref": "#/$defs/node"},
+        "topBarHeight": {"$ref": "#/$defs/slotSize", "default": 44},
+        "bottomBarHeight": {"$ref": "#/$defs/slotSize", "default": 26},
+        "sideBarWidth": {"$ref": "#/$defs/slotSize", "default": 44}
+      }
+    }
+  }
+}

@@ -1,0 +1,24 @@
+name: Genux quality checks
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python3 -m unittest discover -s tool -p 'test_ui_independence.py'
+      - run: python3 tool/check_ui_independence.py
+      - run: python3 -m pip install jsonschema==4.23.0
+      - run: python3 tool/validate_presentation_schema.py

@@ -1,0 +1,10 @@
+/pubspec.lock
+/.dart_tool/
+/build/
+/.packages
+/.flutter-plugins
+/.flutter-plugins-dependencies
+/.idea/
+/.vscode/
+**/__pycache__/
+*.pyc
