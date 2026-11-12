@@ -1,5 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'json/gux_json_utils.dart';
+import 'json/gux_json_renderer.dart';
 
 /// Visual properties for a [GuxButton], independent of an app theme.
 @immutable
@@ -29,6 +31,53 @@ class GuxButtonStyle {
   final Size minimumSize;
   final BorderRadiusGeometry borderRadius;
   final TextStyle textStyle;
+
+  /// Create a GuxButtonStyle from JSON
+  factory GuxButtonStyle.fromJson(Map<String, dynamic> json) {
+    return GuxButtonStyle(
+      backgroundColor: GuxJsonUtils.parseColor(json['backgroundColor']) ??
+          const Color(0xFF3B82F6),
+      hoverColor:
+          GuxJsonUtils.parseColor(json['hoverColor']) ?? const Color(0xFF2563EB),
+      pressedColor: GuxJsonUtils.parseColor(json['pressedColor']) ??
+          const Color(0xFF1D4ED8),
+      disabledColor: GuxJsonUtils.parseColor(json['disabledColor']) ??
+          const Color(0xFF9CA3AF),
+      foregroundColor: GuxJsonUtils.parseColor(json['foregroundColor']) ??
+          const Color(0xFFFFFFFF),
+      disabledForegroundColor:
+          GuxJsonUtils.parseColor(json['disabledForegroundColor']) ??
+              const Color(0xFFD1D5DB),
+      focusColor:
+          GuxJsonUtils.parseColor(json['focusColor']) ?? const Color(0xFF3B82F6),
+      padding: GuxJsonUtils.parseEdgeInsets(json['padding']) ??
+          const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      minimumSize:
+          GuxJsonUtils.parseSize(json['minimumSize']) ?? const Size(0, 28),
+      borderRadius: GuxJsonUtils.parseBorderRadius(json['borderRadius']) ??
+          const BorderRadius.all(Radius.circular(6)),
+      textStyle: GuxJsonUtils.parseTextStyle(json['textStyle'] as Map<String, dynamic>?) ??
+          const TextStyle(fontSize: 14),
+    );
+  }
+
+  /// Convert this GuxButtonStyle to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'backgroundColor': GuxJsonUtils.colorToString(backgroundColor),
+      'hoverColor': GuxJsonUtils.colorToString(hoverColor),
+      'pressedColor': GuxJsonUtils.colorToString(pressedColor),
+      'disabledColor': GuxJsonUtils.colorToString(disabledColor),
+      'foregroundColor': GuxJsonUtils.colorToString(foregroundColor),
+      'disabledForegroundColor':
+          GuxJsonUtils.colorToString(disabledForegroundColor),
+      'focusColor': GuxJsonUtils.colorToString(focusColor),
+      'padding': GuxJsonUtils.edgeInsetsToJson(padding),
+      'minimumSize': GuxJsonUtils.sizeToJson(minimumSize),
+      'borderRadius': GuxJsonUtils.borderRadiusToJson(borderRadius),
+      'textStyle': GuxJsonUtils.textStyleToJson(textStyle),
+    };
+  }
 }
 
 /// A focusable, accessible button styled by its embedding application.
@@ -43,6 +92,7 @@ class GuxButton extends StatefulWidget {
     required this.child,
     this.focusNode,
     this.autofocus = false,
+    this.semanticsLabel,
   });
 
   final VoidCallback? onPressed;
@@ -50,6 +100,53 @@ class GuxButton extends StatefulWidget {
   final Widget child;
   final FocusNode? focusNode;
   final bool autofocus;
+  final String? semanticsLabel;
+
+  /// Create a GuxButton from JSON
+  ///
+  /// Example JSON:
+  /// ```json
+  /// {
+  ///   "style": {
+  ///     "backgroundColor": "#3B82F6",
+  ///     "foregroundColor": "#FFFFFF",
+  ///     "borderRadius": 6
+  ///   },
+  ///   "child": "Click Me",
+  ///   "onPressed": "handleClick",
+  ///   "semanticsLabel": "Submit button"
+  /// }
+  /// ```
+  factory GuxButton.fromJson(
+    Map<String, dynamic> json, {
+    required Map<String, VoidCallback> actions,
+  }) {
+    final onPressedKey = json['onPressed'] as String?;
+
+    // Ensure style is properly cast to Map<String, dynamic>
+    final styleJson = json['style'];
+    final Map<String, dynamic> styleMap;
+    if (styleJson == null) {
+      styleMap = {};
+    } else if (styleJson is Map<String, dynamic>) {
+      styleMap = styleJson;
+    } else if (styleJson is Map) {
+      styleMap = Map<String, dynamic>.from(styleJson);
+    } else {
+      styleMap = {};
+    }
+
+    return GuxButton(
+      onPressed: onPressedKey != null ? actions[onPressedKey] : null,
+      style: GuxButtonStyle.fromJson(styleMap),
+      autofocus: json['autofocus'] as bool? ?? false,
+      semanticsLabel: json['semanticsLabel'] as String?,
+      child: GuxJsonRenderer.parseChild(
+        json['child'],
+        actions: actions,
+      ),
+    );
+  }
 
   @override
   State<GuxButton> createState() => _GuxButtonState();
@@ -96,6 +193,7 @@ class _GuxButtonState extends State<GuxButton> {
     return Semantics(
       button: true,
       enabled: _enabled,
+      label: widget.semanticsLabel,
       onTap: widget.onPressed,
       child: FocusableActionDetector(
         enabled: _enabled,
