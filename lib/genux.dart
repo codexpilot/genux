@@ -30,6 +30,7 @@ export 'src/gux_alert.dart';
 export 'src/gux_separator.dart';
 export 'src/gux_switch.dart';
 export 'src/gux_radio.dart';
+export 'src/gux_radio_group.dart';
 export 'src/gux_slider.dart';
 
 // JSON serialization support

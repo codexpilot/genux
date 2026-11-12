@@ -16,6 +16,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'json/gux_color_codec.dart';
+import 'gux_radio_group.dart';
 
 /// Visual styling for [GuxRadio].
 class GuxRadioStyle {
@@ -119,6 +120,13 @@ class GuxRadio extends StatefulWidget {
   /// Semantic label for accessibility.
   final String? semanticsLabel;
 
+  /// Optional callback for arrow key navigation (used by GuxRadioGroup).
+  ///
+  /// When provided, arrow key events are delegated to this handler for
+  /// group-level navigation. Should not be set directly by users - this
+  /// is automatically configured by GuxRadioGroup.
+  final bool Function(LogicalKeyboardKey)? onArrowKey;
+
   const GuxRadio({
     super.key,
     required this.value,
@@ -126,6 +134,7 @@ class GuxRadio extends StatefulWidget {
     this.onChanged,
     required this.style,
     this.semanticsLabel,
+    this.onArrowKey,
   });
 
   /// Creates a radio button from JSON.
@@ -207,6 +216,9 @@ class _GuxRadioState extends State<GuxRadio> {
 
   @override
   Widget build(BuildContext context) {
+    // Check if we're in a radio group for arrow key navigation
+    final groupScope = RadioGroupScope.of(context);
+
     final effectiveBorderColor = _isEnabled
         ? (_isSelected ? widget.style.checkedColor : widget.style.borderColor)
         : widget.style.disabledColor;
@@ -228,16 +240,46 @@ class _GuxRadioState extends State<GuxRadio> {
         onKeyEvent: (node, event) {
           if (!_isEnabled) return KeyEventResult.ignored;
           if (event is KeyDownEvent) {
+            // Handle Space/Enter for selection
             if (event.logicalKey == LogicalKeyboardKey.space ||
                 event.logicalKey == LogicalKeyboardKey.enter) {
               _handleSelect();
               return KeyEventResult.handled;
             }
+
+            // Delegate arrow keys to group if present
+            if (groupScope != null) {
+              final key = event.logicalKey;
+              if (key == LogicalKeyboardKey.arrowUp ||
+                  key == LogicalKeyboardKey.arrowDown ||
+                  key == LogicalKeyboardKey.arrowLeft ||
+                  key == LogicalKeyboardKey.arrowRight) {
+                final handled = groupScope.onArrowKey(key);
+                return handled ? KeyEventResult.handled : KeyEventResult.ignored;
+              }
+            }
+
+            // Also check explicit onArrowKey callback (for backward compatibility)
+            if (widget.onArrowKey != null) {
+              final key = event.logicalKey;
+              if (key == LogicalKeyboardKey.arrowUp ||
+                  key == LogicalKeyboardKey.arrowDown ||
+                  key == LogicalKeyboardKey.arrowLeft ||
+                  key == LogicalKeyboardKey.arrowRight) {
+                final handled = widget.onArrowKey!(key);
+                return handled ? KeyEventResult.handled : KeyEventResult.ignored;
+              }
+            }
           }
           return KeyEventResult.ignored;
         },
         child: GestureDetector(
-          onTap: _isEnabled ? _handleSelect : null,
+          onTap: _isEnabled
+              ? () {
+                  _focusNode.requestFocus();
+                  _handleSelect();
+                }
+              : null,
           child: Container(
             width: widget.style.size,
             height: widget.style.size,
