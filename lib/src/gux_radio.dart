@@ -88,7 +88,8 @@ class GuxRadioStyle {
   }
 
   static String _colorToHex(Color color) {
-    return '#${color.toARGB32().toRadixString(16).substring(2).toUpperCase()}';
+    final argb = color.toARGB32().toRadixString(16).padLeft(8, '0').toUpperCase();
+    return '#${argb.substring(2)}'; // Remove alpha channel
   }
 }
 
