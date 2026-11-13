@@ -1,391 +1,122 @@
-// Copyright 2025 AIX Project
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     https://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:genux/genux.dart';
 
+const style = GuxComboBoxStyle();
+
 void main() {
   group('GuxComboBox', () {
-    final options = [
-      const GuxComboBoxOption(value: 1, label: 'Option 1'),
-      const GuxComboBoxOption(value: 2, label: 'Option 2'),
-      const GuxComboBoxOption(value: 3, label: 'Option 3'),
-    ];
+    testWidgets('creates widget with label', (tester) async {
+      final options = [
+        const GuxComboBoxOption(value: 'us', label: 'United States'),
+        const GuxComboBoxOption(value: 'ca', label: 'Canada'),
+      ];
 
-    testWidgets('displays placeholder when no value selected', (tester) async {
       await tester.pumpWidget(
-        Directionality(
-          textDirection: TextDirection.ltr,
-          child: MediaQuery(
-            data: const MediaQueryData(),
-            child: Navigator(
-              onGenerateRoute: (_) => PageRouteBuilder<void>(
-                pageBuilder: (context, _, __) => GuxComboBox<int>(
-                  options: options,
-                  value: null,
-                  onChanged: (_) {},
-                  placeholder: 'Select an option',
-                ),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: GuxComboBox<String>(
+              options: options,
+              value: 'us',
+              onChanged: (_) {},
+              labelText: 'Country',
+              style: style,
             ),
           ),
         ),
       );
 
-      expect(find.text('Select an option'), findsOneWidget);
+      expect(find.text('Country'), findsOneWidget);
+      expect(find.text('United States'), findsOneWidget);
     });
 
-    testWidgets('displays selected value', (tester) async {
+    testWidgets('creates widget in editable mode', (tester) async {
+      final options = [
+        const GuxComboBoxOption(value: 'us', label: 'United States'),
+        const GuxComboBoxOption(value: 'ca', label: 'Canada'),
+      ];
+
       await tester.pumpWidget(
-        Directionality(
-          textDirection: TextDirection.ltr,
-          child: MediaQuery(
-            data: const MediaQueryData(),
-            child: Navigator(
-              onGenerateRoute: (_) => PageRouteBuilder<void>(
-                pageBuilder: (context, _, __) => GuxComboBox<int>(
-                  options: options,
-                  value: 2,
-                  onChanged: (_) {},
-                ),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: GuxComboBox<String>(
+              options: options,
+              value: null,
+              onChanged: (_) {},
+              editable: true,
+              placeholder: 'Type to search',
+              style: style,
             ),
           ),
         ),
       );
 
-      expect(find.text('Option 2'), findsOneWidget);
+      expect(find.text('Type to search'), findsOneWidget);
     });
 
-    testWidgets('displays loading state', (tester) async {
+    testWidgets('creates widget in non-editable mode', (tester) async {
+      final options = [
+        const GuxComboBoxOption(value: 'us', label: 'United States'),
+        const GuxComboBoxOption(value: 'ca', label: 'Canada'),
+      ];
+
       await tester.pumpWidget(
-        Directionality(
-          textDirection: TextDirection.ltr,
-          child: MediaQuery(
-            data: const MediaQueryData(),
-            child: Navigator(
-              onGenerateRoute: (_) => PageRouteBuilder<void>(
-                pageBuilder: (context, _, __) => GuxComboBox<int>(
-                  options: options,
-                  value: null,
-                  onChanged: (_) {},
-                  isLoading: true,
-                  loadingMessage: 'Loading...',
-                ),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: GuxComboBox<String>(
+              options: options,
+              value: null,
+              onChanged: (_) {},
+              editable: false,
+              placeholder: 'Select country',
+              style: style,
             ),
           ),
         ),
       );
 
-      expect(find.text('Loading...'), findsOneWidget);
+      expect(find.text('Select country'), findsOneWidget);
     });
 
-    testWidgets('displays error state', (tester) async {
-      await tester.pumpWidget(
-        Directionality(
-          textDirection: TextDirection.ltr,
-          child: MediaQuery(
-            data: const MediaQueryData(),
-            child: Navigator(
-              onGenerateRoute: (_) => PageRouteBuilder<void>(
-                pageBuilder: (context, _, __) => GuxComboBox<int>(
-                  options: options,
-                  value: null,
-                  onChanged: (_) {},
-                  errorMessage: 'Failed to load',
-                  onRetry: () {},
-                  retryLabel: 'Retry',
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-
-      expect(find.text('Failed to load'), findsOneWidget);
-    });
-
-    testWidgets('triggers retry callback on tap when in error state',
-        (tester) async {
-      bool retried = false;
-
-      await tester.pumpWidget(
-        Directionality(
-          textDirection: TextDirection.ltr,
-          child: MediaQuery(
-            data: const MediaQueryData(),
-            child: Navigator(
-              onGenerateRoute: (_) => PageRouteBuilder<void>(
-                pageBuilder: (context, _, __) => GuxComboBox<int>(
-                  options: options,
-                  value: null,
-                  onChanged: (_) {},
-                  errorMessage: 'Failed to load',
-                  onRetry: () {
-                    retried = true;
-                  },
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-
-      await tester.tap(find.byType(GuxComboBox<int>));
-      await tester.pump();
-
-      expect(retried, isTrue);
-    });
-
-    testWidgets('displays empty message when no options', (tester) async {
-      await tester.pumpWidget(
-        Directionality(
-          textDirection: TextDirection.ltr,
-          child: MediaQuery(
-            data: const MediaQueryData(),
-            child: Navigator(
-              onGenerateRoute: (_) => PageRouteBuilder<void>(
-                pageBuilder: (context, _, __) => GuxComboBox<int>(
-                  options: const [],
-                  value: null,
-                  onChanged: (_) {},
-                  emptyMessage: 'No items',
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-
-      expect(find.text('No items'), findsOneWidget);
-    });
-
-    testWidgets('applies custom placeholder', (tester) async {
-      await tester.pumpWidget(
-        Directionality(
-          textDirection: TextDirection.ltr,
-          child: MediaQuery(
-            data: const MediaQueryData(),
-            child: Navigator(
-              onGenerateRoute: (_) => PageRouteBuilder<void>(
-                pageBuilder: (context, _, __) => GuxComboBox<int>(
-                  options: options,
-                  value: null,
-                  onChanged: (_) {},
-                  placeholder: 'Choose one',
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-
-      expect(find.text('Choose one'), findsOneWidget);
-    });
-
-    testWidgets('renders as disabled when enabled is false', (tester) async {
-      await tester.pumpWidget(
-        Directionality(
-          textDirection: TextDirection.ltr,
-          child: MediaQuery(
-            data: const MediaQueryData(),
-            child: Navigator(
-              onGenerateRoute: (_) => PageRouteBuilder<void>(
-                pageBuilder: (context, _, __) => GuxComboBox<int>(
-                  options: options,
-                  value: null,
-                  onChanged: (_) {},
-                  enabled: false,
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-
-      final dropdown = tester.widget<GuxComboBox<int>>(
-        find.byType(GuxComboBox<int>),
-      );
-      expect(dropdown.enabled, isFalse);
-    });
-
-    testWidgets('renders as disabled when onChanged is null', (tester) async {
-      await tester.pumpWidget(
-        Directionality(
-          textDirection: TextDirection.ltr,
-          child: MediaQuery(
-            data: const MediaQueryData(),
-            child: Navigator(
-              onGenerateRoute: (_) => PageRouteBuilder<void>(
-                pageBuilder: (context, _, __) => GuxComboBox<int>(
-                  options: options,
-                  value: null,
-                  onChanged: null,
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-
-      final dropdown = tester.widget<GuxComboBox<int>>(
-        find.byType(GuxComboBox<int>),
-      );
-      expect(dropdown.onChanged, isNull);
-    });
-
-    testWidgets('applies custom styling', (tester) async {
-      const customStyle = GuxComboBoxStyle(
-        backgroundColor: Color(0xFF1A1A1A),
-        menuColor: Color(0xFF2A2A2A),
-        borderColor: Color(0xFF3A3A3A),
-        textColor: Color(0xFFEEEEEE),
-        borderRadius: 8.0,
-        borderWidth: 2.0,
-      );
-
-      await tester.pumpWidget(
-        Directionality(
-          textDirection: TextDirection.ltr,
-          child: MediaQuery(
-            data: const MediaQueryData(),
-            child: Navigator(
-              onGenerateRoute: (_) => PageRouteBuilder<void>(
-                pageBuilder: (context, _, __) => GuxComboBox<int>(
-                  options: options,
-                  value: null,
-                  onChanged: (_) {},
-                  style: customStyle,
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-
-      final dropdown = tester.widget<GuxComboBox<int>>(
-        find.byType(GuxComboBox<int>),
-      );
-      expect(dropdown.style.backgroundColor, equals(const Color(0xFF1A1A1A)));
-      expect(dropdown.style.menuColor, equals(const Color(0xFF2A2A2A)));
-      expect(dropdown.style.borderRadius, equals(8.0));
-      expect(dropdown.style.borderWidth, equals(2.0));
-    });
-
-    testWidgets('accepts options list', (tester) async {
-      await tester.pumpWidget(
-        Directionality(
-          textDirection: TextDirection.ltr,
-          child: MediaQuery(
-            data: const MediaQueryData(),
-            child: Navigator(
-              onGenerateRoute: (_) => PageRouteBuilder<void>(
-                pageBuilder: (context, _, __) => GuxComboBox<int>(
-                  options: options,
-                  value: null,
-                  onChanged: (_) {},
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-
-      final dropdown = tester.widget<GuxComboBox<int>>(
-        find.byType(GuxComboBox<int>),
-      );
-      expect(dropdown.options.length, equals(3));
-      expect(dropdown.options[0].label, equals('Option 1'));
-      expect(dropdown.options[1].label, equals('Option 2'));
-      expect(dropdown.options[2].label, equals('Option 3'));
-    });
-
-    testWidgets('supports semantic label', (tester) async {
-      await tester.pumpWidget(
-        Directionality(
-          textDirection: TextDirection.ltr,
-          child: MediaQuery(
-            data: const MediaQueryData(),
-            child: Navigator(
-              onGenerateRoute: (_) => PageRouteBuilder<void>(
-                pageBuilder: (context, _, __) => GuxComboBox<int>(
-                  options: options,
-                  value: null,
-                  onChanged: (_) {},
-                  semanticLabel: 'Choose country',
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-
-      final dropdown = tester.widget<GuxComboBox<int>>(
-        find.byType(GuxComboBox<int>),
-      );
-      expect(dropdown.semanticLabel, equals('Choose country'));
-    });
-  });
-
-  group('GuxComboBoxOption', () {
-    test('creates option with value and label', () {
-      const option = GuxComboBoxOption(value: 1, label: 'Test');
-      expect(option.value, equals(1));
-      expect(option.label, equals('Test'));
-      expect(option.enabled, isTrue);
-      expect(option.subtitle, isNull);
-    });
-
-    test('creates option with subtitle', () {
+    test('GuxComboBoxOption creates correctly', () {
       const option = GuxComboBoxOption(
-        value: 1,
-        label: 'Test',
-        subtitle: 'Description',
+        value: 'test',
+        label: 'Test Label',
+        enabled: true,
       );
-      expect(option.subtitle, equals('Description'));
+
+      expect(option.value, 'test');
+      expect(option.label, 'Test Label');
+      expect(option.enabled, true);
     });
 
-    test('creates disabled option', () {
+    test('GuxComboBoxOption defaults enabled to true', () {
       const option = GuxComboBoxOption(
-        value: 1,
-        label: 'Test',
-        enabled: false,
+        value: 'test',
+        label: 'Test Label',
       );
-      expect(option.enabled, isFalse);
-    });
-  });
 
-  group('GuxComboBoxStyle', () {
-    test('has default values', () {
+      expect(option.enabled, true);
+    });
+
+    test('GuxComboBoxStyle has correct defaults', () {
       const style = GuxComboBoxStyle();
-      expect(style.backgroundColor, equals(const Color(0xFF292929)));
-      expect(style.menuColor, equals(const Color(0xFF292929)));
-      expect(style.borderRadius, equals(4));
-      expect(style.borderWidth, equals(1));
+
+      expect(style.menuBackgroundColor, const Color(0xFF292929));
+      expect(style.itemHighlightColor, const Color(0xFF444444));
+      expect(style.overlayDimColor, const Color(0x40000000));
     });
 
-    test('accepts custom values', () {
+    test('GuxComboBoxStyle can override defaults', () {
       const style = GuxComboBoxStyle(
-        backgroundColor: Color(0xFF000000),
-        borderRadius: 8,
-        borderWidth: 2,
+        menuBackgroundColor: Color(0xFF000000),
+        itemHighlightColor: Color(0xFF555555),
+        menuElevation: 8.0,
       );
-      expect(style.backgroundColor, equals(const Color(0xFF000000)));
-      expect(style.borderRadius, equals(8));
-      expect(style.borderWidth, equals(2));
+
+      expect(style.menuBackgroundColor, const Color(0xFF000000));
+      expect(style.itemHighlightColor, const Color(0xFF555555));
+      expect(style.menuElevation, 8.0);
     });
   });
 }

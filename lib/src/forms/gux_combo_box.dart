@@ -1,9 +1,25 @@
 import 'dart:math' as math;
-
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
-/// A value and its localized display text in a [GuxComboBox].
+import 'gux_text_field.dart';
+import 'gux_text_input.dart';
+
+/// An option in a [GuxComboBox] menu.
+///
+/// Each option has a [value] (the data returned when selected), a [label]
+/// (displayed text), an optional [subtitle] (secondary text shown below the
+/// label), and an [enabled] flag to allow/prevent selection.
+///
+/// Example:
+/// ```dart
+/// const GuxComboBoxOption(
+///   value: 'us',
+///   label: 'United States',
+///   subtitle: 'North America',
+///   enabled: true,
+/// )
+/// ```
 class GuxComboBoxOption<T> {
   const GuxComboBoxOption({
     required this.value,
@@ -12,143 +28,297 @@ class GuxComboBoxOption<T> {
     this.enabled = true,
   });
 
+  /// The value returned when this option is selected.
   final T value;
+
+  /// The primary text displayed for this option.
   final String label;
+
+  /// Optional secondary text displayed below the label.
   final String? subtitle;
+
+  /// Whether this option can be selected. Defaults to true.
   final bool enabled;
 }
 
-/// Colors and typography for a [GuxComboBox].
+/// Visual properties for [GuxComboBox].
+///
+/// Controls the appearance of the combo box field, menu, and items.
+/// All colors, spacing, and elevation can be customized.
+///
+/// Example:
+/// ```dart
+/// const GuxComboBoxStyle(
+///   menuBackgroundColor: Color(0xFF1E1E1E),
+///   itemHighlightColor: Color(0xFF0078D4),
+///   textStyle: TextStyle(fontSize: 16, color: Color(0xFFFFFFFF)),
+///   itemPadding: EdgeInsets.all(12),
+///   menuElevation: 8.0,
+/// )
+/// ```
+@immutable
 class GuxComboBoxStyle {
   const GuxComboBoxStyle({
-    this.backgroundColor = const Color(0xFF292929),
-    this.disabledBackgroundColor,
-    this.menuColor = const Color(0xFF292929),
-    this.borderColor = const Color(0xFF666666),
-    this.focusColor = const Color(0xFFBBBBBB),
-    this.highlightColor = const Color(0xFF444444),
-    this.textColor = const Color(0xFFFFFFFF),
-    this.selectedColor,
-    this.subtitleColor,
-    this.chevronColor,
-    this.disabledColor = const Color(0xFF999999),
-    this.errorColor = const Color(0xFFFF8888),
-    this.textStyle = const TextStyle(fontSize: 14),
-    this.subtitleTextStyle,
-    this.borderRadius = 4,
-    this.borderWidth = 1,
-    this.fieldPadding = const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-    this.menuPadding = EdgeInsets.zero,
-    this.itemPadding = const EdgeInsets.symmetric(horizontal: 10),
-    this.fieldGap = 6,
-    this.chevronSize = const Size(10, 6),
-    this.showDisabledChevron = false,
-    this.compactItems = false,
-    this.itemHeight = 44,
-    this.maxMenuHeight = 280,
-  }) : assert(borderRadius >= 0 && borderRadius < double.infinity),
-       assert(borderWidth >= 0 && borderWidth < double.infinity),
-       assert(fieldGap >= 0 && fieldGap < double.infinity),
-       assert(itemHeight >= 0 && itemHeight < double.infinity),
-       assert(maxMenuHeight > 0 && maxMenuHeight < double.infinity);
+    this.fieldStyle,
+    this.menuBackgroundColor = const Color(0xFF292929),
+    this.itemHighlightColor = const Color(0xFF444444),
+    this.itemDisabledColor = const Color(0xFF666666),
+    this.textStyle = const TextStyle(fontSize: 16, color: Color(0xFFFFFFFF)),
+    this.subtitleStyle = const TextStyle(fontSize: 14, color: Color(0xFF999999)),
+    this.itemPadding = const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    this.menuElevation = 4.0,
+    this.overlayElevation = 8.0,
+    this.overlayDimColor = const Color(0x40000000),
+  });
 
-  final Color backgroundColor;
-  final Color? disabledBackgroundColor;
-  final Color menuColor;
-  final Color borderColor;
-  final Color focusColor;
-  final Color highlightColor;
-  final Color textColor;
-  final Color? selectedColor;
-  final Color? subtitleColor;
-  final Color? chevronColor;
-  final Color disabledColor;
-  final Color errorColor;
+  /// Optional custom style for the text field. If null, uses default styling.
+  final GuxTextFieldStyle? fieldStyle;
+
+  /// Background color of the menu popup.
+  final Color menuBackgroundColor;
+
+  /// Color when hovering or navigating to an item with keyboard.
+  final Color itemHighlightColor;
+
+  /// Color used for disabled items.
+  final Color itemDisabledColor;
+
+  /// Text style for option labels.
   final TextStyle textStyle;
-  final TextStyle? subtitleTextStyle;
-  final double borderRadius;
-  final double borderWidth;
-  final EdgeInsetsGeometry fieldPadding;
-  final EdgeInsetsGeometry menuPadding;
-  final EdgeInsetsGeometry itemPadding;
-  final double fieldGap;
-  final Size chevronSize;
-  final bool showDisabledChevron;
 
-  /// Sizes each item to its text and padding, subject to [itemHeight].
-  final bool compactItems;
-  final double itemHeight;
-  final double maxMenuHeight;
+  /// Text style for option subtitles.
+  final TextStyle subtitleStyle;
+
+  /// Padding around each menu item.
+  final EdgeInsets itemPadding;
+
+  /// Elevation (shadow depth) for editable mode menu.
+  final double menuElevation;
+
+  /// Elevation (shadow depth) for non-editable overlay mode.
+  final double overlayElevation;
+
+  /// Background dim color for non-editable overlay mode.
+  final Color overlayDimColor;
 }
 
-/// A controlled selection field with an anchored dropdown menu.
+/// Menu positioning behavior.
+enum MenuBehavior {
+  /// Automatically position below field, or above if no space.
+  auto,
+
+  /// Always position below the field.
+  alwaysBelow,
+
+  /// Always position above the field.
+  alwaysAbove,
+}
+
+/// Menu animation style.
+enum MenuAnimation {
+  /// No animation.
+  none,
+
+  /// Fade in.
+  fade,
+
+  /// Slide from top/bottom.
+  slide,
+
+  /// Both fade and slide.
+  both,
+}
+
+/// A combo box supporting both dropdown and editable modes.
 ///
-/// Extends the text input hierarchy concept by providing selection from a
-/// predefined list of options. The field displays the selected option's label
-/// and opens a menu overlay on tap or keyboard activation.
+/// [GuxComboBox] provides two distinct interaction patterns controlled by the
+/// [editable] parameter:
 ///
-/// The host supplies localized labels and updates [value] after [onChanged].
-/// When an error and [onRetry] are provided, the field becomes a retry action.
-/// The menu requires an ancestor [Overlay], typically supplied by a Navigator.
-/// Supports loading states, disabled options, keyboard navigation, and
-/// custom equality comparison via [valueEquals].
+/// ## Non-editable mode (dropdown)
+/// When [editable] is `false` (default), behaves as a traditional dropdown:
+/// - Click to open menu
+/// - Menu overlays centered over the field with dimmed background
+/// - Select from list only, no typing
+/// - Best for: predefined choices, status selection, category pickers
+///
+/// ## Editable mode (autocomplete)
+/// When [editable] is `true`, allows typing to filter options:
+/// - Type to filter options by label text
+/// - Menu appears beneath field (or above if insufficient space below)
+/// - Can select from filtered results or type freely
+/// - Best for: large lists, country/city selectors, searchable catalogs
+///
+/// ## Features
+/// - Generic type support for any value type
+/// - Keyboard navigation (Arrow keys, Enter, Escape)
+/// - Disabled options
+/// - Optional subtitles for options
+/// - Configurable filtering function
+/// - Customizable animations (fade, slide, both, none)
+/// - Material Design 48px item height (configurable)
+/// - Maximum visible items (default 5, scrollable beyond)
+///
+/// ## Example - Non-editable dropdown
+/// ```dart
+/// String? selectedCountry;
+///
+/// GuxComboBox<String>(
+///   options: [
+///     GuxComboBoxOption(value: 'us', label: 'United States'),
+///     GuxComboBoxOption(value: 'ca', label: 'Canada'),
+///     GuxComboBoxOption(value: 'mx', label: 'Mexico'),
+///   ],
+///   value: selectedCountry,
+///   onChanged: (value) => setState(() => selectedCountry = value),
+///   labelText: 'Country',
+///   placeholder: 'Select a country',
+///   editable: false,  // Dropdown mode
+///   style: const GuxComboBoxStyle(),
+/// )
+/// ```
+///
+/// ## Example - Editable with custom filter
+/// ```dart
+/// GuxComboBox<String>(
+///   options: cities,
+///   value: selectedCity,
+///   onChanged: (value) => setState(() => selectedCity = value),
+///   labelText: 'City',
+///   placeholder: 'Type to search',
+///   editable: true,  // Autocomplete mode
+///   filterOptions: (options, query) {
+///     // Custom filter: starts with query (case-insensitive)
+///     final lower = query.toLowerCase();
+///     return options
+///       .where((opt) => opt.label.toLowerCase().startsWith(lower))
+///       .toList();
+///   },
+///   maxVisibleItems: 8,
+///   menuAnimation: MenuAnimation.both,
+///   style: const GuxComboBoxStyle(),
+/// )
+/// ```
+///
+/// ## Example - With subtitles and disabled options
+/// ```dart
+/// GuxComboBox<String>(
+///   options: [
+///     GuxComboBoxOption(
+///       value: 'premium',
+///       label: 'Premium Plan',
+///       subtitle: '\$29/month',
+///     ),
+///     GuxComboBoxOption(
+///       value: 'enterprise',
+///       label: 'Enterprise Plan',
+///       subtitle: 'Contact sales',
+///       enabled: false,  // Disabled option
+///     ),
+///   ],
+///   value: selectedPlan,
+///   onChanged: (value) => setState(() => selectedPlan = value),
+///   labelText: 'Subscription',
+///   style: const GuxComboBoxStyle(),
+/// )
+/// ```
 class GuxComboBox<T> extends StatefulWidget {
   const GuxComboBox({
     super.key,
     required this.options,
-    required this.value,
+    this.value,
     required this.onChanged,
-    this.valueEquals,
-    this.enabled = true,
-    this.isLoading = false,
+    this.editable = false,
+    this.labelText,
+    this.placeholder,
     this.errorMessage,
-    this.onRetry,
-    this.placeholder = 'Select',
-    this.emptyMessage = 'No options available',
-    this.loadingMessage = 'Loading…',
-    this.retryLabel = 'Retry',
-    this.semanticLabel,
-    this.selectedMarker,
-    this.selectedMarkerSize,
-    this.chevron,
-    this.wrapOptions = false,
-    this.loadingLeading,
-    this.loadingLeadingGap = 6,
+    this.filterOptions,
+    this.maxVisibleItems = 5,
+    this.maxMenuHeight,
+    this.itemHeight = 48.0,
+    this.menuBehavior = MenuBehavior.auto,
+    this.menuAnimation = MenuAnimation.both,
     this.style = const GuxComboBoxStyle(),
-  }) : assert(
-         !wrapOptions || selectedMarker == null || selectedMarkerSize != null,
-       ),
-       assert(loadingLeadingGap >= 0 && loadingLeadingGap < double.infinity);
+  });
 
+  /// The list of selectable options.
   final List<GuxComboBoxOption<T>> options;
+
+  /// The currently selected value, or null if nothing is selected.
   final T? value;
+
+  /// Called when the user selects an option.
   final ValueChanged<T>? onChanged;
-  final bool Function(T option, T value)? valueEquals;
-  final bool enabled;
-  final bool isLoading;
+
+  /// When true, allows typing to filter options (autocomplete mode).
+  /// When false, select-only dropdown with overlay menu. Defaults to false.
+  final bool editable;
+
+  /// Optional label displayed above the field.
+  final String? labelText;
+
+  /// Placeholder text shown when no value is selected.
+  final String? placeholder;
+
+  /// Optional error message displayed below the field.
   final String? errorMessage;
-  final VoidCallback? onRetry;
-  final String placeholder;
-  final String emptyMessage;
-  final String loadingMessage;
-  final String retryLabel;
-  final String? semanticLabel;
 
-  /// Optional visual marker for the selected option; excluded from semantics.
-  final Widget? selectedMarker;
+  /// Custom filter function for editable mode.
+  ///
+  /// Receives the full list of options and the current query text.
+  /// Returns the filtered list to display. If null, uses default
+  /// case-insensitive contains matching on option labels.
+  ///
+  /// Example:
+  /// ```dart
+  /// filterOptions: (options, query) {
+  ///   final lower = query.toLowerCase();
+  ///   return options
+  ///     .where((opt) => opt.label.toLowerCase().startsWith(lower))
+  ///     .toList();
+  /// }
+  /// ```
+  final List<GuxComboBoxOption<T>> Function(
+    List<GuxComboBoxOption<T>> options,
+    String query,
+  )? filterOptions;
 
-  /// The marker's layout size; required with [wrapOptions] and a marker.
-  final Size? selectedMarkerSize;
+  /// Maximum number of visible items before scrolling. Defaults to 5.
+  ///
+  /// The menu height is calculated as `maxVisibleItems * itemHeight`.
+  /// If the filtered results have fewer items, the menu shrinks to fit.
+  final int maxVisibleItems;
 
-  /// Optional host-provided field chevron; excluded from semantics.
-  final Widget? chevron;
+  /// Maximum menu height in pixels.
+  ///
+  /// Overrides [maxVisibleItems] if set. Useful for precise control
+  /// over menu size regardless of item height.
+  final double? maxMenuHeight;
 
-  /// Wraps option text and measures row heights at the actual menu width.
-  final bool wrapOptions;
+  /// Height of each menu item in pixels.
+  ///
+  /// Defaults to 48.0 (Material Design standard). Increase if using
+  /// larger fonts or Myanmar text that needs more vertical space.
+  final double itemHeight;
 
-  /// Optional leading visual in the loading state, excluded from semantics.
-  final Widget? loadingLeading;
-  final double loadingLeadingGap;
+  /// How to position the menu relative to the field.
+  ///
+  /// - [MenuBehavior.auto]: Automatically position below field, or above if
+  ///   insufficient space below (editable mode only).
+  /// - [MenuBehavior.alwaysBelow]: Always position below (editable mode only).
+  /// - [MenuBehavior.alwaysAbove]: Always position above (editable mode only).
+  ///
+  /// Non-editable mode always uses centered overlay positioning.
+  final MenuBehavior menuBehavior;
+
+  /// Animation style for menu appearance.
+  ///
+  /// - [MenuAnimation.none]: No animation, instant display.
+  /// - [MenuAnimation.fade]: Fade in/out.
+  /// - [MenuAnimation.slide]: Slide from above/below.
+  /// - [MenuAnimation.both]: Fade and slide combined (default).
+  final MenuAnimation menuAnimation;
+
+  /// Visual styling for the combo box.
   final GuxComboBoxStyle style;
 
   @override
@@ -156,786 +326,538 @@ class GuxComboBox<T> extends StatefulWidget {
 }
 
 class _GuxComboBoxState<T> extends State<GuxComboBox<T>>
-    with WidgetsBindingObserver {
-  final _anchorKey = GlobalKey();
-  final _link = LayerLink();
-  final _scrollController = ScrollController();
-  late final FocusNode _focusNode;
-  OverlayEntry? _entry;
-  int _highlighted = -1;
-  List<double> _rowHeights = const [];
-  double _menuWidth = 0;
-  Locale? _menuLocale;
-  bool _hasFocus = false;
+    with SingleTickerProviderStateMixin {
+  final _controller = TextEditingController();
+  final _focusNode = FocusNode();
+  final _layerLink = LayerLink();
+  final _fieldKey = GlobalKey();
+  OverlayEntry? _overlayEntry;
+  AnimationController? _animationController;
+  Animation<double>? _fadeAnimation;
+  Animation<Offset>? _slideAnimation;
 
-  bool get _canOpen =>
-      widget.enabled &&
-      !widget.isLoading &&
-      widget.errorMessage == null &&
-      widget.onChanged != null &&
-      widget.options.isNotEmpty;
-  bool get _canRetry =>
-      widget.enabled &&
-      !widget.isLoading &&
-      widget.errorMessage != null &&
-      widget.onRetry != null;
-  bool get _open => _entry != null;
+  int _highlightedIndex = -1;
+  List<GuxComboBoxOption<T>> _filteredOptions = [];
+  bool _showAbove = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    _focusNode = FocusNode(debugLabel: 'Gux dropdown', onKeyEvent: _onKey);
-  }
+    _filteredOptions = widget.options;
+    _updateTextFromValue();
+    _focusNode.addListener(_onFocusChange);
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // A local text-scale or direction override may change independently of
-    // window metrics. Close so the next opening captures its latest geometry.
-    MediaQuery.maybeOf(context);
-    Directionality.maybeOf(context);
-    DefaultTextStyle.of(context);
-    Localizations.maybeLocaleOf(context);
-    _close(rebuild: false);
+    if (widget.menuAnimation != MenuAnimation.none) {
+      _animationController = AnimationController(
+        duration: const Duration(milliseconds: 200),
+        vsync: this,
+      );
+
+      if (widget.menuAnimation == MenuAnimation.fade ||
+          widget.menuAnimation == MenuAnimation.both) {
+        _fadeAnimation = CurvedAnimation(
+          parent: _animationController!,
+          curve: Curves.easeOut,
+        );
+      }
+
+      if (widget.menuAnimation == MenuAnimation.slide ||
+          widget.menuAnimation == MenuAnimation.both) {
+        _slideAnimation = Tween<Offset>(
+          begin: const Offset(0, -0.1),
+          end: Offset.zero,
+        ).animate(CurvedAnimation(
+          parent: _animationController!,
+          curve: Curves.easeOut,
+        ));
+      }
+    }
   }
 
   @override
   void didUpdateWidget(covariant GuxComboBox<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (_open && !_canOpen) {
-      _close(rebuild: false);
-    } else if (_open) {
-      _rowHeights = _calculateRowHeights();
-      if (_highlighted >= widget.options.length ||
-          (_highlighted >= 0 && !widget.options[_highlighted].enabled)) {
-        _highlighted = _firstEnabled();
-      }
-      _entry?.markNeedsBuild();
+    if (oldWidget.value != widget.value) {
+      _updateTextFromValue();
     }
-  }
-
-  @override
-  void didChangeMetrics() {
-    // The opening geometry is no longer reliable after a resize, rotation or
-    // keyboard inset change. Closing also removes the overlay hit-test barrier.
-    _close();
+    if (oldWidget.options != widget.options) {
+      _updateFilteredOptions(_controller.text);
+    }
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    _close(rebuild: false);
+    _closeMenu();
+    _controller.dispose();
     _focusNode.dispose();
-    _scrollController.dispose();
+    _animationController?.dispose();
     super.dispose();
   }
 
-  bool _selected(GuxComboBoxOption<T> option) {
-    final value = widget.value;
-    if (value == null) return false;
-    return widget.valueEquals?.call(option.value, value) ??
-        option.value == value;
-  }
-
-  int _firstEnabled() => widget.options.indexWhere((option) => option.enabled);
-
-  double get _itemHeight {
-    final fontSize = widget.style.textStyle.fontSize ?? 14;
-    final scaled = MediaQuery.textScalerOf(context).scale(fontSize);
-    final lines = widget.options.any((item) => item.subtitle != null)
-        ? 2.8
-        : 1.4;
-    return math.max(widget.style.itemHeight, scaled * lines + 12);
-  }
-
-  List<double> _calculateRowHeights() {
-    final style = widget.style;
-    if (widget.wrapOptions) {
-      final direction = Directionality.of(context);
-      final textScaler = MediaQuery.textScalerOf(context);
-      final menuPadding = style.menuPadding.resolve(direction);
-      final itemPadding = style.itemPadding.resolve(direction);
-      final width = math.max(
-        0.0,
-        _menuWidth - menuPadding.horizontal - itemPadding.horizontal,
-      );
-      final defaultStyle = DefaultTextStyle.of(context).style;
-      double measure(String text, TextStyle optionStyle, double maxWidth) {
-        final painter = TextPainter(
-          text: TextSpan(
-            text: text,
-            style: optionStyle.inherit
-                ? defaultStyle.merge(optionStyle)
-                : optionStyle,
-          ),
-          textDirection: direction,
-          textScaler: textScaler,
-          locale: _menuLocale,
-        )..layout(maxWidth: maxWidth);
-        final height = painter.height;
-        painter.dispose();
-        return height;
-      }
-
-      return [
-        for (final option in widget.options)
-          () {
-            final marker =
-                _selected(option) &&
-                widget.selectedMarker != null &&
-                width >= style.fieldGap + 8;
-            final markerWidth = marker
-                ? math.min(
-                    widget.selectedMarkerSize!.width,
-                    math.max(0.0, width - style.fieldGap),
-                  )
-                : 0.0;
-            final textWidth = math.max(
-              0.0,
-              width - (marker ? style.fieldGap + markerWidth : 0.0),
-            );
-            final textHeight =
-                measure(option.label, _optionTextStyle(option), textWidth) +
-                (option.subtitle == null
-                    ? 0
-                    : measure(
-                        option.subtitle!,
-                        _optionSubtitleStyle(option),
-                        textWidth,
-                      ));
-            final markerHeight = marker
-                ? widget.selectedMarkerSize!.height
-                : 0.0;
-            return math.max(
-              style.itemHeight,
-              itemPadding.vertical + math.max(textHeight, markerHeight),
-            );
-          }(),
-      ];
-    }
-    if (!style.compactItems) {
-      return List<double>.filled(widget.options.length, _itemHeight);
-    }
-    double measure(TextStyle textStyle) {
-      final painter = TextPainter(
-        text: TextSpan(text: 'M', style: textStyle),
-        textDirection: Directionality.of(context),
-        textScaler: MediaQuery.textScalerOf(context),
-      )..layout();
-      final height = painter.height;
-      painter.dispose();
-      return height;
-    }
-
-    final titleHeight = measure(style.textStyle);
-    final subtitleStyle =
-        style.subtitleTextStyle ??
-        style.textStyle.copyWith(
-          fontSize: (style.textStyle.fontSize ?? 14) * .85,
-        );
-    final subtitleHeight = measure(subtitleStyle);
-    final padding = style.itemPadding
-        .resolve(Directionality.of(context))
-        .vertical;
-    return [
-      for (final option in widget.options)
-        math.max(
-          style.itemHeight,
-          padding +
-              titleHeight +
-              (option.subtitle == null ? 0 : subtitleHeight),
-        ),
-    ];
-  }
-
-  TextStyle _optionTextStyle(GuxComboBoxOption<T> option) {
-    final style = widget.style;
-    final selected = _selected(option);
-    final color = !option.enabled
-        ? style.disabledColor
-        : selected
-        ? style.selectedColor ?? style.textColor
-        : style.textColor;
-    return style.textStyle.copyWith(
-      color: color,
-      fontWeight: selected ? FontWeight.w600 : null,
-    );
-  }
-
-  TextStyle _optionSubtitleStyle(GuxComboBoxOption<T> option) {
-    final style = widget.style;
-    final color = !option.enabled
-        ? style.disabledColor
-        : style.subtitleColor ?? _optionTextStyle(option).color;
-    return (style.subtitleTextStyle ??
-            style.textStyle.copyWith(
-              fontSize: (style.textStyle.fontSize ?? 14) * .85,
-            ))
-        .copyWith(color: color);
-  }
-
-  double get _menuPaddingTop =>
-      widget.style.menuPadding.resolve(Directionality.of(context)).top;
-
-  double get _menuHeight =>
-      _rowHeights.fold(0.0, (total, height) => total + height) +
-      widget.style.menuPadding.resolve(Directionality.of(context)).vertical;
-
-  void _openMenu() {
-    if (!_canOpen || _open) return;
-    final anchor = _anchorKey.currentContext?.findRenderObject();
-    final overlay = Overlay.maybeOf(context);
-    final overlayBox = overlay?.context.findRenderObject();
-    if (anchor is! RenderBox ||
-        overlayBox is! RenderBox ||
-        overlay == null ||
-        !anchor.hasSize ||
-        !overlayBox.hasSize) {
+  void _updateTextFromValue() {
+    if (widget.value == null) {
+      _controller.text = '';
       return;
     }
-    final position = anchor.localToGlobal(Offset.zero, ancestor: overlayBox);
-    final overlayTop = overlayBox.localToGlobal(Offset.zero).dy;
-    final media = MediaQuery.maybeOf(context);
-    final direction = Directionality.of(context);
-    final defaultTextStyle = DefaultTextStyle.of(context).style;
-    _menuLocale = Localizations.maybeLocaleOf(context);
-    _menuWidth = math.min(anchor.size.width, overlayBox.size.width);
-    final usableBottom = media == null
-        ? overlayBox.size.height
-        : math.min(
-            overlayBox.size.height,
-            media.size.height - media.viewInsets.bottom - overlayTop,
-          );
-    final below = math.max(
-      0.0,
-      usableBottom - position.dy - anchor.size.height - 4,
-    );
-    final above = math.max(0.0, position.dy - 4);
-    _rowHeights = _calculateRowHeights();
-    final desired = math.min(widget.style.maxMenuHeight, _menuHeight);
-    final showAbove = below < desired && above > below;
-    final maxHeight = math.min(
-      widget.style.maxMenuHeight,
-      showAbove ? above : below,
-    );
-    if (maxHeight <= 0) return;
-    _highlighted = widget.options.indexWhere(
-      (option) => option.enabled && _selected(option),
-    );
-    if (_highlighted < 0) _highlighted = _firstEnabled();
-    _entry = OverlayEntry(
-      builder: (context) => Stack(
-        children: [
-          Positioned.fill(
-            child: ExcludeSemantics(
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: _close,
-              ),
-            ),
-          ),
-          Positioned(
-            left: 0,
-            top: 0,
-            child: CompositedTransformFollower(
-              link: _link,
-              showWhenUnlinked: false,
-              targetAnchor: showAbove
-                  ? Alignment.topLeft
-                  : Alignment.bottomLeft,
-              followerAnchor: showAbove
-                  ? Alignment.bottomLeft
-                  : Alignment.topLeft,
-              offset: Offset(0, showAbove ? -4 : 4),
-              child: SizedBox(
-                width: _menuWidth,
-                child: Directionality(
-                  textDirection: direction,
-                  child: media == null
-                      ? _menuWithTextStyle(maxHeight, defaultTextStyle)
-                      : MediaQuery(
-                          data: media,
-                          child: _menuWithTextStyle(
-                            maxHeight,
-                            defaultTextStyle,
-                          ),
-                        ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-    overlay.insert(_entry!);
-    setState(() {});
-    _scrollToHighlight();
-  }
 
-  Widget _menuWithTextStyle(double maxHeight, TextStyle defaultTextStyle) =>
-      widget.wrapOptions
-      ? DefaultTextStyle(style: defaultTextStyle, child: _buildMenu(maxHeight))
-      : _buildMenu(maxHeight);
+    final option = widget.options.cast<GuxComboBoxOption<T>?>().firstWhere(
+      (opt) => opt?.value == widget.value,
+      orElse: () => null,
+    );
 
-  void _close({bool rebuild = true}) {
-    final entry = _entry;
-    if (entry == null) return;
-    _entry = null;
-    entry.remove();
-    entry.dispose();
-    _highlighted = -1;
-    if (rebuild && mounted) setState(() {});
-  }
-
-  void _select(int index) {
-    if (!_canOpen ||
-        index < 0 ||
-        index >= widget.options.length ||
-        !widget.options[index].enabled) {
-      return;
-    }
-    final value = widget.options[index].value;
-    _close();
-    widget.onChanged?.call(value);
-  }
-
-  void _move(int direction) {
-    final length = widget.options.length;
-    if (length == 0) return;
-    for (var step = 1; step <= length; step++) {
-      final start = _highlighted < 0 ? (direction > 0 ? -1 : 0) : _highlighted;
-      final next = (start + step * direction) % length;
-      if (widget.options[next].enabled) {
-        _highlighted = next;
-        _entry?.markNeedsBuild();
-        _scrollToHighlight();
-        return;
-      }
+    if (option != null) {
+      _controller.text = option.label;
     }
   }
 
-  void _scrollToHighlight() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted ||
-          !_open ||
-          !_scrollController.hasClients ||
-          _highlighted < 0) {
-        return;
+  void _onFocusChange() {
+    if (_focusNode.hasFocus) {
+      if (!widget.editable) {
+        // Non-editable: open full menu on focus
+        _showMenu();
       }
-      final position = _scrollController.position;
-      var top = _menuPaddingTop;
-      for (var i = 0; i < _highlighted; i++) {
-        top += _rowHeights[i];
+    } else {
+      _closeMenu();
+    }
+  }
+
+  void _onTextChanged(String text) {
+    if (!widget.editable) return;
+
+    _updateFilteredOptions(text);
+
+    if (text.isNotEmpty) {
+      _showMenu();
+    } else {
+      _closeMenu();
+    }
+  }
+
+  void _updateFilteredOptions(String text) {
+    setState(() {
+      if (text.isEmpty) {
+        _filteredOptions = widget.options;
+      } else if (widget.filterOptions != null) {
+        _filteredOptions = widget.filterOptions!(widget.options, text);
+      } else {
+        // Default: case-insensitive contains
+        final lower = text.toLowerCase();
+        _filteredOptions = widget.options
+            .where((opt) => opt.label.toLowerCase().contains(lower))
+            .toList();
       }
-      final bottom = top + _rowHeights[_highlighted];
-      var target = position.pixels;
-      if (_rowHeights[_highlighted] > position.viewportDimension ||
-          top < target) {
-        target = top;
-      } else if (bottom > target + position.viewportDimension) {
-        target = bottom - position.viewportDimension;
-      }
-      _scrollController.jumpTo(
-        target.clamp(position.minScrollExtent, position.maxScrollExtent),
-      );
+
+      _highlightedIndex = _filteredOptions.isEmpty ? -1 : 0;
     });
   }
 
-  KeyEventResult _onKey(FocusNode node, KeyEvent event) {
-    if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
-      return KeyEventResult.ignored;
-    }
-    final key = event.logicalKey;
-    if (key == LogicalKeyboardKey.tab && _open) {
-      _close();
-      return KeyEventResult.ignored;
-    }
-    if (key == LogicalKeyboardKey.escape && _open) {
-      _close();
-      return KeyEventResult.handled;
-    }
-    if (key == LogicalKeyboardKey.enter || key == LogicalKeyboardKey.space) {
-      if (_canRetry) {
-        widget.onRetry!();
-      } else if (_open) {
-        _select(_highlighted);
-      } else {
-        _openMenu();
-      }
-      return _canRetry || _canOpen
-          ? KeyEventResult.handled
-          : KeyEventResult.ignored;
-    }
-    if ((key == LogicalKeyboardKey.arrowDown ||
-            key == LogicalKeyboardKey.arrowUp) &&
-        _canOpen) {
-      if (_open) {
-        _move(key == LogicalKeyboardKey.arrowDown ? 1 : -1);
-      } else {
-        _openMenu();
-      }
-      return KeyEventResult.handled;
-    }
-    return KeyEventResult.ignored;
-  }
+  void _showMenu() {
+    if (_overlayEntry != null) return; // Already showing
+    if (_filteredOptions.isEmpty) return;
 
-  Widget _buildMenu(double maxHeight) {
-    final style = widget.style;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: style.menuColor,
-        borderRadius: BorderRadius.circular(style.borderRadius),
-        border: Border.all(color: style.borderColor, width: style.borderWidth),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(style.borderRadius),
-        child: SizedBox(
-          height: math.min(maxHeight, _menuHeight),
-          child: ListView.builder(
-            controller: _scrollController,
-            padding: style.menuPadding,
-            itemExtentBuilder: (index, _) => _rowHeights[index],
-            itemCount: widget.options.length,
-            itemBuilder: (context, index) {
-              final option = widget.options[index];
-              final selected = _selected(option);
-              return Semantics(
-                button: true,
-                label: option.subtitle == null
-                    ? option.label
-                    : '${option.label}, ${option.subtitle}',
-                enabled: option.enabled,
-                selected: selected,
-                onTap: option.enabled ? () => _select(index) : null,
-                child: ExcludeSemantics(
-                  child: MouseRegion(
-                    cursor: option.enabled
-                        ? SystemMouseCursors.click
-                        : SystemMouseCursors.basic,
-                    onEnter: (_) {
-                      if (!option.enabled) return;
-                      _highlighted = index;
-                      _entry?.markNeedsBuild();
-                    },
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: option.enabled ? () => _select(index) : null,
-                      child: ColoredBox(
-                        color: index == _highlighted
-                            ? style.highlightColor
-                            : const Color(0x00000000),
-                        child: Padding(
-                          padding: style.itemPadding,
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              final marker =
-                                  selected &&
-                                  widget.selectedMarker != null &&
-                                  constraints.maxWidth >= style.fieldGap + 8;
-                              return Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          option.label,
-                                          maxLines: widget.wrapOptions
-                                              ? null
-                                              : 1,
-                                          softWrap: widget.wrapOptions
-                                              ? true
-                                              : null,
-                                          overflow: widget.wrapOptions
-                                              ? TextOverflow.clip
-                                              : TextOverflow.ellipsis,
-                                          locale: widget.wrapOptions
-                                              ? _menuLocale
-                                              : null,
-                                          style: _optionTextStyle(option),
-                                        ),
-                                        if (option.subtitle != null)
-                                          Text(
-                                            option.subtitle!,
-                                            maxLines: widget.wrapOptions
-                                                ? null
-                                                : 1,
-                                            softWrap: widget.wrapOptions
-                                                ? true
-                                                : null,
-                                            overflow: widget.wrapOptions
-                                                ? TextOverflow.clip
-                                                : TextOverflow.ellipsis,
-                                            locale: widget.wrapOptions
-                                                ? _menuLocale
-                                                : null,
-                                            style: _optionSubtitleStyle(option),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                  if (marker) ...[
-                                    SizedBox(width: style.fieldGap),
-                                    if (widget.wrapOptions)
-                                      SizedBox(
-                                        width: math.min(
-                                          widget.selectedMarkerSize!.width,
-                                          math.max(
-                                            0.0,
-                                            constraints.maxWidth -
-                                                style.fieldGap,
-                                          ),
-                                        ),
-                                        height:
-                                            widget.selectedMarkerSize!.height,
-                                        child: FittedBox(
-                                          fit: BoxFit.scaleDown,
-                                          child: widget.selectedMarker!,
-                                        ),
-                                      )
-                                    else
-                                      Flexible(
-                                        child: FittedBox(
-                                          fit: BoxFit.scaleDown,
-                                          child: widget.selectedMarker!,
-                                        ),
-                                      ),
-                                  ],
-                                ],
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
+    // Calculate positioning
+    final renderBox = _fieldKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+
+    final fieldSize = renderBox.size;
+    final fieldPosition = renderBox.localToGlobal(Offset.zero);
+
+    // Use View.of for framework-free screen size access
+    final view = View.of(context);
+    final screenHeight = view.physicalSize.height / view.devicePixelRatio;
+    final paddingTop = view.padding.top / view.devicePixelRatio;
+    final paddingBottom = view.padding.bottom / view.devicePixelRatio;
+
+    final spaceBelow = screenHeight - fieldPosition.dy - fieldSize.height - paddingBottom - 8;
+    final spaceAbove = fieldPosition.dy - paddingTop - 8;
+
+    final menuHeight = _calculateMenuHeight();
+
+    // Decide position based on mode and available space
+    if (widget.editable) {
+      // Editable: prefer below, use above if no space
+      if (widget.menuBehavior == MenuBehavior.alwaysAbove) {
+        _showAbove = true;
+      } else if (widget.menuBehavior == MenuBehavior.alwaysBelow) {
+        _showAbove = false;
+      } else {
+        _showAbove = spaceBelow < menuHeight && spaceAbove > spaceBelow;
+      }
+    } else {
+      // Non-editable: overlay centered (ignore _showAbove)
+      _showAbove = false;
+    }
+
+    _overlayEntry = OverlayEntry(
+      builder: (context) => _MenuOverlay<T>(
+        link: _layerLink,
+        options: _filteredOptions,
+        highlightedIndex: _highlightedIndex,
+        onSelect: _selectOption,
+        onHighlight: (index) {
+          setState(() => _highlightedIndex = index);
+          _overlayEntry?.markNeedsBuild();
+        },
+        fieldKey: _fieldKey,
+        isEditableMode: widget.editable,
+        showAbove: _showAbove,
+        maxHeight: _showAbove ? spaceAbove : spaceBelow,
+        style: widget.style,
+        itemHeight: widget.itemHeight,
+        fadeAnimation: _fadeAnimation,
+        slideAnimation: _slideAnimation,
       ),
     );
+
+    Overlay.of(context).insert(_overlayEntry!);
+    _animationController?.forward(from: 0.0);
+  }
+
+  void _closeMenu() {
+    _animationController?.reverse().then((_) {
+      _overlayEntry?.remove();
+      _overlayEntry = null;
+    });
+
+    if (_animationController == null) {
+      _overlayEntry?.remove();
+      _overlayEntry = null;
+    }
+  }
+
+  void _selectOption(int index) {
+    if (index < 0 || index >= _filteredOptions.length) return;
+
+    final option = _filteredOptions[index];
+    if (!option.enabled) return;
+
+    widget.onChanged?.call(option.value);
+    _controller.text = option.label;
+    _closeMenu();
+
+    if (widget.editable) {
+      _focusNode.unfocus();
+    }
+  }
+
+  double _calculateMenuHeight() {
+    final itemCount = math.min(_filteredOptions.length, widget.maxVisibleItems);
+    final calculatedHeight = widget.itemHeight * itemCount;
+
+    if (widget.maxMenuHeight != null) {
+      return math.min(calculatedHeight, widget.maxMenuHeight!);
+    }
+
+    return calculatedHeight;
+  }
+
+  KeyEventResult _handleKey(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+
+    final key = event.logicalKey;
+
+    if (key == LogicalKeyboardKey.arrowDown) {
+      if (_overlayEntry == null && !widget.editable) {
+        _showMenu();
+      } else if (_filteredOptions.isNotEmpty) {
+        setState(() {
+          _highlightedIndex = (_highlightedIndex + 1) % _filteredOptions.length;
+        });
+        _overlayEntry?.markNeedsBuild();
+      }
+      return KeyEventResult.handled;
+    }
+
+    if (key == LogicalKeyboardKey.arrowUp) {
+      if (_overlayEntry == null && !widget.editable) {
+        _showMenu();
+      } else if (_filteredOptions.isNotEmpty) {
+        setState(() {
+          _highlightedIndex =
+            (_highlightedIndex - 1 + _filteredOptions.length) % _filteredOptions.length;
+        });
+        _overlayEntry?.markNeedsBuild();
+      }
+      return KeyEventResult.handled;
+    }
+
+    if (key == LogicalKeyboardKey.enter || key == LogicalKeyboardKey.space) {
+      if (_overlayEntry != null && _highlightedIndex >= 0) {
+        _selectOption(_highlightedIndex);
+        return KeyEventResult.handled;
+      } else if (!widget.editable) {
+        _showMenu();
+        return KeyEventResult.handled;
+      }
+    }
+
+    if (key == LogicalKeyboardKey.escape) {
+      if (_overlayEntry != null) {
+        _closeMenu();
+        return KeyEventResult.handled;
+      }
+    }
+
+    return KeyEventResult.ignored;
   }
 
   @override
   Widget build(BuildContext context) {
-    final style = widget.style;
-    assert(style.chevronSize.width >= 0 && style.chevronSize.width.isFinite);
-    assert(style.chevronSize.height >= 0 && style.chevronSize.height.isFinite);
-    assert(
-      widget.selectedMarkerSize == null ||
-          (widget.selectedMarkerSize!.width >= 0 &&
-              widget.selectedMarkerSize!.width.isFinite &&
-              widget.selectedMarkerSize!.height >= 0 &&
-              widget.selectedMarkerSize!.height.isFinite),
-    );
-    final selected = widget.options.where(_selected).firstOrNull;
-    final status = widget.isLoading
-        ? widget.loadingMessage
-        : widget.errorMessage ??
-              (widget.options.isEmpty ? widget.emptyMessage : null);
-    final text = status ?? selected?.label ?? widget.placeholder;
-    final active = _canOpen || _canRetry;
-    final foreground = widget.errorMessage != null && !widget.isLoading
-        ? style.errorColor
-        : active
-        ? style.textColor
-        : style.disabledColor;
-    final semanticsLabel = widget.semanticLabel;
     return CompositedTransformTarget(
-      link: _link,
+      key: _fieldKey,
+      link: _layerLink,
       child: Focus(
-        focusNode: _focusNode,
-        onFocusChange: (focused) {
-          setState(() => _hasFocus = focused);
-          if (!focused) _close();
-        },
-        canRequestFocus: active,
-        skipTraversal: !active,
-        child: Semantics(
-          button: true,
-          enabled: active,
-          label: _canRetry
-              ? '${semanticsLabel == null ? '' : '$semanticsLabel, '}$text, ${widget.retryLabel}'
-              : semanticsLabel,
-          value: _canRetry ? null : text,
-          expanded: _canOpen ? _open : null,
-          onTap: active ? _activate : null,
-          child: ExcludeSemantics(
-            child: GestureDetector(
-              key: _anchorKey,
-              behavior: HitTestBehavior.opaque,
-              onTap: active ? _activate : null,
-              child: MouseRegion(
-                cursor: active
-                    ? SystemMouseCursors.click
-                    : SystemMouseCursors.basic,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: widget.enabled && status == null
-                        ? style.backgroundColor
-                        : style.disabledBackgroundColor ??
-                              style.backgroundColor,
-                    border: Border.all(
-                      color: widget.errorMessage != null && !widget.isLoading
-                          ? style.errorColor
-                          : _hasFocus
-                          ? style.focusColor
-                          : style.borderColor,
-                      width: style.borderWidth,
-                    ),
-                    borderRadius: BorderRadius.circular(style.borderRadius),
-                  ),
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final requested = style.fieldPadding.resolve(
-                        Directionality.of(context),
-                      );
-                      final scaleX =
-                          constraints.hasBoundedWidth &&
-                              requested.horizontal > 0
-                          ? math.min(
-                              1.0,
-                              constraints.maxWidth / (requested.horizontal * 2),
-                            )
-                          : 1.0;
-                      final scaleY =
-                          constraints.hasBoundedHeight && requested.vertical > 0
-                          ? math.min(
-                              1.0,
-                              constraints.maxHeight / (requested.vertical * 2),
-                            )
-                          : 1.0;
-                      final showChevron =
-                          status == null &&
-                          (_canOpen || style.showDisabledChevron) &&
-                          (!constraints.hasBoundedWidth ||
-                              constraints.maxWidth >=
-                                  requested.horizontal * scaleX +
-                                      style.fieldGap +
-                                      style.chevronSize.width);
-                      final showLoadingLeading =
-                          widget.isLoading &&
-                          widget.loadingLeading != null &&
-                          (!constraints.hasBoundedWidth ||
-                              constraints.maxWidth >=
-                                  requested.horizontal * scaleX +
-                                      widget.loadingLeadingGap +
-                                      8);
-                      return Padding(
-                        padding: EdgeInsets.fromLTRB(
-                          requested.left * scaleX,
-                          requested.top * scaleY,
-                          requested.right * scaleX,
-                          requested.bottom * scaleY,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (showLoadingLeading) ...[
-                              Flexible(
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: widget.loadingLeading!,
-                                ),
-                              ),
-                              SizedBox(width: widget.loadingLeadingGap),
-                            ],
-                            Flexible(
-                              child: Text(
-                                text,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: style.textStyle.copyWith(
-                                  color: foreground,
-                                ),
-                              ),
-                            ),
-                            if (showChevron) ...[
-                              SizedBox(width: style.fieldGap),
-                              SizedBox.fromSize(
-                                size: style.chevronSize,
-                                child: widget.chevron == null
-                                    ? CustomPaint(
-                                        painter: _ChevronPainter(
-                                          _canOpen
-                                              ? style.chevronColor ?? foreground
-                                              : style.disabledColor,
-                                        ),
-                                      )
-                                    : FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        child: widget.chevron!,
-                                      ),
-                              ),
-                            ],
-                            if (_canRetry &&
-                                (!constraints.hasBoundedWidth ||
-                                    constraints.maxWidth >= 72)) ...[
-                              const SizedBox(width: 6),
-                              Flexible(
-                                child: Text(
-                                  widget.retryLabel,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: style.textStyle.copyWith(
-                                    color: foreground,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
+        onKeyEvent: _handleKey,
+        child: widget.editable
+          ? GuxTextField(
+              controller: _controller,
+              focusNode: _focusNode,
+              labelText: widget.labelText,
+              placeholder: widget.placeholder,
+              errorMessage: widget.errorMessage,
+              enabled: widget.onChanged != null,
+              onChanged: _onTextChanged,
+              style: widget.style.fieldStyle ?? _defaultFieldStyle(),
+            )
+          : GestureDetector(
+              onTap: () {
+                _focusNode.requestFocus();
+                if (_overlayEntry == null) {
+                  _showMenu();
+                }
+              },
+              child: GuxTextField(
+                controller: _controller,
+                focusNode: _focusNode,
+                labelText: widget.labelText,
+                placeholder: widget.placeholder,
+                errorMessage: widget.errorMessage,
+                enabled: widget.onChanged != null,
+                style: widget.style.fieldStyle ?? _defaultFieldStyle(),
               ),
             ),
-          ),
-        ),
       ),
     );
   }
 
-  void _activate() {
-    if (_canRetry) {
-      widget.onRetry!();
-    } else if (_canOpen) {
-      _focusNode.requestFocus();
-      if (_open) {
-        _close();
-      } else {
-        _openMenu();
-      }
-    }
+  GuxTextFieldStyle _defaultFieldStyle() {
+    const inputStyle = GuxTextInputStyle(
+      textStyle: TextStyle(fontSize: 16, color: Color(0xFFECECEC)),
+      backgroundColor: Color(0xFF252525),
+      disabledBackgroundColor: Color(0xFF1F1F1F),
+      borderColor: Color(0xFF484848),
+      focusedBorderColor: Color(0xFF3B82F6),
+      errorBorderColor: Color(0xFFFF453A),
+      cursorColor: Color(0xFF3B82F6),
+      selectionColor: Color(0x803B82F6),
+      placeholderStyle: TextStyle(fontSize: 16, color: Color(0xFF8E8E8E)),
+      errorStyle: TextStyle(fontSize: 12, color: Color(0xFFFF453A)),
+    );
+
+    return const GuxTextFieldStyle(
+      inputStyle: inputStyle,
+      errorInputStyle: inputStyle,
+      labelStyle: TextStyle(fontSize: 14, color: Color(0xFFECECEC)),
+      errorTextStyle: TextStyle(fontSize: 12, color: Color(0xFFFF453A)),
+      labelSpacing: 4.0,
+      errorSpacing: 4.0,
+    );
   }
 }
 
-class _ChevronPainter extends CustomPainter {
-  const _ChevronPainter(this.color);
-  final Color color;
+class _MenuOverlay<T> extends StatelessWidget {
+  const _MenuOverlay({
+    required this.link,
+    required this.options,
+    required this.highlightedIndex,
+    required this.onSelect,
+    required this.onHighlight,
+    required this.fieldKey,
+    required this.isEditableMode,
+    required this.showAbove,
+    required this.maxHeight,
+    required this.style,
+    required this.itemHeight,
+    this.fadeAnimation,
+    this.slideAnimation,
+  });
+
+  final LayerLink link;
+  final List<GuxComboBoxOption<T>> options;
+  final int highlightedIndex;
+  final ValueChanged<int> onSelect;
+  final ValueChanged<int> onHighlight;
+  final GlobalKey fieldKey;
+  final bool isEditableMode;
+  final bool showAbove;
+  final double maxHeight;
+  final GuxComboBoxStyle style;
+  final double itemHeight;
+  final Animation<double>? fadeAnimation;
+  final Animation<Offset>? slideAnimation;
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-    canvas.drawPath(
-      Path()
-        ..moveTo(0, 0)
-        ..lineTo(size.width / 2, size.height)
-        ..lineTo(size.width, 0),
-      paint,
+  Widget build(BuildContext context) {
+    Widget menu = _buildMenuContent(context);
+
+    // Apply animations
+    if (fadeAnimation != null) {
+      menu = FadeTransition(
+        opacity: fadeAnimation!,
+        child: menu,
+      );
+    }
+
+    if (slideAnimation != null) {
+      menu = SlideTransition(
+        position: slideAnimation!,
+        child: menu,
+      );
+    }
+
+    if (isEditableMode) {
+      return _buildEditableMenu(context, menu);
+    } else {
+      return _buildOverlayMenu(context, menu);
+    }
+  }
+
+  Widget _buildEditableMenu(BuildContext context, Widget menu) {
+    final renderBox = fieldKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null) return const SizedBox.shrink();
+
+    final fieldSize = renderBox.size;
+
+    return CompositedTransformFollower(
+      link: link,
+      targetAnchor: showAbove ? Alignment.topLeft : Alignment.bottomLeft,
+      followerAnchor: showAbove ? Alignment.bottomLeft : Alignment.topLeft,
+      child: Container(
+        width: fieldSize.width,
+        constraints: BoxConstraints(maxHeight: maxHeight),
+        child: menu,
+      ),
     );
   }
 
-  @override
-  bool shouldRepaint(covariant _ChevronPainter oldDelegate) =>
-      oldDelegate.color != color;
+  Widget _buildOverlayMenu(BuildContext context, Widget menu) {
+    final renderBox = fieldKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null) return const SizedBox.shrink();
+
+    final fieldSize = renderBox.size;
+    final fieldPosition = renderBox.localToGlobal(Offset.zero);
+    final menuHeight = math.min(itemHeight * options.length, maxHeight);
+
+    // Center the menu over the field
+    final menuTop = fieldPosition.dy + (fieldSize.height / 2) - (menuHeight / 2);
+
+    return Stack(
+      children: [
+        // Dim background
+        Positioned.fill(
+          child: GestureDetector(
+            onTap: () {
+              // Close menu when tapping outside
+            },
+            child: Container(
+              color: style.overlayDimColor,
+            ),
+          ),
+        ),
+        // Centered menu
+        Positioned(
+          left: fieldPosition.dx,
+          width: fieldSize.width,
+          top: menuTop,
+          child: Container(
+            constraints: BoxConstraints(maxHeight: maxHeight),
+            child: menu,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMenuContent(BuildContext context) {
+    final elevation = isEditableMode ? style.menuElevation : style.overlayElevation;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: style.menuBackgroundColor,
+        boxShadow: elevation > 0
+            ? [
+                BoxShadow(
+                  color: const Color(0x33000000),
+                  blurRadius: elevation * 2,
+                  offset: Offset(0, elevation),
+                ),
+              ]
+            : null,
+      ),
+      child: ListView.builder(
+        shrinkWrap: true,
+        padding: EdgeInsets.zero,
+        itemCount: options.length,
+        itemBuilder: (context, index) {
+          final option = options[index];
+          final isHighlighted = index == highlightedIndex;
+          final isEnabled = option.enabled;
+
+          return GestureDetector(
+            onTap: isEnabled ? () => onSelect(index) : null,
+            child: MouseRegion(
+              onEnter: (_) {
+                if (isEnabled) onHighlight(index);
+              },
+              cursor: isEnabled
+                  ? SystemMouseCursors.click
+                  : SystemMouseCursors.basic,
+              child: Container(
+                height: itemHeight,
+                color: isHighlighted && isEnabled
+                    ? style.itemHighlightColor
+                    : const Color(0x00000000), // Transparent
+                padding: style.itemPadding,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            option.label,
+                            style: style.textStyle.copyWith(
+                              color: isEnabled
+                                ? style.textStyle.color
+                                : style.itemDisabledColor,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (option.subtitle != null) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              option.subtitle!,
+                              style: style.subtitleStyle.copyWith(
+                                color: isEnabled
+                                  ? style.subtitleStyle.color
+                                  : style.itemDisabledColor,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
 }
