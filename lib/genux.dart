@@ -31,7 +31,7 @@ export 'src/forms/gux_text_field.dart';
 export 'src/forms/gux_text_input.dart';
 export 'src/forms/gux_checkbox.dart';
 export 'src/forms/gux_toggle.dart';
-export 'src/forms/gux_dropdown.dart';
+export 'src/forms/gux_combo_box.dart';
 export 'src/forms/gux_switch.dart';
 export 'src/forms/gux_radio.dart';
 export 'src/forms/gux_radio_group.dart';
@@ -49,7 +49,7 @@ export 'src/utility/gux_date_time_utils.dart';
 export 'src/utility/gux_json_utils.dart';
 export 'src/utility/gux_json_renderer.dart';
 export 'src/utility/gux_color_codec.dart';
-export 'src/utility/gux_dropdown_json.dart';
+export 'src/utility/gux_combo_box_json.dart';
 
 // Theme System
 export 'src/gux_theme.dart';

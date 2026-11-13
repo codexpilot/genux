@@ -1,10 +1,10 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genux/src/forms/gux_dropdown.dart';
-import 'package:genux/src/utility/gux_dropdown_json.dart';
+import 'package:genux/src/forms/gux_combo_box.dart';
+import 'package:genux/src/utility/gux_combo_box_json.dart';
 
 void main() {
-  group('GuxDropdownStyle.fromJson', () {
+  group('GuxComboBoxStyle.fromJson', () {
     test('creates style with all colors', () {
       final json = {
         'backgroundColor': '#292929',
@@ -21,7 +21,7 @@ void main() {
         'errorColor': '#FF8888',
       };
 
-      final style = GuxDropdownStyleJson.fromJson(json);
+      final style = GuxComboBoxStyleJson.fromJson(json);
 
       expect(style.backgroundColor, const Color(0xFF292929));
       expect(style.disabledBackgroundColor, const Color(0xFF1E1E1E));
@@ -50,7 +50,7 @@ void main() {
         },
       };
 
-      final style = GuxDropdownStyleJson.fromJson(json);
+      final style = GuxComboBoxStyleJson.fromJson(json);
 
       expect(style.textStyle.fontSize, 14.0);
       expect(style.textStyle.fontWeight, FontWeight.w600);
@@ -69,7 +69,7 @@ void main() {
         'maxMenuHeight': 320.0,
       };
 
-      final style = GuxDropdownStyleJson.fromJson(json);
+      final style = GuxComboBoxStyleJson.fromJson(json);
 
       expect(style.borderRadius, 8.0);
       expect(style.borderWidth, 2.0);
@@ -85,7 +85,7 @@ void main() {
         'itemPadding': {'horizontal': 16.0},
       };
 
-      final style = GuxDropdownStyleJson.fromJson(json);
+      final style = GuxComboBoxStyleJson.fromJson(json);
 
       expect(
         style.fieldPadding,
@@ -100,7 +100,7 @@ void main() {
         'chevronSize': {'width': 12.0, 'height': 8.0},
       };
 
-      final style = GuxDropdownStyleJson.fromJson(json);
+      final style = GuxComboBoxStyleJson.fromJson(json);
 
       expect(style.chevronSize.width, 12.0);
       expect(style.chevronSize.height, 8.0);
@@ -112,7 +112,7 @@ void main() {
         'compactItems': true,
       };
 
-      final style = GuxDropdownStyleJson.fromJson(json);
+      final style = GuxComboBoxStyleJson.fromJson(json);
 
       expect(style.showDisabledChevron, true);
       expect(style.compactItems, true);
@@ -121,7 +121,7 @@ void main() {
     test('uses defaults for missing properties', () {
       final json = <String, dynamic>{};
 
-      final style = GuxDropdownStyleJson.fromJson(json);
+      final style = GuxComboBoxStyleJson.fromJson(json);
 
       expect(style.backgroundColor, const Color(0xFF292929));
       expect(style.menuColor, const Color(0xFF292929));
@@ -143,9 +143,9 @@ void main() {
     });
   });
 
-  group('GuxDropdownStyle.toJson', () {
+  group('GuxComboBoxStyle.toJson', () {
     test('serializes all colors', () {
-      const style = GuxDropdownStyle(
+      const style = GuxComboBoxStyle(
         backgroundColor: Color(0xFF292929),
         disabledBackgroundColor: Color(0xFF1E1E1E),
         menuColor: Color(0xFF333333),
@@ -177,7 +177,7 @@ void main() {
     });
 
     test('serializes text styles', () {
-      const style = GuxDropdownStyle(
+      const style = GuxComboBoxStyle(
         textStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
         subtitleTextStyle: TextStyle(fontSize: 12, color: Color(0xFFCCCCCC)),
       );
@@ -191,7 +191,7 @@ void main() {
     });
 
     test('omits null optional colors', () {
-      const style = GuxDropdownStyle();
+      const style = GuxComboBoxStyle();
 
       final json = style.toJson();
 
@@ -202,7 +202,7 @@ void main() {
     });
 
     test('roundtrip serialization preserves values', () {
-      const original = GuxDropdownStyle(
+      const original = GuxComboBoxStyle(
         backgroundColor: Color(0xFF292929),
         menuColor: Color(0xFF333333),
         borderColor: Color(0xFF666666),
@@ -215,7 +215,7 @@ void main() {
       );
 
       final json = original.toJson();
-      final restored = GuxDropdownStyleJson.fromJson(json);
+      final restored = GuxComboBoxStyleJson.fromJson(json);
 
       expect(restored.backgroundColor, original.backgroundColor);
       expect(restored.menuColor, original.menuColor);
@@ -230,7 +230,7 @@ void main() {
     });
   });
 
-  group('GuxDropdownStringJson.fromJson', () {
+  group('GuxComboBoxStringJson.fromJson', () {
     testWidgets('creates dropdown with minimal JSON', (tester) async {
       final json = {
         'options': [
@@ -239,7 +239,7 @@ void main() {
         ],
       };
 
-      final dropdown = GuxDropdownStringJson.fromJson(json, actions: {});
+      final dropdown = GuxComboBoxStringJson.fromJson(json, actions: {});
 
       await tester.pumpWidget(
         Directionality(
@@ -254,7 +254,7 @@ void main() {
         ),
       );
 
-      expect(find.byType(GuxDropdown<String>), findsOneWidget);
+      expect(find.byType(GuxComboBox<String>), findsOneWidget);
       expect(dropdown.options.length, 2);
       expect(dropdown.options[0].value, 'option1');
       expect(dropdown.options[0].label, 'Option 1');
@@ -280,7 +280,7 @@ void main() {
         ],
       };
 
-      final dropdown = GuxDropdownStringJson.fromJson(json, actions: {});
+      final dropdown = GuxComboBoxStringJson.fromJson(json, actions: {});
 
       await tester.pumpWidget(
         Directionality(
@@ -312,7 +312,7 @@ void main() {
         'onChanged': 'handleChange',
       };
 
-      final dropdown = GuxDropdownStringJson.fromJson(
+      final dropdown = GuxComboBoxStringJson.fromJson(
         json,
         actions: {
           'handleChange': (value) => changedValue = value,
@@ -347,7 +347,7 @@ void main() {
         'enabled': false,
       };
 
-      final dropdown = GuxDropdownStringJson.fromJson(json, actions: {});
+      final dropdown = GuxComboBoxStringJson.fromJson(json, actions: {});
 
       await tester.pumpWidget(
         Directionality(
@@ -373,7 +373,7 @@ void main() {
         'isLoading': true,
       };
 
-      final dropdown = GuxDropdownStringJson.fromJson(json, actions: {});
+      final dropdown = GuxComboBoxStringJson.fromJson(json, actions: {});
 
       await tester.pumpWidget(
         Directionality(
@@ -399,7 +399,7 @@ void main() {
         'errorMessage': 'Failed to load options',
       };
 
-      final dropdown = GuxDropdownStringJson.fromJson(json, actions: {});
+      final dropdown = GuxComboBoxStringJson.fromJson(json, actions: {});
 
       await tester.pumpWidget(
         Directionality(
@@ -428,7 +428,7 @@ void main() {
         'semanticLabel': 'Select a value',
       };
 
-      final dropdown = GuxDropdownStringJson.fromJson(json, actions: {});
+      final dropdown = GuxComboBoxStringJson.fromJson(json, actions: {});
 
       await tester.pumpWidget(
         Directionality(
@@ -457,7 +457,7 @@ void main() {
         'wrapOptions': true,
       };
 
-      final dropdown = GuxDropdownStringJson.fromJson(json, actions: {});
+      final dropdown = GuxComboBoxStringJson.fromJson(json, actions: {});
 
       await tester.pumpWidget(
         Directionality(
@@ -487,7 +487,7 @@ void main() {
         },
       };
 
-      final dropdown = GuxDropdownStringJson.fromJson(json, actions: {});
+      final dropdown = GuxComboBoxStringJson.fromJson(json, actions: {});
 
       await tester.pumpWidget(
         Directionality(
@@ -512,7 +512,7 @@ void main() {
         'options': [],
       };
 
-      final dropdown = GuxDropdownStringJson.fromJson(json, actions: {});
+      final dropdown = GuxComboBoxStringJson.fromJson(json, actions: {});
 
       await tester.pumpWidget(
         Directionality(
@@ -544,7 +544,7 @@ void main() {
         'options': [],
       };
 
-      final dropdown = GuxDropdownStringJson.fromJson(json, actions: {});
+      final dropdown = GuxComboBoxStringJson.fromJson(json, actions: {});
 
       await tester.pumpWidget(
         Directionality(
@@ -563,12 +563,12 @@ void main() {
     });
   });
 
-  group('GuxDropdownStringJson.toJson', () {
+  group('GuxComboBoxStringJson.toJson', () {
     test('serializes options', () {
-      const dropdown = GuxDropdown<String>(
+      const dropdown = GuxComboBox<String>(
         options: [
-          GuxDropdownOption(value: 'opt1', label: 'Option 1', enabled: true),
-          GuxDropdownOption(
+          GuxComboBoxOption(value: 'opt1', label: 'Option 1', enabled: true),
+          GuxComboBoxOption(
             value: 'opt2',
             label: 'Option 2',
             subtitle: 'Description',
@@ -579,7 +579,7 @@ void main() {
         onChanged: null,
       );
 
-      final json = GuxDropdownStringJson.toJson(dropdown);
+      final json = GuxComboBoxStringJson.toJson(dropdown);
 
       expect(json['options'], isA<List>());
       expect(json['options'].length, 2);
@@ -591,35 +591,35 @@ void main() {
     });
 
     test('serializes value when present', () {
-      const dropdown = GuxDropdown<String>(
+      const dropdown = GuxComboBox<String>(
         options: [
-          GuxDropdownOption(value: 'opt1', label: 'Option 1', enabled: true),
+          GuxComboBoxOption(value: 'opt1', label: 'Option 1', enabled: true),
         ],
         value: 'opt1',
         onChanged: null,
       );
 
-      final json = GuxDropdownStringJson.toJson(dropdown);
+      final json = GuxComboBoxStringJson.toJson(dropdown);
 
       expect(json['value'], 'opt1');
     });
 
     test('omits value when null', () {
-      const dropdown = GuxDropdown<String>(
+      const dropdown = GuxComboBox<String>(
         options: [
-          GuxDropdownOption(value: 'opt1', label: 'Option 1', enabled: true),
+          GuxComboBoxOption(value: 'opt1', label: 'Option 1', enabled: true),
         ],
         value: null,
         onChanged: null,
       );
 
-      final json = GuxDropdownStringJson.toJson(dropdown);
+      final json = GuxComboBoxStringJson.toJson(dropdown);
 
       expect(json.containsKey('value'), false);
     });
 
     test('serializes boolean flags', () {
-      const dropdown = GuxDropdown<String>(
+      const dropdown = GuxComboBox<String>(
         options: [],
         value: null,
         onChanged: null,
@@ -628,7 +628,7 @@ void main() {
         wrapOptions: true,
       );
 
-      final json = GuxDropdownStringJson.toJson(dropdown);
+      final json = GuxComboBoxStringJson.toJson(dropdown);
 
       expect(json['enabled'], false);
       expect(json['isLoading'], true);
@@ -636,7 +636,7 @@ void main() {
     });
 
     test('serializes text properties', () {
-      const dropdown = GuxDropdown<String>(
+      const dropdown = GuxComboBox<String>(
         options: [],
         value: null,
         onChanged: null,
@@ -647,7 +647,7 @@ void main() {
         errorMessage: 'Error occurred',
       );
 
-      final json = GuxDropdownStringJson.toJson(dropdown);
+      final json = GuxComboBoxStringJson.toJson(dropdown);
 
       expect(json['placeholder'], 'Choose');
       expect(json['emptyMessage'], 'No data');
@@ -657,17 +657,17 @@ void main() {
     });
 
     test('serializes style', () {
-      const dropdown = GuxDropdown<String>(
+      const dropdown = GuxComboBox<String>(
         options: [],
         value: null,
         onChanged: null,
-        style: GuxDropdownStyle(
+        style: GuxComboBoxStyle(
           backgroundColor: Color(0xFF1E1E1E),
           borderRadius: 8,
         ),
       );
 
-      final json = GuxDropdownStringJson.toJson(dropdown);
+      final json = GuxComboBoxStringJson.toJson(dropdown);
 
       expect(json['style'], isA<Map>());
       expect(json['style']['backgroundColor'], '#FF1E1E1E');
@@ -675,9 +675,9 @@ void main() {
     });
 
     test('roundtrip serialization preserves values', () {
-      const original = GuxDropdown<String>(
+      const original = GuxComboBox<String>(
         options: [
-          GuxDropdownOption(
+          GuxComboBoxOption(
             value: 'opt1',
             label: 'Option 1',
             subtitle: 'Description',
@@ -690,11 +690,11 @@ void main() {
         isLoading: false,
         placeholder: 'Select one',
         wrapOptions: false,
-        style: GuxDropdownStyle(backgroundColor: Color(0xFF1E1E1E)),
+        style: GuxComboBoxStyle(backgroundColor: Color(0xFF1E1E1E)),
       );
 
-      final json = GuxDropdownStringJson.toJson(original);
-      final restored = GuxDropdownStringJson.fromJson(json, actions: {});
+      final json = GuxComboBoxStringJson.toJson(original);
+      final restored = GuxComboBoxStringJson.fromJson(json, actions: {});
 
       expect(restored.options.length, original.options.length);
       expect(restored.options[0].value, original.options[0].value);

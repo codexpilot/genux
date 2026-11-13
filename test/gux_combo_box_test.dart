@@ -17,11 +17,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:genux/genux.dart';
 
 void main() {
-  group('GuxDropdown', () {
+  group('GuxComboBox', () {
     final options = [
-      const GuxDropdownOption(value: 1, label: 'Option 1'),
-      const GuxDropdownOption(value: 2, label: 'Option 2'),
-      const GuxDropdownOption(value: 3, label: 'Option 3'),
+      const GuxComboBoxOption(value: 1, label: 'Option 1'),
+      const GuxComboBoxOption(value: 2, label: 'Option 2'),
+      const GuxComboBoxOption(value: 3, label: 'Option 3'),
     ];
 
     testWidgets('displays placeholder when no value selected', (tester) async {
@@ -32,7 +32,7 @@ void main() {
             data: const MediaQueryData(),
             child: Navigator(
               onGenerateRoute: (_) => PageRouteBuilder<void>(
-                pageBuilder: (context, _, __) => GuxDropdown<int>(
+                pageBuilder: (context, _, __) => GuxComboBox<int>(
                   options: options,
                   value: null,
                   onChanged: (_) {},
@@ -55,7 +55,7 @@ void main() {
             data: const MediaQueryData(),
             child: Navigator(
               onGenerateRoute: (_) => PageRouteBuilder<void>(
-                pageBuilder: (context, _, __) => GuxDropdown<int>(
+                pageBuilder: (context, _, __) => GuxComboBox<int>(
                   options: options,
                   value: 2,
                   onChanged: (_) {},
@@ -77,7 +77,7 @@ void main() {
             data: const MediaQueryData(),
             child: Navigator(
               onGenerateRoute: (_) => PageRouteBuilder<void>(
-                pageBuilder: (context, _, __) => GuxDropdown<int>(
+                pageBuilder: (context, _, __) => GuxComboBox<int>(
                   options: options,
                   value: null,
                   onChanged: (_) {},
@@ -101,7 +101,7 @@ void main() {
             data: const MediaQueryData(),
             child: Navigator(
               onGenerateRoute: (_) => PageRouteBuilder<void>(
-                pageBuilder: (context, _, __) => GuxDropdown<int>(
+                pageBuilder: (context, _, __) => GuxComboBox<int>(
                   options: options,
                   value: null,
                   onChanged: (_) {},
@@ -129,7 +129,7 @@ void main() {
             data: const MediaQueryData(),
             child: Navigator(
               onGenerateRoute: (_) => PageRouteBuilder<void>(
-                pageBuilder: (context, _, __) => GuxDropdown<int>(
+                pageBuilder: (context, _, __) => GuxComboBox<int>(
                   options: options,
                   value: null,
                   onChanged: (_) {},
@@ -144,7 +144,7 @@ void main() {
         ),
       );
 
-      await tester.tap(find.byType(GuxDropdown<int>));
+      await tester.tap(find.byType(GuxComboBox<int>));
       await tester.pump();
 
       expect(retried, isTrue);
@@ -158,7 +158,7 @@ void main() {
             data: const MediaQueryData(),
             child: Navigator(
               onGenerateRoute: (_) => PageRouteBuilder<void>(
-                pageBuilder: (context, _, __) => GuxDropdown<int>(
+                pageBuilder: (context, _, __) => GuxComboBox<int>(
                   options: const [],
                   value: null,
                   onChanged: (_) {},
@@ -181,7 +181,7 @@ void main() {
             data: const MediaQueryData(),
             child: Navigator(
               onGenerateRoute: (_) => PageRouteBuilder<void>(
-                pageBuilder: (context, _, __) => GuxDropdown<int>(
+                pageBuilder: (context, _, __) => GuxComboBox<int>(
                   options: options,
                   value: null,
                   onChanged: (_) {},
@@ -204,7 +204,7 @@ void main() {
             data: const MediaQueryData(),
             child: Navigator(
               onGenerateRoute: (_) => PageRouteBuilder<void>(
-                pageBuilder: (context, _, __) => GuxDropdown<int>(
+                pageBuilder: (context, _, __) => GuxComboBox<int>(
                   options: options,
                   value: null,
                   onChanged: (_) {},
@@ -216,8 +216,8 @@ void main() {
         ),
       );
 
-      final dropdown = tester.widget<GuxDropdown<int>>(
-        find.byType(GuxDropdown<int>),
+      final dropdown = tester.widget<GuxComboBox<int>>(
+        find.byType(GuxComboBox<int>),
       );
       expect(dropdown.enabled, isFalse);
     });
@@ -230,7 +230,7 @@ void main() {
             data: const MediaQueryData(),
             child: Navigator(
               onGenerateRoute: (_) => PageRouteBuilder<void>(
-                pageBuilder: (context, _, __) => GuxDropdown<int>(
+                pageBuilder: (context, _, __) => GuxComboBox<int>(
                   options: options,
                   value: null,
                   onChanged: null,
@@ -241,14 +241,14 @@ void main() {
         ),
       );
 
-      final dropdown = tester.widget<GuxDropdown<int>>(
-        find.byType(GuxDropdown<int>),
+      final dropdown = tester.widget<GuxComboBox<int>>(
+        find.byType(GuxComboBox<int>),
       );
       expect(dropdown.onChanged, isNull);
     });
 
     testWidgets('applies custom styling', (tester) async {
-      const customStyle = GuxDropdownStyle(
+      const customStyle = GuxComboBoxStyle(
         backgroundColor: Color(0xFF1A1A1A),
         menuColor: Color(0xFF2A2A2A),
         borderColor: Color(0xFF3A3A3A),
@@ -264,7 +264,7 @@ void main() {
             data: const MediaQueryData(),
             child: Navigator(
               onGenerateRoute: (_) => PageRouteBuilder<void>(
-                pageBuilder: (context, _, __) => GuxDropdown<int>(
+                pageBuilder: (context, _, __) => GuxComboBox<int>(
                   options: options,
                   value: null,
                   onChanged: (_) {},
@@ -276,8 +276,8 @@ void main() {
         ),
       );
 
-      final dropdown = tester.widget<GuxDropdown<int>>(
-        find.byType(GuxDropdown<int>),
+      final dropdown = tester.widget<GuxComboBox<int>>(
+        find.byType(GuxComboBox<int>),
       );
       expect(dropdown.style.backgroundColor, equals(const Color(0xFF1A1A1A)));
       expect(dropdown.style.menuColor, equals(const Color(0xFF2A2A2A)));
@@ -293,7 +293,7 @@ void main() {
             data: const MediaQueryData(),
             child: Navigator(
               onGenerateRoute: (_) => PageRouteBuilder<void>(
-                pageBuilder: (context, _, __) => GuxDropdown<int>(
+                pageBuilder: (context, _, __) => GuxComboBox<int>(
                   options: options,
                   value: null,
                   onChanged: (_) {},
@@ -304,8 +304,8 @@ void main() {
         ),
       );
 
-      final dropdown = tester.widget<GuxDropdown<int>>(
-        find.byType(GuxDropdown<int>),
+      final dropdown = tester.widget<GuxComboBox<int>>(
+        find.byType(GuxComboBox<int>),
       );
       expect(dropdown.options.length, equals(3));
       expect(dropdown.options[0].label, equals('Option 1'));
@@ -321,7 +321,7 @@ void main() {
             data: const MediaQueryData(),
             child: Navigator(
               onGenerateRoute: (_) => PageRouteBuilder<void>(
-                pageBuilder: (context, _, __) => GuxDropdown<int>(
+                pageBuilder: (context, _, __) => GuxComboBox<int>(
                   options: options,
                   value: null,
                   onChanged: (_) {},
@@ -333,16 +333,16 @@ void main() {
         ),
       );
 
-      final dropdown = tester.widget<GuxDropdown<int>>(
-        find.byType(GuxDropdown<int>),
+      final dropdown = tester.widget<GuxComboBox<int>>(
+        find.byType(GuxComboBox<int>),
       );
       expect(dropdown.semanticLabel, equals('Choose country'));
     });
   });
 
-  group('GuxDropdownOption', () {
+  group('GuxComboBoxOption', () {
     test('creates option with value and label', () {
-      const option = GuxDropdownOption(value: 1, label: 'Test');
+      const option = GuxComboBoxOption(value: 1, label: 'Test');
       expect(option.value, equals(1));
       expect(option.label, equals('Test'));
       expect(option.enabled, isTrue);
@@ -350,7 +350,7 @@ void main() {
     });
 
     test('creates option with subtitle', () {
-      const option = GuxDropdownOption(
+      const option = GuxComboBoxOption(
         value: 1,
         label: 'Test',
         subtitle: 'Description',
@@ -359,7 +359,7 @@ void main() {
     });
 
     test('creates disabled option', () {
-      const option = GuxDropdownOption(
+      const option = GuxComboBoxOption(
         value: 1,
         label: 'Test',
         enabled: false,
@@ -368,9 +368,9 @@ void main() {
     });
   });
 
-  group('GuxDropdownStyle', () {
+  group('GuxComboBoxStyle', () {
     test('has default values', () {
-      const style = GuxDropdownStyle();
+      const style = GuxComboBoxStyle();
       expect(style.backgroundColor, equals(const Color(0xFF292929)));
       expect(style.menuColor, equals(const Color(0xFF292929)));
       expect(style.borderRadius, equals(4));
@@ -378,7 +378,7 @@ void main() {
     });
 
     test('accepts custom values', () {
-      const style = GuxDropdownStyle(
+      const style = GuxComboBoxStyle(
         backgroundColor: Color(0xFF000000),
         borderRadius: 8,
         borderWidth: 2,

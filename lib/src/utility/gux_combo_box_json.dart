@@ -1,19 +1,19 @@
 import 'package:flutter/widgets.dart';
-import '../forms/gux_dropdown.dart';
+import '../forms/gux_combo_box.dart';
 import 'gux_json_utils.dart';
 
-/// JSON serialization support for GuxDropdown components.
+/// JSON serialization support for GuxComboBox components.
 ///
-/// Since GuxDropdown uses generic types, JSON serialization requires:
+/// Since GuxComboBox uses generic types, JSON serialization requires:
 /// 1. A value serializer/deserializer (toJson/fromJson for the value type T)
 /// 2. String-based value representation for options
 ///
-/// This helper provides serialization for GuxDropdownStyle and utilities
+/// This helper provides serialization for GuxComboBoxStyle and utilities
 /// for building dropdown JSON with string-based values.
 
-/// Extension to add JSON serialization to GuxDropdownStyle
-extension GuxDropdownStyleJson on GuxDropdownStyle {
-  /// Convert GuxDropdownStyle to JSON
+/// Extension to add JSON serialization to GuxComboBoxStyle
+extension GuxComboBoxStyleJson on GuxComboBoxStyle {
+  /// Convert GuxComboBoxStyle to JSON
   Map<String, dynamic> toJson() {
     return {
       'backgroundColor': GuxJsonUtils.colorToString(backgroundColor),
@@ -53,8 +53,8 @@ extension GuxDropdownStyleJson on GuxDropdownStyle {
     };
   }
 
-  /// Create GuxDropdownStyle from JSON
-  static GuxDropdownStyle fromJson(Map<String, dynamic> json) {
+  /// Create GuxComboBoxStyle from JSON
+  static GuxComboBoxStyle fromJson(Map<String, dynamic> json) {
     final textStyleJson = json['textStyle'];
     final Map<String, dynamic>? textStyleMap;
     if (textStyleJson == null) {
@@ -91,7 +91,7 @@ extension GuxDropdownStyleJson on GuxDropdownStyle {
       chevronSizeMap = null;
     }
 
-    return GuxDropdownStyle(
+    return GuxComboBoxStyle(
       backgroundColor: GuxJsonUtils.parseColor(json['backgroundColor']) ??
           const Color(0xFF292929),
       disabledBackgroundColor:
@@ -143,12 +143,12 @@ extension GuxDropdownStyleJson on GuxDropdownStyle {
   }
 }
 
-/// Helper for creating `GuxDropdown<String>` from JSON
+/// Helper for creating `GuxComboBox<String>` from JSON
 ///
 /// This is the most common use case for JSON-driven UI where dropdown
 /// values are string-based.
-class GuxDropdownStringJson {
-  /// Create a `GuxDropdown<String>` from JSON
+class GuxComboBoxStringJson {
+  /// Create a `GuxComboBox<String>` from JSON
   ///
   /// Example JSON:
   /// ```json
@@ -164,7 +164,7 @@ class GuxDropdownStringJson {
   ///   "style": { ... }
   /// }
   /// ```
-  static GuxDropdown<String> fromJson(
+  static GuxComboBox<String> fromJson(
     Map<String, dynamic> json, {
     required Map<String, void Function(String)> actions,
   }) {
@@ -184,7 +184,7 @@ class GuxDropdownStringJson {
 
     final onChangedKey = json['onChanged'] as String?;
 
-    return GuxDropdown<String>(
+    return GuxComboBox<String>(
       options: optionsList
               ?.map((item) {
                 if (item is Map<String, dynamic>) {
@@ -207,13 +207,13 @@ class GuxDropdownStringJson {
       semanticLabel: json['semanticLabel'] as String?,
       wrapOptions: json['wrapOptions'] as bool? ?? false,
       style: styleMap != null
-          ? GuxDropdownStyleJson.fromJson(styleMap)
-          : const GuxDropdownStyle(),
+          ? GuxComboBoxStyleJson.fromJson(styleMap)
+          : const GuxComboBoxStyle(),
     );
   }
 
-  static GuxDropdownOption<String> _optionFromJson(Map<String, dynamic> json) {
-    return GuxDropdownOption<String>(
+  static GuxComboBoxOption<String> _optionFromJson(Map<String, dynamic> json) {
+    return GuxComboBoxOption<String>(
       value: json['value'] as String? ?? '',
       label: json['label'] as String? ?? '',
       subtitle: json['subtitle'] as String?,
@@ -221,10 +221,10 @@ class GuxDropdownStringJson {
     );
   }
 
-  /// Convert `GuxDropdown<String>` to JSON
+  /// Convert `GuxComboBox<String>` to JSON
   ///
   /// Note: This only serializes the data, not callbacks or widgets
-  static Map<String, dynamic> toJson(GuxDropdown<String> dropdown) {
+  static Map<String, dynamic> toJson(GuxComboBox<String> dropdown) {
     return {
       'options': dropdown.options
           .map((option) => {

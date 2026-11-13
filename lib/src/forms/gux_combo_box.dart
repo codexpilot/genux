@@ -3,9 +3,9 @@ import 'dart:math' as math;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
-/// A value and its localized display text in a [GuxDropdown].
-class GuxDropdownOption<T> {
-  const GuxDropdownOption({
+/// A value and its localized display text in a [GuxComboBox].
+class GuxComboBoxOption<T> {
+  const GuxComboBoxOption({
     required this.value,
     required this.label,
     this.subtitle,
@@ -18,9 +18,9 @@ class GuxDropdownOption<T> {
   final bool enabled;
 }
 
-/// Colors and typography for a [GuxDropdown].
-class GuxDropdownStyle {
-  const GuxDropdownStyle({
+/// Colors and typography for a [GuxComboBox].
+class GuxComboBoxStyle {
+  const GuxComboBoxStyle({
     this.backgroundColor = const Color(0xFF292929),
     this.disabledBackgroundColor,
     this.menuColor = const Color(0xFF292929),
@@ -86,8 +86,8 @@ class GuxDropdownStyle {
 /// The host supplies localized labels and updates [value] after [onChanged].
 /// When an error and [onRetry] are provided, the field becomes a retry action.
 /// The menu requires an ancestor [Overlay], typically supplied by a Navigator.
-class GuxDropdown<T> extends StatefulWidget {
-  const GuxDropdown({
+class GuxComboBox<T> extends StatefulWidget {
+  const GuxComboBox({
     super.key,
     required this.options,
     required this.value,
@@ -108,13 +108,13 @@ class GuxDropdown<T> extends StatefulWidget {
     this.wrapOptions = false,
     this.loadingLeading,
     this.loadingLeadingGap = 6,
-    this.style = const GuxDropdownStyle(),
+    this.style = const GuxComboBoxStyle(),
   }) : assert(
          !wrapOptions || selectedMarker == null || selectedMarkerSize != null,
        ),
        assert(loadingLeadingGap >= 0 && loadingLeadingGap < double.infinity);
 
-  final List<GuxDropdownOption<T>> options;
+  final List<GuxComboBoxOption<T>> options;
   final T? value;
   final ValueChanged<T>? onChanged;
   final bool Function(T option, T value)? valueEquals;
@@ -143,13 +143,13 @@ class GuxDropdown<T> extends StatefulWidget {
   /// Optional leading visual in the loading state, excluded from semantics.
   final Widget? loadingLeading;
   final double loadingLeadingGap;
-  final GuxDropdownStyle style;
+  final GuxComboBoxStyle style;
 
   @override
-  State<GuxDropdown<T>> createState() => _GuxDropdownState<T>();
+  State<GuxComboBox<T>> createState() => _GuxComboBoxState<T>();
 }
 
-class _GuxDropdownState<T> extends State<GuxDropdown<T>>
+class _GuxComboBoxState<T> extends State<GuxComboBox<T>>
     with WidgetsBindingObserver {
   final _anchorKey = GlobalKey();
   final _link = LayerLink();
@@ -195,7 +195,7 @@ class _GuxDropdownState<T> extends State<GuxDropdown<T>>
   }
 
   @override
-  void didUpdateWidget(covariant GuxDropdown<T> oldWidget) {
+  void didUpdateWidget(covariant GuxComboBox<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (_open && !_canOpen) {
       _close(rebuild: false);
@@ -225,7 +225,7 @@ class _GuxDropdownState<T> extends State<GuxDropdown<T>>
     super.dispose();
   }
 
-  bool _selected(GuxDropdownOption<T> option) {
+  bool _selected(GuxComboBoxOption<T> option) {
     final value = widget.value;
     if (value == null) return false;
     return widget.valueEquals?.call(option.value, value) ??
@@ -343,7 +343,7 @@ class _GuxDropdownState<T> extends State<GuxDropdown<T>>
     ];
   }
 
-  TextStyle _optionTextStyle(GuxDropdownOption<T> option) {
+  TextStyle _optionTextStyle(GuxComboBoxOption<T> option) {
     final style = widget.style;
     final selected = _selected(option);
     final color = !option.enabled
@@ -357,7 +357,7 @@ class _GuxDropdownState<T> extends State<GuxDropdown<T>>
     );
   }
 
-  TextStyle _optionSubtitleStyle(GuxDropdownOption<T> option) {
+  TextStyle _optionSubtitleStyle(GuxComboBoxOption<T> option) {
     final style = widget.style;
     final color = !option.enabled
         ? style.disabledColor
