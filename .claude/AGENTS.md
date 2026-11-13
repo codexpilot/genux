@@ -52,6 +52,10 @@ DecoratedBox(
   ),
   child: child,
 )
+    ],
+  ),
+  child: child,
+)
 ```
 
 ```dart
@@ -117,6 +121,174 @@ grep -r "Colors\." lib/src --include="*.dart"
 ### When in Doubt
 
 **ALWAYS ASK** the user what version number to use. Version numbering is a product decision, not just technical.
+
+## Pickers and Platform Integration
+
+### Date/Time Picker
+
+**GuxDateTimePicker has a built-in picker** (`_showBuiltInPicker`) that displays a custom calendar/time dialog.
+
+- **Default behavior**: Opens a framework-free calendar dialog
+- **Host override**: Optional `selectDateTime` callback allows host to provide platform picker
+- **Min/Max enforcement**: Built-in picker enforces `minDate` and `maxDate` constraints
+- **NOT a placeholder**: Fully functional out of the box
+
+```dart
+// ✅ Works with built-in picker
+GuxDateTimePicker(
+  value: selectedDate,
+  onChanged: (value) => setState(() => selectedDate = value),
+  mode: DateTimePickerMode.date,
+  minDate: DateTime(2020, 1, 1),
+  maxDate: DateTime(2030, 12, 31),
+  style: const GuxDateTimePickerStyle(),
+)
+
+// ✅ Host can override with platform picker
+GuxDateTimePicker(
+  value: selectedDate,
+  onChanged: (value) => setState(() => selectedDate = value),
+  selectDateTime: (context, value, mode, min, max) async {
+    // Host provides platform-specific picker
+    return await showPlatformDatePicker(...);
+  },
+  style: const GuxDateTimePickerStyle(),
+)
+```
+
+### File Picker
+
+**GuxFilePicker REQUIRES host implementation** - it is a UI wrapper, not a file picker.
+
+- **No built-in picker**: Genux cannot access platform file dialogs
+- **Required parameter**: `selectFiles` callback must be provided by host
+- **Host responsibility**: Opening file picker, handling permissions, returning file data
+
+```dart
+// ✅ Host must provide selectFiles callback
+GuxFilePicker(
+  value: selectedFiles,
+  onChanged: (files) => setState(() => selectedFiles = files),
+  selectFiles: (context, allowMultiple, acceptedExtensions) async {
+    // Host implementation required
+    // Use file_picker package, platform channels, or web file input
+    final result = await FilePicker.platform.pickFiles(
+      allowMultiple: allowMultiple,
+      allowedExtensions: acceptedExtensions,
+    );
+    return result?.files.map((f) => GuxFileInfo(...)).toList();
+  },
+  allowMultiple: true,
+  acceptedExtensions: ['pdf', 'docx'],
+  style: const GuxFilePickerStyle(),
+)
+```
+
+### Host Integration Requirements
+
+When using Genux in ContextStudio or Dataset:
+
+1. **File picker**: Must provide `selectFiles` callback
+2. **Date picker**: Can use built-in or override with `selectDateTime`
+3. **Permissions**: Host handles file access permissions
+4. **Platform specifics**: Host handles web vs native differences
+
+## Icons and Fonts
+
+### Material Symbols Font
+
+Genux includes Material Symbols Outlined font for host use:
+
+- **Location**: `assets/fonts/material_symbols/MaterialSymbolsOutlined.ttf`
+- **Registered**: In pubspec.yaml under `flutter.fonts`
+- **Family name**: `MaterialSymbols`
+- **Usage**: Host-provided, not built into components
+
+### Icon Strategy
+
+**Components DO NOT have built-in icons**. All icons are host-provided through optional `icon` parameter.
+
+```dart
+// ❌ WRONG - No built-in icons
+GuxDateTimePicker(
+  // No icon appears automatically
+)
+
+// ✅ CORRECT - Host provides icon widget
+GuxDateTimePicker(
+  icon: Text(
+    String.fromCharCode(0xe935), // calendar_today
+    style: TextStyle(
+      fontFamily: 'MaterialSymbols',
+      fontSize: 20,
+      color: Color(0xFFFFFFFF),
+    ),
+  ),
+  // ... other parameters
+)
+
+// ✅ CORRECT - Or use any custom icon
+GuxDateTimePicker(
+  icon: Image.asset('assets/icons/calendar.png', width: 20, height: 20),
+  // ... other parameters
+)
+```
+
+### Icon Guidelines
+
+1. **Never bundle icons** - Host provides all icons
+2. **Material Symbols available** - Font is packaged for host convenience
+3. **Icon parameter is Widget** - Host can use text, image, or custom widget
+4. **No icon dependencies** - Components work without icons
+5. **Host consistency** - Host ensures consistent icon usage across app
+
+### Using Material Symbols (Host Code)
+
+Create a helper for Material Symbols icons:
+
+```dart
+// In host application (ContextStudio/Dataset)
+class GuxIcons {
+  static Widget calendar({Color? color, double size = 20}) {
+    return Text(
+      String.fromCharCode(0xe935),
+      style: TextStyle(
+        fontFamily: 'MaterialSymbols',
+        fontSize: size,
+        color: color,
+      ),
+    );
+  }
+  
+  static Widget folder({Color? color, double size = 20}) {
+    return Text(
+      String.fromCharCode(0xe2c7),
+      style: TextStyle(
+        fontFamily: 'MaterialSymbols',
+        fontSize: size,
+        color: color,
+      ),
+    );
+  }
+}
+
+// Usage
+GuxDateTimePicker(
+  icon: GuxIcons.calendar(color: Color(0xFFFFFFFF)),
+  // ...
+)
+```
+
+### Before Committing Icon Changes
+
+Verify no hardcoded icon dependencies:
+
+```bash
+# Should return 0 results
+grep -r "Icons\." lib/src --include="*.dart"
+grep -r "IconData" lib/src --include="*.dart" | grep -v "// "
+grep -r "0xe[0-9a-f]" lib/src --include="*.dart"  # Icon codepoints
+```
 
 ## Component Design Principles
 
