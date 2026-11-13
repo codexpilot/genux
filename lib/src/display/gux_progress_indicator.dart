@@ -85,7 +85,9 @@ class _GuxProgressIndicatorState extends State<GuxProgressIndicator>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _reduceMotion = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    // Use View.of for framework-free accessibility features access
+    final view = View.of(context);
+    _reduceMotion = view.platformDispatcher.accessibilityFeatures.disableAnimations;
     _updateAnimation();
   }
 

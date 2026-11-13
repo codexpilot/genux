@@ -104,8 +104,14 @@ class GuxDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final inheritedStyle = DefaultTextStyle.of(context).style;
-    final keyboardInsets =
-        MediaQuery.maybeViewInsetsOf(context) ?? EdgeInsets.zero;
+
+    // Use View.of for framework-free keyboard insets access
+    final view = View.of(context);
+    final keyboardInsets = EdgeInsets.fromViewPadding(
+      view.viewInsets,
+      view.devicePixelRatio,
+    );
+
     return Semantics(
       scopesRoute: true,
       explicitChildNodes: true,
