@@ -33,7 +33,7 @@ void main() {
       expect(find.text('Select date'), findsOneWidget);
     });
 
-    testWidgets('formats date value', (tester) async {
+    testWidgets('formats DateTime value', (tester) async {
       final date = DateTime(2025, 1, 15);
 
       await tester.pumpWidget(
@@ -41,6 +41,24 @@ void main() {
           textDirection: TextDirection.ltr,
           child: GuxDateTimePicker(
             value: date,
+            onChanged: (_) {},
+            mode: DateTimePickerMode.date,
+          ),
+        ),
+      );
+
+      expect(find.text('2025-01-15'), findsOneWidget);
+    });
+
+    testWidgets('formats epoch milliseconds value', (tester) async {
+      // 2025-01-15 00:00:00 UTC
+      final epochMs = DateTime(2025, 1, 15).millisecondsSinceEpoch;
+
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: GuxDateTimePicker(
+            value: epochMs,
             onChanged: (_) {},
             mode: DateTimePickerMode.date,
           ),
@@ -104,6 +122,49 @@ void main() {
       expect(find.text('2025-01-15 02:30 PM'), findsOneWidget);
     });
 
+    testWidgets('returns DateTime when input is DateTime', (tester) async {
+      dynamic capturedValue;
+
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: GuxDateTimePicker(
+            value: DateTime(2025, 1, 15),
+            onChanged: (value) {
+              capturedValue = value;
+            },
+          ),
+        ),
+      );
+
+      await tester.tap(find.byType(GuxDateTimePicker));
+      await tester.pump();
+
+      expect(capturedValue, isA<DateTime>());
+    });
+
+    testWidgets('returns epoch ms when input is epoch ms', (tester) async {
+      dynamic capturedValue;
+      final epochMs = DateTime(2025, 1, 15).millisecondsSinceEpoch;
+
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: GuxDateTimePicker(
+            value: epochMs,
+            onChanged: (value) {
+              capturedValue = value;
+            },
+          ),
+        ),
+      );
+
+      await tester.tap(find.byType(GuxDateTimePicker));
+      await tester.pump();
+
+      expect(capturedValue, isA<int>());
+    });
+
     testWidgets('is disabled when onChanged is null', (tester) async {
       await tester.pumpWidget(
         const Directionality(
@@ -162,6 +223,54 @@ void main() {
       );
       expect(picker.style.backgroundColor, equals(const Color(0xFF1A1A1A)));
       expect(picker.style.borderRadius, equals(8.0));
+    });
+  });
+
+  group('GuxDateTimeUtils', () {
+    test('converts DateTime to DateTime', () {
+      final dateTime = DateTime(2025, 1, 15);
+      expect(GuxDateTimeUtils.toDateTime(dateTime), equals(dateTime));
+    });
+
+    test('converts epoch ms to DateTime', () {
+      final dateTime = DateTime(2025, 1, 15);
+      final epochMs = dateTime.millisecondsSinceEpoch;
+      final result = GuxDateTimeUtils.toDateTime(epochMs);
+      expect(result?.year, equals(2025));
+      expect(result?.month, equals(1));
+      expect(result?.day, equals(15));
+    });
+
+    test('converts DateTime to epoch ms', () {
+      final dateTime = DateTime(2025, 1, 15);
+      expect(
+        GuxDateTimeUtils.toEpochMs(dateTime),
+        equals(dateTime.millisecondsSinceEpoch),
+      );
+    });
+
+    test('converts epoch ms to epoch ms', () {
+      final epochMs = DateTime(2025, 1, 15).millisecondsSinceEpoch;
+      expect(GuxDateTimeUtils.toEpochMs(epochMs), equals(epochMs));
+    });
+
+    test('handles null values', () {
+      expect(GuxDateTimeUtils.toDateTime(null), isNull);
+      expect(GuxDateTimeUtils.toEpochMs(null), isNull);
+    });
+
+    test('identifies epoch ms format', () {
+      final epochMs = DateTime.now().millisecondsSinceEpoch;
+      expect(GuxDateTimeUtils.isEpochMs(epochMs), isTrue);
+      expect(GuxDateTimeUtils.isEpochMs(DateTime.now()), isFalse);
+    });
+
+    test('identifies DateTime format', () {
+      expect(GuxDateTimeUtils.isDateTime(DateTime.now()), isTrue);
+      expect(
+        GuxDateTimeUtils.isDateTime(DateTime.now().millisecondsSinceEpoch),
+        isFalse,
+      );
     });
   });
 }

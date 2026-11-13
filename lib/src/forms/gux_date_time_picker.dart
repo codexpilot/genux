@@ -29,6 +29,9 @@ class GuxDateTimePickerStyle {
 ///
 /// Displays a trigger widget that opens a picker overlay when tapped.
 /// The picker shows a calendar for date selection and optional time controls.
+///
+/// Accepts values as either DateTime objects or epoch milliseconds (int).
+/// Returns values in the same format as provided via onChanged callback.
 class GuxDateTimePicker extends StatefulWidget {
   const GuxDateTimePicker({
     super.key,
@@ -43,11 +46,18 @@ class GuxDateTimePicker extends StatefulWidget {
     this.use24HourFormat = false,
   });
 
-  final DateTime? value;
-  final ValueChanged<DateTime?>? onChanged;
+  /// The current value as either DateTime or int (epoch milliseconds)
+  final dynamic value;
+
+  /// Callback that receives either DateTime or int based on input type
+  final ValueChanged<dynamic>? onChanged;
+
   final DateTimePickerMode mode;
-  final DateTime? minDate;
-  final DateTime? maxDate;
+
+  /// Min/max dates accept either DateTime or int (epoch milliseconds)
+  final dynamic minDate;
+  final dynamic maxDate;
+
   final bool enabled;
   final String placeholder;
   final GuxDateTimePickerStyle style;
@@ -62,39 +72,51 @@ class _GuxDateTimePickerState extends State<GuxDateTimePicker> {
 
   bool get _isEnabled => widget.enabled && widget.onChanged != null;
 
+  /// Convert value to DateTime for internal use
+  DateTime? get _dateTimeValue {
+    if (widget.value == null) return null;
+    if (widget.value is DateTime) return widget.value as DateTime;
+    if (widget.value is int) {
+      return DateTime.fromMillisecondsSinceEpoch(widget.value as int);
+    }
+    return null;
+  }
+
   String _formatValue() {
-    if (widget.value == null) return widget.placeholder;
+    final dateTime = _dateTimeValue;
+    if (dateTime == null) return widget.placeholder;
 
     switch (widget.mode) {
       case DateTimePickerMode.date:
-        return '${widget.value!.year}-${widget.value!.month.toString().padLeft(2, '0')}-${widget.value!.day.toString().padLeft(2, '0')}';
+        return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}';
       case DateTimePickerMode.time:
         final hour = widget.use24HourFormat
-            ? widget.value!.hour
-            : (widget.value!.hour % 12 == 0 ? 12 : widget.value!.hour % 12);
-        final minute = widget.value!.minute.toString().padLeft(2, '0');
+            ? dateTime.hour
+            : (dateTime.hour % 12 == 0 ? 12 : dateTime.hour % 12);
+        final minute = dateTime.minute.toString().padLeft(2, '0');
         final period = widget.use24HourFormat
             ? ''
-            : (widget.value!.hour >= 12 ? ' PM' : ' AM');
+            : (dateTime.hour >= 12 ? ' PM' : ' AM');
         return '${hour.toString().padLeft(2, '0')}:$minute$period';
       case DateTimePickerMode.dateTime:
-        final date = '${widget.value!.year}-${widget.value!.month.toString().padLeft(2, '0')}-${widget.value!.day.toString().padLeft(2, '0')}';
+        final date = '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}';
         final hour = widget.use24HourFormat
-            ? widget.value!.hour
-            : (widget.value!.hour % 12 == 0 ? 12 : widget.value!.hour % 12);
-        final minute = widget.value!.minute.toString().padLeft(2, '0');
+            ? dateTime.hour
+            : (dateTime.hour % 12 == 0 ? 12 : dateTime.hour % 12);
+        final minute = dateTime.minute.toString().padLeft(2, '0');
         final period = widget.use24HourFormat
             ? ''
-            : (widget.value!.hour >= 12 ? ' PM' : ' AM');
+            : (dateTime.hour >= 12 ? ' PM' : ' AM');
         return '$date ${hour.toString().padLeft(2, '0')}:$minute$period';
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final dateTime = _dateTimeValue;
     final textColor = !_isEnabled
         ? widget.style.disabledColor
-        : (widget.value == null ? widget.style.disabledColor : widget.style.textColor);
+        : (dateTime == null ? widget.style.disabledColor : widget.style.textColor);
 
     return MouseRegion(
       onEnter: _isEnabled ? (_) => setState(() => _isHovered = true) : null,
@@ -106,7 +128,7 @@ class _GuxDateTimePickerState extends State<GuxDateTimePicker> {
           button: true,
           enabled: _isEnabled,
           label: widget.placeholder,
-          value: widget.value?.toString(),
+          value: dateTime?.toString(),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
@@ -149,7 +171,14 @@ class _GuxDateTimePickerState extends State<GuxDateTimePicker> {
     // This is a simplified version - a full implementation would show
     // a calendar/time picker overlay using showGuxModal or similar.
     // For now, this demonstrates the component structure.
-    widget.onChanged?.call(DateTime.now());
+    final now = DateTime.now();
+
+    // Return value in same format as input
+    if (widget.value is int) {
+      widget.onChanged?.call(now.millisecondsSinceEpoch);
+    } else {
+      widget.onChanged?.call(now);
+    }
   }
 }
 
