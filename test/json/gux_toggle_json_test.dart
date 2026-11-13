@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genux/src/gux_toggle.dart';
+import 'package:genux/src/forms/gux_toggle.dart';
 
 void main() {
   group('GuxToggleStyle', () {

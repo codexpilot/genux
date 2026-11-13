@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 
-import 'gux_workspace_scaffold.dart';
+import 'layout/gux_workspace_scaffold.dart';
 import 'presentation_document.dart';
 import 'summary_lines.dart';
 

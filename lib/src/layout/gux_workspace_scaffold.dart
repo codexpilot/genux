@@ -1,8 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
-import 'json/gux_json_utils.dart';
-import 'json/gux_json_renderer.dart';
+import '../json/gux_json_utils.dart';
+import '../json/gux_json_renderer.dart';
 
 /// A workspace layout with optional top, bottom, and leading side regions.
 ///

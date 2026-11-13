@@ -15,7 +15,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
-import 'json/gux_color_codec.dart';
+import '../json/gux_color_codec.dart';
 import 'gux_radio_group.dart';
 
 /// Visual styling for [GuxRadio].

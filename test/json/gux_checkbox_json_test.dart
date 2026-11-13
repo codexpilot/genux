@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genux/src/gux_checkbox.dart';
+import 'package:genux/src/forms/gux_checkbox.dart';
 
 void main() {
   group('GuxCheckboxStyle', () {

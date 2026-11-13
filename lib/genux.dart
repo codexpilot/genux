@@ -1,37 +1,44 @@
 /// Reusable, application-independent UI primitives for AIX Flutter apps.
 library;
 
-export 'src/gux_app.dart';
+// Foundation
+export 'src/foundation/gux_app.dart';
+export 'src/foundation/gux_page_route.dart';
+
+// Layout & Navigation
+export 'src/layout/gux_workspace_scaffold.dart';
+export 'src/layout/gux_scaffold.dart';
+export 'src/layout/gux_navigation.dart';
+export 'src/layout/gux_dialog.dart';
+
+// Display Components
+export 'src/display/gux_card.dart';
+export 'src/display/gux_badge.dart';
+export 'src/display/gux_avatar.dart';
+export 'src/display/gux_accordion.dart';
+export 'src/display/gux_tabs.dart';
+export 'src/display/gux_sheet.dart';
+export 'src/display/gux_toast.dart';
+export 'src/display/gux_alert.dart';
+export 'src/display/gux_separator.dart';
+export 'src/display/gux_progress_indicator.dart';
+
+// Form Controls
+export 'src/forms/gux_button.dart';
+export 'src/forms/gux_text_field.dart';
+export 'src/forms/gux_text_input.dart';
+export 'src/forms/gux_checkbox.dart';
+export 'src/forms/gux_toggle.dart';
+export 'src/forms/gux_dropdown.dart';
+export 'src/forms/gux_switch.dart';
+export 'src/forms/gux_radio.dart';
+export 'src/forms/gux_radio_group.dart';
+export 'src/forms/gux_slider.dart';
+
+// Supporting Systems
 export 'src/summary_lines.dart';
-export 'src/gux_workspace_scaffold.dart';
-export 'src/gux_scaffold.dart';
 export 'src/presentation_document.dart';
 export 'src/presentation_view.dart';
-export 'src/gux_button.dart';
-export 'src/gux_dialog.dart';
-export 'src/gux_dropdown.dart';
-export 'src/gux_navigation.dart';
-export 'src/gux_page_route.dart';
-export 'src/gux_progress_indicator.dart';
-export 'src/gux_text_field.dart';
-export 'src/gux_text_input.dart';
-export 'src/gux_checkbox.dart';
-export 'src/gux_toggle.dart';
-
-// Phase 2 components
-export 'src/gux_card.dart';
-export 'src/gux_badge.dart';
-export 'src/gux_avatar.dart';
-export 'src/gux_accordion.dart';
-export 'src/gux_tabs.dart';
-export 'src/gux_sheet.dart';
-export 'src/gux_toast.dart';
-export 'src/gux_alert.dart';
-export 'src/gux_separator.dart';
-export 'src/gux_switch.dart';
-export 'src/gux_radio.dart';
-export 'src/gux_radio_group.dart';
-export 'src/gux_slider.dart';
 
 // JSON serialization support
 export 'src/json/gux_json_utils.dart';

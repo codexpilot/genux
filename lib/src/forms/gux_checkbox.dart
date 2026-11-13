@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-import 'json/gux_json_utils.dart';
+import '../json/gux_json_utils.dart';
 
 /// A checkbox with checked, unchecked, and indeterminate states.
 ///

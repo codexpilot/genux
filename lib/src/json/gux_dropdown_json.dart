@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import '../gux_dropdown.dart';
+import '../forms/gux_dropdown.dart';
 import 'gux_json_utils.dart';
 
 /// JSON serialization support for GuxDropdown components.

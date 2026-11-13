@@ -14,14 +14,14 @@
 
 import 'package:flutter/widgets.dart';
 
-import 'json/gux_color_codec.dart';
+import '../json/gux_color_codec.dart';
 
-/// Visual styling for [GuxBadge].
-class GuxBadgeStyle {
-  /// Background color of the badge.
+/// Visual styling for [GuxAvatar].
+class GuxAvatarStyle {
+  /// Background color (used when no image is provided).
   final Color backgroundColor;
 
-  /// Text color.
+  /// Text color for initials.
   final Color textColor;
 
   /// Border color (if borderWidth > 0).
@@ -30,32 +30,28 @@ class GuxBadgeStyle {
   /// Border width in pixels.
   final double borderWidth;
 
-  /// Corner radius in pixels.
-  final double borderRadius;
+  /// Size of the avatar (width and height).
+  final double size;
 
-  /// Padding inside the badge.
-  final EdgeInsets padding;
-
-  /// Text size.
+  /// Font size for initials.
   final double fontSize;
 
-  /// Font weight.
+  /// Font weight for initials.
   final FontWeight fontWeight;
 
-  const GuxBadgeStyle({
+  const GuxAvatarStyle({
     this.backgroundColor = const Color(0xFFE5E7EB),
     this.textColor = const Color(0xFF1F2937),
     this.borderColor,
     this.borderWidth = 0.0,
-    this.borderRadius = 4.0,
-    this.padding = const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
-    this.fontSize = 12.0,
+    this.size = 40.0,
+    this.fontSize = 16.0,
     this.fontWeight = FontWeight.w500,
   });
 
-  /// Creates a badge style from JSON.
-  factory GuxBadgeStyle.fromJson(Map<String, dynamic> json) {
-    return GuxBadgeStyle(
+  /// Creates an avatar style from JSON.
+  factory GuxAvatarStyle.fromJson(Map<String, dynamic> json) {
+    return GuxAvatarStyle(
       backgroundColor: json['backgroundColor'] != null
           ? GuxColorCodec.parse(json['backgroundColor'] as String)
           : const Color(0xFFE5E7EB),
@@ -66,11 +62,8 @@ class GuxBadgeStyle {
           ? GuxColorCodec.parse(json['borderColor'] as String)
           : null,
       borderWidth: (json['borderWidth'] as num?)?.toDouble() ?? 0.0,
-      borderRadius: (json['borderRadius'] as num?)?.toDouble() ?? 4.0,
-      padding: json['padding'] != null
-          ? _parsePadding(json['padding'] as Map<String, dynamic>)
-          : const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
-      fontSize: (json['fontSize'] as num?)?.toDouble() ?? 12.0,
+      size: (json['size'] as num?)?.toDouble() ?? 40.0,
+      fontSize: (json['fontSize'] as num?)?.toDouble() ?? 16.0,
       fontWeight: _parseFontWeight(json['fontWeight'] as String?),
     );
   }
@@ -82,11 +75,7 @@ class GuxBadgeStyle {
       'textColor': GuxColorCodec.toHex(textColor),
       if (borderColor != null) 'borderColor': GuxColorCodec.toHex(borderColor!),
       'borderWidth': borderWidth,
-      'borderRadius': borderRadius,
-      'padding': {
-        'horizontal': padding.horizontal / 2,
-        'vertical': padding.vertical / 2,
-      },
+      'size': size,
       'fontSize': fontSize,
       'fontWeight': _fontWeightToString(fontWeight),
     };
@@ -94,40 +83,16 @@ class GuxBadgeStyle {
 
 
 
-  static EdgeInsets _parsePadding(Map<String, dynamic> json) {
-    if (json.containsKey('horizontal') && json.containsKey('vertical')) {
-      return EdgeInsets.symmetric(
-        horizontal: (json['horizontal'] as num).toDouble(),
-        vertical: (json['vertical'] as num).toDouble(),
-      );
-    }
-    return const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0);
-  }
-
   static FontWeight _parseFontWeight(String? weight) {
     switch (weight) {
       case 'normal':
         return FontWeight.normal;
       case 'bold':
         return FontWeight.bold;
-      case 'w100':
-        return FontWeight.w100;
-      case 'w200':
-        return FontWeight.w200;
-      case 'w300':
-        return FontWeight.w300;
-      case 'w400':
-        return FontWeight.w400;
       case 'w500':
         return FontWeight.w500;
       case 'w600':
         return FontWeight.w600;
-      case 'w700':
-        return FontWeight.w700;
-      case 'w800':
-        return FontWeight.w800;
-      case 'w900':
-        return FontWeight.w900;
       default:
         return FontWeight.w500;
     }
@@ -140,61 +105,69 @@ class GuxBadgeStyle {
   }
 }
 
-/// A small badge label for displaying status, count, or category.
+/// A circular avatar displaying initials or an image.
 ///
-/// Inspired by shadcn/ui Badge component. Commonly used for tags,
-/// status indicators, or notification counts.
+/// Inspired by shadcn/ui Avatar component. Used for user profiles,
+/// contact lists, or any circular representation of identity.
 ///
 /// Example:
 /// ```dart
-/// GuxBadge(
-///   label: 'New',
-///   style: GuxBadgeStyle(
+/// GuxAvatar(
+///   initials: 'JD',
+///   style: GuxAvatarStyle(
 ///     backgroundColor: Color(0xFF3B82F6),
 ///     textColor: Color(0xFFFFFFFF),
+///     size: 40.0,
 ///   ),
 /// )
 /// ```
-class GuxBadge extends StatelessWidget {
-  /// Text label to display.
-  final String label;
+class GuxAvatar extends StatelessWidget {
+  /// User initials to display (if no imageUrl provided).
+  final String? initials;
 
-  /// Visual styling for the badge.
-  final GuxBadgeStyle style;
+  /// Optional image URL (not implemented in this version).
+  final String? imageUrl;
 
-  const GuxBadge({
+  /// Visual styling for the avatar.
+  final GuxAvatarStyle style;
+
+  const GuxAvatar({
     super.key,
-    required this.label,
+    this.initials,
+    this.imageUrl,
     required this.style,
   });
 
-  /// Creates a badge from JSON.
+  /// Creates an avatar from JSON.
   ///
   /// Example:
   /// ```dart
-  /// GuxBadge.fromJson({
-  ///   'label': 'New',
+  /// GuxAvatar.fromJson({
+  ///   'initials': 'JD',
   ///   'style': {
   ///     'backgroundColor': '#3B82F6',
   ///     'textColor': '#FFFFFF',
+  ///     'size': 40.0,
   ///   },
   /// })
   /// ```
-  factory GuxBadge.fromJson(Map<String, dynamic> json) {
+  factory GuxAvatar.fromJson(Map<String, dynamic> json) {
     final styleJson = json['style'] as Map<String, dynamic>?;
 
-    return GuxBadge(
-      label: json['label'] as String? ?? '',
+    return GuxAvatar(
+      initials: json['initials'] as String?,
+      imageUrl: json['imageUrl'] as String?,
       style: styleJson != null
-          ? GuxBadgeStyle.fromJson(styleJson)
-          : const GuxBadgeStyle(),
+          ? GuxAvatarStyle.fromJson(styleJson)
+          : const GuxAvatarStyle(),
     );
   }
 
-  /// Converts this badge to JSON.
+  /// Converts this avatar to JSON.
   Map<String, dynamic> toJson() {
     return {
-      'label': label,
+      if (initials != null) 'initials': initials,
+      if (imageUrl != null) 'imageUrl': imageUrl,
       'style': style.toJson(),
     };
   }
@@ -202,25 +175,30 @@ class GuxBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: style.padding,
+      width: style.size,
+      height: style.size,
       decoration: BoxDecoration(
         color: style.backgroundColor,
+        shape: BoxShape.circle,
         border: style.borderWidth > 0 && style.borderColor != null
             ? Border.all(
                 color: style.borderColor!,
                 width: style.borderWidth,
               )
             : null,
-        borderRadius: BorderRadius.circular(style.borderRadius),
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: style.textColor,
-          fontSize: style.fontSize,
-          fontWeight: style.fontWeight,
-          height: 1.0,
-        ),
+      child: Center(
+        child: initials != null
+            ? Text(
+                initials!,
+                style: TextStyle(
+                  color: style.textColor,
+                  fontSize: style.fontSize,
+                  fontWeight: style.fontWeight,
+                  height: 1.0,
+                ),
+              )
+            : const SizedBox.shrink(),
       ),
     );
   }

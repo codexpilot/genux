@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genux/src/gux_text_input.dart';
-import 'package:genux/src/gux_text_field.dart';
+import 'package:genux/src/forms/gux_text_input.dart';
+import 'package:genux/src/forms/gux_text_field.dart';
 
 void main() {
   group('GuxTextInputStyle', () {

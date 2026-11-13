@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genux/src/gux_progress_indicator.dart';
+import 'package:genux/src/display/gux_progress_indicator.dart';
 
 void main() {
   group('GuxProgressIndicator.fromJson', () {

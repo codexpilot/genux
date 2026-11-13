@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genux/src/gux_button.dart';
+import 'package:genux/src/forms/gux_button.dart';
 import 'package:genux/src/json/gux_json_renderer.dart';
 import 'package:flutter/widgets.dart';
 
