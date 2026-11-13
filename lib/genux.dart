@@ -10,6 +10,8 @@ export 'src/layout/gux_workspace_scaffold.dart';
 export 'src/layout/gux_scaffold.dart';
 export 'src/layout/gux_navigation.dart';
 export 'src/layout/gux_dialog.dart';
+export 'src/layout/gux_dialog_variant.dart';
+export 'src/layout/gux_modal.dart';
 
 // Display Components
 export 'src/display/gux_card.dart';
@@ -34,6 +36,8 @@ export 'src/forms/gux_switch.dart';
 export 'src/forms/gux_radio.dart';
 export 'src/forms/gux_radio_group.dart';
 export 'src/forms/gux_slider.dart';
+export 'src/forms/gux_date_time_picker.dart';
+export 'src/forms/gux_file_picker.dart';
 
 // Supporting Systems
 export 'src/summary_lines.dart';
