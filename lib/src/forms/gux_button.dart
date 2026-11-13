@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-import '../json/gux_json_utils.dart';
-import '../json/gux_json_renderer.dart';
+import '../utility/gux_json_utils.dart';
+import '../utility/gux_json_renderer.dart';
 
 /// Visual properties for a [GuxButton], independent of an app theme.
 @immutable

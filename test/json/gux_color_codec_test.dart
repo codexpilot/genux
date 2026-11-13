@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genux/src/json/gux_color_codec.dart';
+import 'package:genux/src/utility/gux_color_codec.dart';
 import 'package:flutter/widgets.dart';
 
 void main() {

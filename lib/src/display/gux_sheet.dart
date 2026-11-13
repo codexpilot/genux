@@ -14,7 +14,7 @@
 
 import 'package:flutter/widgets.dart';
 
-import '../json/gux_color_codec.dart';
+import '../utility/gux_color_codec.dart';
 
 /// Visual styling for [GuxSheet].
 class GuxSheetStyle {

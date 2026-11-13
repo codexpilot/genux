@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
-import '../json/gux_json_utils.dart';
-import '../json/gux_json_renderer.dart';
+import '../utility/gux_json_utils.dart';
+import '../utility/gux_json_renderer.dart';
 
 /// A host-styled dialog surface for use with a Navigator overlay.
 ///

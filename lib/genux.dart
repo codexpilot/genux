@@ -46,11 +46,10 @@ export 'src/presentation_view.dart';
 
 // Utilities
 export 'src/utility/gux_date_time_utils.dart';
-
-// JSON serialization support
-export 'src/json/gux_json_utils.dart';
-export 'src/json/gux_json_renderer.dart';
-export 'src/json/gux_dropdown_json.dart';
+export 'src/utility/gux_json_utils.dart';
+export 'src/utility/gux_json_renderer.dart';
+export 'src/utility/gux_color_codec.dart';
+export 'src/utility/gux_dropdown_json.dart';
 
 // Theme System
 export 'src/gux_theme.dart';

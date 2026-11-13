@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:genux/src/layout/gux_workspace_scaffold.dart';
-import 'package:genux/src/json/gux_json_renderer.dart';
+import 'package:genux/src/utility/gux_json_renderer.dart';
 
 void main() {
   setUpAll(() {

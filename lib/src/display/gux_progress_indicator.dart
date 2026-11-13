@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
-import '../json/gux_json_utils.dart';
+import '../utility/gux_json_utils.dart';
 
 /// A compact circular progress indicator without a UI framework dependency.
 ///

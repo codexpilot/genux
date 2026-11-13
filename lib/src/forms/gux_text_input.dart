@@ -2,7 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'gux_text_field.dart';
-import '../json/gux_json_utils.dart';
+import '../utility/gux_json_utils.dart';
 
 /// A labeled text input field with validation display.
 ///

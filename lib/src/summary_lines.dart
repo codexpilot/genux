@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'json/gux_json_utils.dart';
+import 'utility/gux_json_utils.dart';
 
 /// Three single-line text values arranged vertically for a compact summary.
 ///

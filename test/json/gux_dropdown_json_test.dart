@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:genux/src/forms/gux_dropdown.dart';
-import 'package:genux/src/json/gux_dropdown_json.dart';
+import 'package:genux/src/utility/gux_dropdown_json.dart';
 
 void main() {
   group('GuxDropdownStyle.fromJson', () {

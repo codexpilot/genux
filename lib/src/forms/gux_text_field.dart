@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/widgets.dart';
-import '../json/gux_json_utils.dart';
+import '../utility/gux_json_utils.dart';
 
 /// Host-provided labels and colors for the text selection menu.
 @immutable

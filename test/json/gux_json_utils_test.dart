@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genux/src/json/gux_json_utils.dart';
+import 'package:genux/src/utility/gux_json_utils.dart';
 import 'package:flutter/widgets.dart';
 
 void main() {
