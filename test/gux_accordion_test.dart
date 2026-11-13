@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:genux/genux.dart';
@@ -139,8 +140,57 @@ void main() {
       await tester.tap(find.text('Section'));
       await tester.pump();
 
-      // Space key should toggle (this is handled by GestureDetector automatically in tests)
       expect(find.text('Keyboard Content'), findsOneWidget);
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
+      await tester.pump();
+      expect(find.text('Keyboard Content'), findsNothing);
+    });
+
+    testWidgets('supports keyboard-only activation from collapsed state',
+        (tester) async {
+      var expansionState = false;
+
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: GuxAccordion(
+            title: 'Keyboard Section',
+            content: const Text('Keyboard Content'),
+            style: const GuxAccordionStyle(),
+            onExpansionChanged: (expanded) => expansionState = expanded,
+          ),
+        ),
+      );
+
+      // Initially collapsed
+      expect(find.text('Keyboard Content'), findsNothing);
+      expect(expansionState, isFalse);
+
+      // Focus the accordion (simulate Tab key navigation to it)
+      final element = tester.element(find.byType(GuxAccordion));
+      FocusScope.of(element).requestFocus(
+        tester.widget<FocusableActionDetector>(
+          find.descendant(
+            of: find.byType(GuxAccordion),
+            matching: find.byType(FocusableActionDetector),
+          ),
+        ).focusNode,
+      );
+      await tester.pump();
+
+      // Activate with Space key (keyboard-only, no tap)
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
+      await tester.pump();
+
+      expect(find.text('Keyboard Content'), findsOneWidget);
+      expect(expansionState, isTrue);
+
+      // Collapse with Enter key
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+
+      expect(find.text('Keyboard Content'), findsNothing);
+      expect(expansionState, isFalse);
     });
 
     testWidgets('applies expanded background color', (tester) async {

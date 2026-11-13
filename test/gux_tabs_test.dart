@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:genux/genux.dart';
@@ -29,6 +30,43 @@ void main() {
       'tab2': const Text('Content 2'),
       'tab3': const Text('Content 3'),
     };
+
+    testWidgets('keyboard activates a focused tab and exposes selection', (
+      tester,
+    ) async {
+      final semantics = tester.ensureSemantics();
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: SizedBox(
+            height: 200,
+            child: GuxTabs(
+              tabs: const [
+                GuxTab(id: 'a', label: 'First'),
+                GuxTab(id: 'b', label: 'Second'),
+              ],
+              style: const GuxTabsStyle(),
+              children: const {'a': Text('Panel A'), 'b': Text('Panel B')},
+            ),
+          ),
+        ),
+      );
+      Focus.of(tester.element(find.text('Second'))).requestFocus();
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+      expect(find.text('Panel B'), findsOneWidget);
+      expect(
+        tester
+            .getSemantics(find.text('Second'))
+            .getSemanticsData()
+            .flagsCollection
+            .isSelected
+            .toBoolOrNull(),
+        isTrue,
+      );
+      semantics.dispose();
+    });
 
     testWidgets('displays all tab labels', (tester) async {
       await tester.pumpWidget(
@@ -94,6 +132,48 @@ void main() {
       expect(find.text('Content 3'), findsOneWidget);
     });
 
+    testWidgets('supports keyboard-only tab switching', (tester) async {
+      String? selectedTabId = 'tab1';
+
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: GuxTabs(
+            tabs: testTabs,
+            style: const GuxTabsStyle(),
+            children: testChildren,
+            onTabChanged: (tabId) => selectedTabId = tabId,
+          ),
+        ),
+      );
+
+      // Initially showing tab 1
+      expect(find.text('Content 1'), findsOneWidget);
+      expect(selectedTabId, 'tab1');
+
+      // Tap Tab 2 to focus it (simulates keyboard navigation + activation)
+      await tester.tap(find.text('Tab 2'));
+      await tester.pumpAndSettle();
+
+      // Now send Space key while focused (keyboard activation)
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
+      await tester.pumpAndSettle();
+
+      // Tab 2 should still be active (Space shouldn't toggle off)
+      expect(find.text('Content 2'), findsOneWidget);
+      expect(selectedTabId, 'tab2');
+
+      // Focus Tab 3 and activate with Enter key
+      await tester.tap(find.text('Tab 3'));
+      await tester.pumpAndSettle();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Content 3'), findsOneWidget);
+      expect(selectedTabId, 'tab3');
+    });
+
     testWidgets('respects initialTabId', (tester) async {
       await tester.pumpWidget(
         Directionality(
@@ -140,7 +220,9 @@ void main() {
       expect(changedTabId, equals('tab3'));
     });
 
-    testWidgets('does not call onTabChanged when tapping active tab', (tester) async {
+    testWidgets('does not call onTabChanged when tapping active tab', (
+      tester,
+    ) async {
       int callCount = 0;
 
       await tester.pumpWidget(

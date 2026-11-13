@@ -292,11 +292,74 @@ grep -r "0xe[0-9a-f]" lib/src --include="*.dart"  # Icon codepoints
 
 ## Component Design Principles
 
-### 1. Host-Provided Styling
-Components never have built-in colors or styles. All visual properties come from the host through style parameters.
+### 1. Host-Provided Styling (Explicit, Not Inherited)
+
+**IMPORTANT: Components DO NOT auto-consume GuxTheme from context.**
+
+All visual properties must be explicitly passed through style parameters. This is intentional design, not a missing feature.
+
+#### Why Explicit Styling?
+
+1. **Predictable behavior** - No hidden context dependencies
+2. **Host control** - ContextStudio/Dataset implement their own theme systems
+3. **No surprises** - What you pass is what you get
+4. **Framework independence** - No InheritedWidget magic
+5. **Testability** - Components work in isolation
+
+#### GuxTheme Purpose
+
+`GuxTheme` and `GuxThemeStyles` are **convenience helpers for hosts**, not runtime theme providers:
 
 ```dart
-// ✅ CORRECT
+// ✅ CORRECT - Host explicitly maps theme to component styles
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    const theme = GuxThemes.slate;
+    const styles = GuxThemeStyles(theme);
+    
+    return GuxButton(
+      style: styles.button,  // Explicit mapping
+      onPressed: () {},
+      child: Text('Click'),
+    );
+  }
+}
+
+// ❌ WRONG - Expecting auto-consumption
+GuxButton(
+  // Does NOT automatically use GuxTheme.of(context)
+  onPressed: () {},
+  child: Text('Click'),
+)
+```
+
+#### Host Theme Integration
+
+Hosts should create their own theme system that maps to Genux styles:
+
+```dart
+// In ContextStudio/Dataset
+class AppTheme {
+  final GuxTheme genuxTheme;
+  final GuxThemeStyles genuxStyles;
+  
+  AppTheme(this.genuxTheme) : genuxStyles = GuxThemeStyles(genuxTheme);
+  
+  // Provide via InheritedWidget or Riverpod/Provider
+  static AppTheme of(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<AppThemeProvider>()!.theme;
+  }
+}
+
+// Usage in Dataset renderer
+GuxButton(
+  style: AppTheme.of(context).genuxStyles.button,
+  // ...
+)
+```
+
+### 2. Framework-Free Implementation
 class GuxButton extends StatelessWidget {
   const GuxButton({
     required this.style,  // Host provides all styling
@@ -326,11 +389,183 @@ CustomPaint, CustomPainter
 Components should be small, focused, and composable.
 
 ### 4. Accessibility
-Always include proper semantics and support for:
-- Screen readers
-- Keyboard navigation
-- Reduce motion preferences
-- High contrast modes
+
+All interactive components must support full keyboard navigation and screen readers.
+
+#### Required Accessibility Features
+
+**Keyboard Support:**
+- Use `FocusableActionDetector` for keyboard shortcuts
+- Support both Space and Enter keys for activation
+- Handle arrow keys for navigation (tabs, lists, menus)
+- Provide visible focus indicators
+
+**Semantics:**
+- Use `Semantics` widget with appropriate properties
+- `button: true` for clickable elements
+- `selected: true/false` for tabs and list items
+- `expanded: true/false` for accordions and dropdowns
+- `label` and `hint` for screen reader context
+- `onTap` callbacks for TalkBack/VoiceOver
+
+**Example - Accessible Button:**
+```dart
+FocusableActionDetector(
+  onShowFocusHighlight: (focused) => setState(() => _focused = focused),
+  shortcuts: const {
+    SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+    SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+  },
+  actions: {
+    ActivateIntent: CallbackAction<ActivateIntent>(
+      onInvoke: (_) {
+        widget.onPressed?.call();
+        return null;
+      },
+    ),
+  },
+  child: Semantics(
+    button: true,
+    enabled: widget.enabled,
+    label: widget.accessibilityLabel,
+    onTap: widget.onPressed,
+    child: GestureDetector(
+      excludeFromSemantics: true,  // Avoid duplicate semantics
+      onTap: widget.onPressed,
+      child: // ... visual widget
+    ),
+  ),
+)
+```
+
+**Example - Accessible Tab:**
+```dart
+FocusableActionDetector(
+  onShowFocusHighlight: (focused) => setState(() => _focused = focused),
+  shortcuts: const {
+    SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+    SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+  },
+  actions: {
+    ActivateIntent: CallbackAction<ActivateIntent>(
+      onInvoke: (_) {
+        _selectTab(tab.id);
+        return null;
+      },
+    ),
+  },
+  child: Semantics(
+    button: true,
+    selected: isActive,
+    label: tab.label,
+    onTap: () => _selectTab(tab.id),
+    child: // ... tab visual
+  ),
+)
+```
+
+**Example - Accessible Accordion:**
+```dart
+FocusableActionDetector(
+  focusNode: _focusNode,
+  onShowFocusHighlight: (focused) => setState(() => _focused = focused),
+  shortcuts: const {
+    SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+    SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+  },
+  actions: {
+    ActivateIntent: CallbackAction<ActivateIntent>(
+      onInvoke: (_) {
+        _toggleExpansion();
+        return null;
+      },
+    ),
+  },
+  child: Semantics(
+    button: true,
+    expanded: _isExpanded,
+    label: widget.title,
+    onTap: _toggleExpansion,
+    child: // ... accordion header visual
+  ),
+)
+```
+
+#### Accessibility Testing Requirements
+
+Every interactive component must have tests for:
+
+1. **Mouse/Touch interaction** - `await tester.tap(find.byType(Widget))`
+2. **Keyboard-only activation** - Focus then send key without tapping first
+3. **Screen reader semantics** - Verify Semantics properties
+4. **Focus management** - Tab order, focus indicators
+
+**Example - Complete Accessibility Test:**
+```dart
+testWidgets('supports keyboard-only activation', (tester) async {
+  var activated = false;
+  
+  await tester.pumpWidget(
+    Directionality(
+      textDirection: TextDirection.ltr,
+      child: GuxButton(
+        onPressed: () => activated = true,
+        child: Text('Click Me'),
+        style: const GuxButtonStyle(),
+      ),
+    ),
+  );
+  
+  // Focus without tapping (keyboard-only navigation)
+  final buttonFinder = find.byType(GuxButton);
+  await tester.sendKeyEvent(LogicalKeyboardKey.tab); // Focus
+  await tester.pump();
+  
+  // Activate with Space key
+  await tester.sendKeyEvent(LogicalKeyboardKey.space);
+  await tester.pump();
+  
+  expect(activated, isTrue);
+  
+  // Reset and test Enter key
+  activated = false;
+  await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+  await tester.pump();
+  
+  expect(activated, isTrue);
+});
+
+testWidgets('has proper screen reader semantics', (tester) async {
+  await tester.pumpWidget(
+    Directionality(
+      textDirection: TextDirection.ltr,
+      child: GuxButton(
+        onPressed: () {},
+        child: Text('Submit'),
+        style: const GuxButtonStyle(),
+      ),
+    ),
+  );
+  
+  final semantics = tester.getSemantics(find.byType(GuxButton));
+  expect(semantics.hasFlag(SemanticsFlag.isButton), isTrue);
+  expect(semantics.hasAction(SemanticsAction.tap), isTrue);
+  expect(semantics.label, contains('Submit'));
+});
+```
+
+#### Accessibility Checklist
+
+Before committing a new interactive component:
+
+- [ ] `FocusableActionDetector` with Space + Enter shortcuts
+- [ ] `Semantics` widget with appropriate properties
+- [ ] Visible focus indicator (change color/border when focused)
+- [ ] `excludeFromSemantics: true` on `GestureDetector`
+- [ ] Tests for mouse, keyboard, and screen reader
+- [ ] Works with VoiceOver (iOS) and TalkBack (Android)
+- [ ] Reduce motion support (no required animations)
+- [ ] High contrast mode support (sufficient color contrast)
 
 ### 5. Testing
 Every component must have tests covering:
