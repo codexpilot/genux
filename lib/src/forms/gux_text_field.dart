@@ -7,7 +7,14 @@ import '../utility/gux_json_utils.dart';
 /// A labeled text input field with validation display.
 ///
 /// Built on [GuxTextInput] with consistent label, placeholder, and error
-/// message layout. The host supplies all styling through [GuxTextInputStyle].
+/// message layout. This is the recommended text input component for most
+/// use cases - use [GuxTextInput] directly only when you need a primitive
+/// without labels.
+///
+/// The host supplies all styling through [GuxTextFieldStyle], which includes
+/// separate styles for normal and error states. The field displays an optional
+/// label above the input and an optional error message below it, with
+/// configurable spacing.
 class GuxTextField extends StatelessWidget {
   const GuxTextField({
     super.key,

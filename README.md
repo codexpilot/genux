@@ -17,14 +17,15 @@ The package exports:
 - `GuxButton`: a host-styled button with pointer, keyboard, focus, and disabled
   states. `GuxButtonStyle` supplies its colors, dimensions, and text style.
 - `GuxCheckbox`: a checkbox control with optional tristate support.
-- `GuxTextField`: a low-level text input with host-owned text, labels,
-  styling and validation. Keyboard selection works, but platform selection
-  handles, a context menu, and accessibility copy/cut/paste actions are not yet
-  implemented; it is not a drop-in replacement for a full-featured text field.
-- `GuxTextInput`: a single-line text input with validation support.
-- `GuxDropdown`: a controlled selection field with keyboard navigation,
-  status states, and an anchored menu. The menu closes on viewport or local
-  text-direction or scaling changes and uses fresh bounds when reopened.
+- `GuxTextInput`: the primitive text input with EditableText, cursor, selection
+  menu, and focus handling. Provides the foundation for higher-level text components.
+- `GuxTextField`: a labeled text input built on `GuxTextInput`, adding label text,
+  placeholder, error messages, and validation display. The host supplies all styling
+  and manages the text controller.
+- `GuxComboBox`: a controlled selection field with keyboard navigation,
+  status states, and an anchored menu. Built to extend the text field hierarchy.
+  The menu closes on viewport or local text-direction or scaling changes and uses
+  fresh bounds when reopened.
 - `GuxProgressIndicator`: a compact determinate or indeterminate indicator
   with host-supplied colors and optional accessibility labels.
 - `GuxDialog` and `showGuxDialog`: a host-styled dialog surface and route.

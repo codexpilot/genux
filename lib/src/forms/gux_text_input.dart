@@ -150,13 +150,17 @@ class GuxTextInputStyle {
   }
 }
 
-/// A framework-independent editable field with host-owned text and styling.
+/// Primitive editable text input - the foundational text component.
+///
+/// This is the base text input component with full EditableText behavior:
+/// cursor, text selection, selection menu (cut/copy/paste), focus handling,
+/// and keyboard input. Use this directly for simple text input needs, or use
+/// [GuxTextField] which adds labels and error message display.
 ///
 /// The caller owns and disposes [controller] and any supplied [focusNode].
-/// [semanticsLabel], [placeholder] and [errorText] are supplied by the host.
-/// The error text communicates a validation result; validation itself remains
-/// the caller's responsibility. Text selection uses Flutter's low-level
-/// gesture handling and a host-configurable selection menu.
+/// [semanticsLabel] and [placeholder] are supplied by the host. The [hasError]
+/// flag signals error state for visual styling. Text selection uses Flutter's
+/// low-level gesture handling and a host-configurable selection menu.
 class GuxTextInput extends StatefulWidget {
   const GuxTextInput({
     super.key,

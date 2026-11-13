@@ -81,11 +81,17 @@ class GuxComboBoxStyle {
   final double maxMenuHeight;
 }
 
-/// A controlled, non-editable selection field with an anchored overlay menu.
+/// A controlled selection field with an anchored dropdown menu.
+///
+/// Extends the text input hierarchy concept by providing selection from a
+/// predefined list of options. The field displays the selected option's label
+/// and opens a menu overlay on tap or keyboard activation.
 ///
 /// The host supplies localized labels and updates [value] after [onChanged].
 /// When an error and [onRetry] are provided, the field becomes a retry action.
 /// The menu requires an ancestor [Overlay], typically supplied by a Navigator.
+/// Supports loading states, disabled options, keyboard navigation, and
+/// custom equality comparison via [valueEquals].
 class GuxComboBox<T> extends StatefulWidget {
   const GuxComboBox({
     super.key,
