@@ -1,6 +1,6 @@
 name: genux
 description: Reusable Flutter UI primitives for AIX applications.
-version: 0.1.0
+version: 1.0.1
 publish_to: 'none'
 
 environment:
