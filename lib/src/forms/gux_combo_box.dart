@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import '../display/gux_progress_indicator.dart';
 import 'gux_text_field.dart';
 import 'gux_text_input.dart';
 
@@ -221,6 +222,39 @@ enum MenuAnimation {
 ///   style: const GuxComboBoxStyle(),
 /// )
 /// ```
+///
+/// ## Example - Custom value equality
+/// ```dart
+/// GuxComboBox<User>(
+///   value: currentUser,
+///   valueEquals: (a, b) => a.id == b.id, // Compare by ID
+///   options: users.map((u) => GuxComboBoxOption(
+///     value: u,
+///     label: u.name,
+///   )).toList(),
+///   onChanged: (user) => setState(() => currentUser = user),
+///   labelText: 'User',
+///   style: const GuxComboBoxStyle(),
+/// )
+/// ```
+///
+/// ## Example - Async data with loading/error states
+/// ```dart
+/// GuxComboBox<int>(
+///   value: selectedId,
+///   isLoading: _isLoading,
+///   errorMessage: _error,
+///   onRetry: _loadData, // Retry button on error
+///   emptyMessage: 'No items available',
+///   options: _data?.map((d) => GuxComboBoxOption(
+///     value: d.id,
+///     label: d.name,
+///   )).toList() ?? [],
+///   onChanged: (id) => setState(() => selectedId = id),
+///   labelText: 'Select item',
+///   style: const GuxComboBoxStyle(),
+/// )
+/// ```
 class GuxComboBox<T> extends StatefulWidget {
   const GuxComboBox({
     super.key,
@@ -238,6 +272,10 @@ class GuxComboBox<T> extends StatefulWidget {
     this.menuBehavior = MenuBehavior.auto,
     this.menuAnimation = MenuAnimation.both,
     this.style = const GuxComboBoxStyle(),
+    this.valueEquals,
+    this.isLoading = false,
+    this.onRetry,
+    this.emptyMessage,
   });
 
   /// The list of selectable options.
@@ -321,6 +359,74 @@ class GuxComboBox<T> extends StatefulWidget {
   /// Visual styling for the combo box.
   final GuxComboBoxStyle style;
 
+  /// Custom equality function for comparing values.
+  ///
+  /// Used to determine which option is selected when value types don't
+  /// override `==` operator. Useful for comparing complex objects by ID.
+  ///
+  /// Example:
+  /// ```dart
+  /// GuxComboBox<User>(
+  ///   value: currentUser,
+  ///   valueEquals: (a, b) => a.id == b.id, // Compare by ID
+  ///   options: users.map((u) => GuxComboBoxOption(
+  ///     value: u,
+  ///     label: u.name,
+  ///   )).toList(),
+  ///   onChanged: (user) => setState(() => currentUser = user),
+  /// )
+  /// ```
+  final bool Function(T a, T b)? valueEquals;
+
+  /// Whether data is currently loading.
+  ///
+  /// When true, displays a loading spinner in place of the dropdown arrow.
+  /// Useful for async data loading from APIs.
+  ///
+  /// Example:
+  /// ```dart
+  /// GuxComboBox<int>(
+  ///   isLoading: _isLoading,
+  ///   options: _data?.map((d) => GuxComboBoxOption(
+  ///     value: d.id,
+  ///     label: d.name,
+  ///   )).toList() ?? [],
+  ///   onChanged: (id) => setState(() => selectedId = id),
+  /// )
+  /// ```
+  final bool isLoading;
+
+  /// Callback when user clicks retry button after error.
+  ///
+  /// Only shown when [errorMessage] is not null. Displays a retry button
+  /// next to the error message.
+  ///
+  /// Example:
+  /// ```dart
+  /// GuxComboBox<int>(
+  ///   errorMessage: _error,
+  ///   onRetry: _loadData, // Reload data on retry
+  ///   options: [...],
+  ///   onChanged: (id) => setState(() => selectedId = id),
+  /// )
+  /// ```
+  final VoidCallback? onRetry;
+
+  /// Message shown when options list is empty.
+  ///
+  /// Displayed in the menu when [options] is empty but not loading.
+  /// Provides better UX for empty states.
+  ///
+  /// Example:
+  /// ```dart
+  /// GuxComboBox<int>(
+  ///   emptyMessage: 'No items available',
+  ///   options: _data?.map(...).toList() ?? [],
+  ///   onChanged: (id) => setState(() => selectedId = id),
+  /// )
+  /// ```
+  final String? emptyMessage;
+
   @override
   State<GuxComboBox<T>> createState() => _GuxComboBoxState<T>();
 }
@@ -400,14 +506,24 @@ class _GuxComboBoxState<T> extends State<GuxComboBox<T>>
       return;
     }
 
+    final value = widget.value;
+    if (value == null) return;
+
     final option = widget.options.cast<GuxComboBoxOption<T>?>().firstWhere(
-      (opt) => opt?.value == widget.value,
+      (opt) => opt != null && _valuesEqual(opt.value, value),
       orElse: () => null,
     );
 
     if (option != null) {
       _controller.text = option.label;
     }
+  }
+
+  bool _valuesEqual(T a, T b) {
+    if (widget.valueEquals != null) {
+      return widget.valueEquals!(a, b);
+    }
+    return a == b;
   }
 
   void _onFocusChange() {
@@ -504,6 +620,8 @@ class _GuxComboBoxState<T> extends State<GuxComboBox<T>>
         maxHeight: _showAbove ? spaceAbove : spaceBelow,
         style: widget.style,
         itemHeight: widget.itemHeight,
+        isLoading: widget.isLoading,
+        emptyMessage: widget.emptyMessage,
         fadeAnimation: _fadeAnimation,
         slideAnimation: _slideAnimation,
       ),
@@ -608,34 +726,85 @@ class _GuxComboBoxState<T> extends State<GuxComboBox<T>>
       link: _layerLink,
       child: Focus(
         onKeyEvent: _handleKey,
-        child: widget.editable
-          ? GuxTextField(
-              controller: _controller,
-              focusNode: _focusNode,
-              labelText: widget.labelText,
-              placeholder: widget.placeholder,
-              errorMessage: widget.errorMessage,
-              enabled: widget.onChanged != null,
-              onChanged: _onTextChanged,
-              style: widget.style.fieldStyle ?? _defaultFieldStyle(),
-            )
-          : GestureDetector(
-              onTap: () {
-                _focusNode.requestFocus();
-                if (_overlayEntry == null) {
-                  _showMenu();
-                }
-              },
-              child: GuxTextField(
-                controller: _controller,
-                focusNode: _focusNode,
-                labelText: widget.labelText,
-                placeholder: widget.placeholder,
-                errorMessage: widget.errorMessage,
-                enabled: widget.onChanged != null,
-                style: widget.style.fieldStyle ?? _defaultFieldStyle(),
-              ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              alignment: Alignment.centerRight,
+              children: [
+                widget.editable
+                    ? GuxTextField(
+                        controller: _controller,
+                        focusNode: _focusNode,
+                        labelText: widget.labelText,
+                        placeholder: widget.placeholder,
+                        errorMessage: widget.errorMessage,
+                        enabled: widget.onChanged != null && !widget.isLoading,
+                        onChanged: _onTextChanged,
+                        style: widget.style.fieldStyle ?? _defaultFieldStyle(),
+                      )
+                    : GestureDetector(
+                        onTap: widget.isLoading
+                            ? null
+                            : () {
+                                _focusNode.requestFocus();
+                                if (_overlayEntry == null) {
+                                  _showMenu();
+                                }
+                              },
+                        child: GuxTextField(
+                          controller: _controller,
+                          focusNode: _focusNode,
+                          labelText: widget.labelText,
+                          placeholder: widget.placeholder,
+                          errorMessage: widget.errorMessage,
+                          enabled: widget.onChanged != null && !widget.isLoading,
+                          style: widget.style.fieldStyle ?? _defaultFieldStyle(),
+                        ),
+                      ),
+                // Loading spinner or dropdown icon
+                if (widget.isLoading)
+                  Positioned(
+                    right: 12,
+                    top: widget.labelText != null ? 32 : 12,
+                    child: SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: GuxProgressIndicator(
+                        size: 16,
+                        strokeWidth: 2,
+                        color: widget.style.textStyle.color ?? const Color(0xFFFFFFFF),
+                        trackColor: const Color(0x33FFFFFF),
+                      ),
+                    ),
+                  ),
+              ],
             ),
+            // Retry button
+            if (widget.errorMessage != null && widget.onRetry != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: GestureDetector(
+                  onTap: widget.onRetry,
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Text(
+                        'Retry',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: const Color(0xFF0078D4),
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -678,6 +847,8 @@ class _MenuOverlay<T> extends StatelessWidget {
     required this.maxHeight,
     required this.style,
     required this.itemHeight,
+    required this.isLoading,
+    required this.emptyMessage,
     this.fadeAnimation,
     this.slideAnimation,
   });
@@ -693,6 +864,8 @@ class _MenuOverlay<T> extends StatelessWidget {
   final double maxHeight;
   final GuxComboBoxStyle style;
   final double itemHeight;
+  final bool isLoading;
+  final String? emptyMessage;
   final Animation<double>? fadeAnimation;
   final Animation<Offset>? slideAnimation;
 
@@ -780,6 +953,33 @@ class _MenuOverlay<T> extends StatelessWidget {
 
   Widget _buildMenuContent(BuildContext context) {
     final elevation = isEditableMode ? style.menuElevation : style.overlayElevation;
+
+    // Show empty message if no options and not loading
+    if (options.isEmpty && !isLoading) {
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          color: style.menuBackgroundColor,
+          boxShadow: elevation > 0
+              ? [
+                  BoxShadow(
+                    color: const Color(0x33000000),
+                    blurRadius: elevation * 2,
+                    offset: Offset(0, elevation),
+                  ),
+                ]
+              : null,
+        ),
+        child: Container(
+          height: itemHeight,
+          padding: style.itemPadding,
+          alignment: Alignment.center,
+          child: Text(
+            emptyMessage ?? 'No items',
+            style: style.subtitleStyle,
+          ),
+        ),
+      );
+    }
 
     return DecoratedBox(
       decoration: BoxDecoration(
