@@ -4,6 +4,11 @@
 library;
 
 import 'package:flutter/widgets.dart';
+
+import 'display/gux_accordion.dart';
+import 'display/gux_tabs.dart';
+import 'forms/gux_date_time_picker.dart';
+import 'forms/gux_file_picker.dart';
 import 'theme/gux_color_schemes.dart';
 
 export 'theme/gux_color_schemes.dart';
@@ -44,10 +49,10 @@ class GuxTheme {
   });
 
   Map<String, dynamic> toJson() => {
-        'name': name,
-        'colorScheme': colorScheme.toJson(),
-        'radius': radius.toJson(),
-      };
+    'name': name,
+    'colorScheme': colorScheme.toJson(),
+    'radius': radius.toJson(),
+  };
 
   factory GuxTheme.fromJson(Map<String, dynamic> json) {
     return GuxTheme(
@@ -63,6 +68,55 @@ class GuxTheme {
   BorderRadius getBorderRadius() {
     return BorderRadius.circular(radius.value * 8);
   }
+}
+
+/// Explicit mapping from theme tokens to component styles.
+///
+/// Themes do not change existing widgets implicitly. Hosts pass these styles
+/// to each widget, so overrides remain local and predictable.
+class GuxThemeStyles {
+  const GuxThemeStyles(this.theme);
+  final GuxTheme theme;
+
+  GuxDateTimePickerStyle get dateTimePicker => GuxDateTimePickerStyle(
+    backgroundColor: theme.colorScheme.background,
+    textColor: theme.colorScheme.foreground,
+    selectedColor: theme.colorScheme.primary,
+    selectedTextColor: theme.colorScheme.primaryForeground,
+    disabledColor: theme.colorScheme.mutedForeground,
+    borderColor: theme.colorScheme.border,
+    hoverColor: theme.colorScheme.muted,
+    borderRadius: theme.radius.value * 8,
+  );
+
+  GuxFilePickerStyle get filePicker => GuxFilePickerStyle(
+    backgroundColor: theme.colorScheme.background,
+    textColor: theme.colorScheme.foreground,
+    disabledColor: theme.colorScheme.mutedForeground,
+    borderColor: theme.colorScheme.border,
+    hoverColor: theme.colorScheme.muted,
+    borderRadius: theme.radius.value * 8,
+  );
+
+  GuxTabsStyle get tabs => GuxTabsStyle(
+    backgroundColor: theme.colorScheme.muted,
+    activeTabColor: theme.colorScheme.background,
+    activeTextColor: theme.colorScheme.foreground,
+    inactiveTextColor: theme.colorScheme.mutedForeground,
+    borderColor: theme.colorScheme.border,
+    indicatorColor: theme.colorScheme.primary,
+    borderRadius: theme.radius.value * 8,
+  );
+
+  GuxAccordionStyle get accordion => GuxAccordionStyle(
+    backgroundColor: theme.colorScheme.background,
+    expandedBackgroundColor: theme.colorScheme.muted,
+    borderColor: theme.colorScheme.border,
+    headerTextColor: theme.colorScheme.foreground,
+    contentTextColor: theme.colorScheme.foreground,
+    iconColor: theme.colorScheme.foreground,
+    borderRadius: theme.radius.value * 8,
+  );
 }
 
 /// Pre-built themes based on shadcn/ui color schemes.

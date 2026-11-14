@@ -139,3 +139,7 @@ To check the presentation schema and fixtures, use a Python environment with
 python3 -m pip install jsonschema==4.23.0
 python3 tool/validate_presentation_schema.py
 ```
+
+## Host integration
+
+Pickers require host-provided selection adapters; themes are applied through explicit style mappings. See the [host integration guide](docs/host-integration.md) for contracts and limitations.

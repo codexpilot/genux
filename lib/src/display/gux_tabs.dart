@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import '../utility/gux_color_codec.dart';
@@ -72,7 +73,10 @@ class GuxTabsStyle {
     this.borderColor,
     this.borderWidth = 1.0,
     this.borderRadius = 6.0,
-    this.tabPadding = const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+    this.tabPadding = const EdgeInsets.symmetric(
+      horizontal: 12.0,
+      vertical: 8.0,
+    ),
     this.fontSize = 14.0,
     this.activeFontWeight = FontWeight.w600,
     this.inactiveFontWeight = FontWeight.normal,
@@ -109,7 +113,9 @@ class GuxTabsStyle {
           : const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
       fontSize: (json['fontSize'] as num?)?.toDouble() ?? 14.0,
       activeFontWeight: _parseFontWeight(json['activeFontWeight'] as String?),
-      inactiveFontWeight: _parseFontWeight(json['inactiveFontWeight'] as String?),
+      inactiveFontWeight: _parseFontWeight(
+        json['inactiveFontWeight'] as String?,
+      ),
       tabBarHeight: (json['tabBarHeight'] as num?)?.toDouble() ?? 44.0,
       indicatorColor: json['indicatorColor'] != null
           ? GuxColorCodec.parse(json['indicatorColor'] as String)
@@ -137,7 +143,8 @@ class GuxTabsStyle {
       'activeFontWeight': _fontWeightToString(activeFontWeight),
       'inactiveFontWeight': _fontWeightToString(inactiveFontWeight),
       'tabBarHeight': tabBarHeight,
-      if (indicatorColor != null) 'indicatorColor': GuxColorCodec.toHex(indicatorColor!),
+      if (indicatorColor != null)
+        'indicatorColor': GuxColorCodec.toHex(indicatorColor!),
       'indicatorHeight': indicatorHeight,
     };
   }
@@ -199,11 +206,7 @@ class GuxTab {
   /// Optional icon data (not implemented in this version).
   final String? icon;
 
-  const GuxTab({
-    required this.id,
-    required this.label,
-    this.icon,
-  });
+  const GuxTab({required this.id, required this.label, this.icon});
 
   /// Creates a tab from JSON.
   factory GuxTab.fromJson(Map<String, dynamic> json) {
@@ -216,11 +219,7 @@ class GuxTab {
 
   /// Converts this tab to JSON.
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'label': label,
-      if (icon != null) 'icon': icon,
-    };
+    return {'id': id, 'label': label, if (icon != null) 'icon': icon};
   }
 }
 
@@ -303,7 +302,8 @@ class GuxTabs extends StatefulWidget {
     final styleJson = json['style'] as Map<String, dynamic>?;
     final childrenJson = json['children'] as Map<String, dynamic>?;
 
-    final tabs = tabsJson
+    final tabs =
+        tabsJson
             ?.map((t) => GuxTab.fromJson(t as Map<String, dynamic>))
             .toList() ??
         [];
@@ -353,11 +353,13 @@ class GuxTabs extends StatefulWidget {
 
 class _GuxTabsState extends State<GuxTabs> {
   late String _selectedTabId;
+  String? _focusedTabId;
 
   @override
   void initState() {
     super.initState();
-    _selectedTabId = widget.initialTabId ??
+    _selectedTabId =
+        widget.initialTabId ??
         (widget.tabs.isNotEmpty ? widget.tabs.first.id : '');
   }
 
@@ -380,7 +382,8 @@ class _GuxTabsState extends State<GuxTabs> {
           height: widget.style.tabBarHeight,
           decoration: BoxDecoration(
             color: widget.style.backgroundColor,
-            border: widget.style.borderWidth > 0 && widget.style.borderColor != null
+            border:
+                widget.style.borderWidth > 0 && widget.style.borderColor != null
                 ? Border(
                     bottom: BorderSide(
                       color: widget.style.borderColor!,
@@ -392,38 +395,71 @@ class _GuxTabsState extends State<GuxTabs> {
           child: Row(
             children: widget.tabs.map((tab) {
               final isActive = tab.id == _selectedTabId;
-              return GestureDetector(
-                onTap: () => _handleTabTap(tab.id),
-                child: Container(
-                  padding: widget.style.tabPadding,
-                  decoration: BoxDecoration(
-                    color: isActive
-                        ? widget.style.activeTabColor
-                        : widget.style.inactiveTabColor,
-                    borderRadius: BorderRadius.circular(widget.style.borderRadius),
-                    border: isActive &&
-                            widget.style.indicatorColor != null &&
-                            widget.style.indicatorHeight > 0
-                        ? Border(
-                            bottom: BorderSide(
-                              color: widget.style.indicatorColor!,
-                              width: widget.style.indicatorHeight,
-                            ),
-                          )
-                        : null,
+              return FocusableActionDetector(
+                onShowFocusHighlight: (focused) =>
+                    setState(() => _focusedTabId = focused ? tab.id : null),
+                shortcuts: const {
+                  SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+                  SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+                },
+                actions: {
+                  ActivateIntent: CallbackAction<ActivateIntent>(
+                    onInvoke: (_) {
+                      _handleTabTap(tab.id);
+                      return null;
+                    },
                   ),
-                  child: Center(
-                    child: Text(
-                      tab.label,
-                      style: TextStyle(
+                },
+                child: Semantics(
+                  button: true,
+                  selected: isActive,
+                  onTap: () => _handleTabTap(tab.id),
+                  child: GestureDetector(
+                    excludeFromSemantics: true,
+                    onTap: () => _handleTabTap(tab.id),
+                    child: Container(
+                      foregroundDecoration: _focusedTabId == tab.id
+                          ? BoxDecoration(
+                              border: Border.all(
+                                color: widget.style.activeTextColor,
+                                width: 2,
+                              ),
+                            )
+                          : null,
+                      padding: widget.style.tabPadding,
+                      decoration: BoxDecoration(
                         color: isActive
-                            ? widget.style.activeTextColor
-                            : widget.style.inactiveTextColor,
-                        fontSize: widget.style.fontSize,
-                        fontWeight: isActive
-                            ? widget.style.activeFontWeight
-                            : widget.style.inactiveFontWeight,
-                        height: 1.0,
+                            ? widget.style.activeTabColor
+                            : widget.style.inactiveTabColor,
+                        borderRadius: BorderRadius.circular(
+                          widget.style.borderRadius,
+                        ),
+                        border:
+                            isActive &&
+                                widget.style.indicatorColor != null &&
+                                widget.style.indicatorHeight > 0
+                            ? Border(
+                                bottom: BorderSide(
+                                  color: widget.style.indicatorColor!,
+                                  width: widget.style.indicatorHeight,
+                                ),
+                              )
+                            : null,
+                      ),
+                      child: Center(
+                        child: Text(
+                          tab.label,
+                          style: TextStyle(
+                            color: isActive
+                                ? widget.style.activeTextColor
+                                : widget.style.inactiveTextColor,
+                            fontSize: widget.style.fontSize,
+                            fontWeight: isActive
+                                ? widget.style.activeFontWeight
+                                : widget.style.inactiveFontWeight,
+                            height: 1.0,
+                          ),
+                        ),
                       ),
                     ),
                   ),

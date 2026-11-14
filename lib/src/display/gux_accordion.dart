@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import '../utility/gux_color_codec.dart';
@@ -105,8 +106,7 @@ class GuxAccordionStyle {
           ? GuxColorCodec.parse(json['headerTextColor'] as String)
           : const Color(0xFF1F2937),
       headerFontSize: (json['headerFontSize'] as num?)?.toDouble() ?? 16.0,
-      headerFontWeight:
-          _parseFontWeight(json['headerFontWeight'] as String?),
+      headerFontWeight: _parseFontWeight(json['headerFontWeight'] as String?),
       contentTextColor: json['contentTextColor'] != null
           ? GuxColorCodec.parse(json['contentTextColor'] as String)
           : const Color(0xFF4B5563),
@@ -149,8 +149,6 @@ class GuxAccordionStyle {
       'spacing': spacing,
     };
   }
-
-
 
   static EdgeInsets _parsePadding(Map<String, dynamic> json) {
     if (json.containsKey('all')) {
@@ -289,9 +287,7 @@ class GuxAccordion extends StatefulWidget {
   Map<String, dynamic> toJson() {
     return {
       'title': title,
-      'content': {
-        'type': 'Widget',
-      },
+      'content': {'type': 'Widget'},
       'style': style.toJson(),
       'initiallyExpanded': initiallyExpanded,
     };
@@ -303,6 +299,14 @@ class GuxAccordion extends StatefulWidget {
 
 class _GuxAccordionState extends State<GuxAccordion> {
   late bool _isExpanded;
+  bool _focused = false;
+  final _focusNode = FocusNode();
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -327,46 +331,69 @@ class _GuxAccordionState extends State<GuxAccordion> {
             ? style.expandedBackgroundColor
             : style.backgroundColor,
         border: style.borderWidth > 0 && style.borderColor != null
-            ? Border.all(
-                color: style.borderColor!,
-                width: style.borderWidth,
-              )
+            ? Border.all(color: style.borderColor!, width: style.borderWidth)
             : null,
         borderRadius: BorderRadius.circular(style.borderRadius),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          GestureDetector(
-            onTap: _toggleExpansion,
-            child: Container(
-              padding: style.headerPadding,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      widget.title,
-                      style: TextStyle(
-                        color: style.headerTextColor,
-                        fontSize: style.headerFontSize,
-                        fontWeight: style.headerFontWeight,
-                        height: 1.0,
+          FocusableActionDetector(
+            focusNode: _focusNode,
+            onShowFocusHighlight: (value) => setState(() => _focused = value),
+            shortcuts: const {
+              SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+              SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+            },
+            actions: {
+              ActivateIntent: CallbackAction<ActivateIntent>(
+                onInvoke: (_) {
+                  _toggleExpansion();
+                  return null;
+                },
+              ),
+            },
+            child: Semantics(
+              button: true,
+              expanded: _isExpanded,
+              onTap: _toggleExpansion,
+              child: GestureDetector(
+                excludeFromSemantics: true,
+                onTap: () {
+                  _focusNode.requestFocus();
+                  _toggleExpansion();
+                },
+                child: Container(
+                  foregroundDecoration: _focused
+                      ? BoxDecoration(
+                          border: Border.all(color: style.iconColor, width: 2),
+                        )
+                      : null,
+                  padding: style.headerPadding,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          widget.title,
+                          style: TextStyle(
+                            color: style.headerTextColor,
+                            fontSize: style.headerFontSize,
+                            fontWeight: style.headerFontWeight,
+                            height: 1.0,
+                          ),
+                        ),
                       ),
-                    ),
+                      SizedBox(width: 8.0),
+                      _buildIcon(style),
+                    ],
                   ),
-                  SizedBox(width: 8.0),
-                  _buildIcon(style),
-                ],
+                ),
               ),
             ),
           ),
           if (_isExpanded) ...[
-            if (style.spacing > 0)
-              SizedBox(height: style.spacing),
-            Container(
-              padding: style.contentPadding,
-              child: widget.content,
-            ),
+            if (style.spacing > 0) SizedBox(height: style.spacing),
+            Container(padding: style.contentPadding, child: widget.content),
           ],
         ],
       ),

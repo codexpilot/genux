@@ -1,12 +1,9 @@
 import 'package:flutter/widgets.dart';
+
 import '../forms/gux_button.dart';
 
 /// Dialog variant types
-enum DialogVariantType {
-  alert,
-  confirm,
-  info,
-}
+enum DialogVariantType { alert, confirm, info }
 
 /// Style configuration for dialog variants
 class GuxDialogVariantStyle {
@@ -42,6 +39,7 @@ class GuxDialogVariant extends StatelessWidget {
     this.backgroundColor = const Color(0xFF252525),
     this.padding = const EdgeInsets.all(24),
     this.style = const GuxDialogVariantStyle(),
+    this.icon,
   });
 
   final DialogVariantType type;
@@ -55,6 +53,9 @@ class GuxDialogVariant extends StatelessWidget {
   final EdgeInsetsGeometry padding;
   final GuxDialogVariantStyle style;
 
+  /// Optional host-supplied icon, independent of any icon font.
+  final Widget? icon;
+
   Color get _iconColor {
     switch (type) {
       case DialogVariantType.alert:
@@ -63,17 +64,6 @@ class GuxDialogVariant extends StatelessWidget {
         return style.confirmColor;
       case DialogVariantType.info:
         return style.infoColor;
-    }
-  }
-
-  IconData get _icon {
-    switch (type) {
-      case DialogVariantType.alert:
-        return const IconData(0xe002, fontFamily: 'MaterialIcons'); // error
-      case DialogVariantType.confirm:
-        return const IconData(0xe8fd, fontFamily: 'MaterialIcons'); // help
-      case DialogVariantType.info:
-        return const IconData(0xe88e, fontFamily: 'MaterialIcons'); // info
     }
   }
 
@@ -107,12 +97,8 @@ class GuxDialogVariant extends StatelessWidget {
               // Icon and title row
               Row(
                 children: [
-                  Icon(
-                    _icon,
-                    size: style.iconSize,
-                    color: _iconColor,
-                  ),
-                  const SizedBox(width: 12),
+                  ?icon,
+                  if (icon != null) const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       title,
@@ -129,17 +115,15 @@ class GuxDialogVariant extends StatelessWidget {
               // Message
               Text(
                 message,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFFE5E7EB),
-                ),
+                style: const TextStyle(fontSize: 14, color: Color(0xFFE5E7EB)),
               ),
               const SizedBox(height: 24),
               // Actions
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  if (type == DialogVariantType.confirm && onCancel != null) ...[
+                  if (type == DialogVariantType.confirm &&
+                      onCancel != null) ...[
                     GuxButton(
                       onPressed: onCancel,
                       style: GuxButtonStyle(

@@ -130,6 +130,7 @@ void main() {
           textDirection: TextDirection.ltr,
           child: GuxDateTimePicker(
             value: DateTime(2025, 1, 15),
+            selectDateTime: (_, _, _, _, _) async => DateTime(2025, 2, 1),
             onChanged: (value) {
               capturedValue = value;
             },
@@ -152,6 +153,7 @@ void main() {
           textDirection: TextDirection.ltr,
           child: GuxDateTimePicker(
             value: epochMs,
+            selectDateTime: (_, _, _, _, _) async => DateTime(2025, 2, 1),
             onChanged: (value) {
               capturedValue = value;
             },
@@ -169,10 +171,7 @@ void main() {
       await tester.pumpWidget(
         const Directionality(
           textDirection: TextDirection.ltr,
-          child: GuxDateTimePicker(
-            value: null,
-            onChanged: null,
-          ),
+          child: GuxDateTimePicker(value: null, onChanged: null),
         ),
       );
 
